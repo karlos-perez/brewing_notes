@@ -1,0 +1,193 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}Кладовая. Хмель{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center my-2">
+    <h4>Хмель. Кладовая</h4>
+  </div>
+  <div class="col-12 mb-2">
+    <div class="d-flex justify-content-between mb-2">
+      <div>
+        <small>Всего хмеля:&nbsp;</small>
+        <small><strong>{{ hops_total|default_if_none:"0,0" }}</strong>&nbsp;г</small>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddHop" title="Добавить хмель">Добавить хмель</a>
+      </div>
+    </div>
+    <div class="table-div w-100">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Хмель</th>
+            <th class="w80px" title="альфа кислота, %">Альфа</th>
+            <th class="w80px" title="граммы">Приход</th>
+            <th class="w80px" title="граммы">Остаток</th>
+            <th class="w80px" title="за грамм">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="hops-list">
+          {% for h in object_list %}
+          <tr id="reserve-hop-{{ h.id }}" {% if h.spent %} style="color: #656666"{% endif %}>
+            <td>
+              <a class="link" href="{% url 'pantry_hop_one' h.id %}" {% if h.spent %} style="color: #656666"{% endif %}>{{ h.hop }}{% if h.hop.company %} | {{ h.hop.company.name }}{% endif %}</a>
+            </td>
+            <td class="hop-alfa" title="альфа кислота, %">{{ h.alfa }}</td>
+            <td title="граммы">{{ h.parish }}</td>
+            <td title="граммы">{{ h.balance }}</td>
+            <td title="за грамм">{{ h.cost_per_unit }}</td>
+            <td class="d-none d-md-table-cell">{{ h.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ h.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_hop_delete' h.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="hop-empty" hidden>
+            <td class="hop-name"></td>
+            <td class="hop-alfa" title="альфа кислота"></td>
+            <td class="hop-parish" title="граммы"></td>
+            <td class="hop-balance" title="граммы"></td>
+            <td class="hop-cost" title="за грамм"></td>
+            <td class="hop-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="hop-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  function AddHop() {
+      let form = $('#form-add-hop');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.hop-empty').clone().appendTo('#hops-list');
+              m.attr('hidden', false);
+              m.removeClass('hop-empty');
+              m.attr('id', 'reserve-hop-'+data.id);
+              m.find('.hop-name').text(data.hop);
+              m.find('.hop-alfa').text(data.alfa);
+              m.find('.hop-parish').text(data.parish);
+              m.find('.hop-balance').text(data.balance);
+              m.find('.hop-cost').text(data.cost);
+              m.find('.hop-date').text(data.date);
+              m.find('.hop-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddHop').modal('hide');
+  };
+  function ShowModalDelete(url){
+      $('#form-delete').attr('action', url);
+      $('#modalDelete').modal('show');
+	};
+  function Delete(){
+      let form = $('#form-delete');
+      $('#modalDelete').modal('hide');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              $('#reserve-'+data.id).fadeOut('slow');
+          }
+          else {
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAddHop" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления солода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-hop"  action="{% url 'pantry_parish_hop_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Хмель:</label>
+              <select class="form-control form-control-sm" name="hops">
+                {% for h in hops %}
+                <option value="{{ h.id }}">{% if h.company %}{{ h.company.name }} | {% endif %}{{ h.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Альфа, %:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_alfa" value="1" step="0.1" min="1" max="99.9" required>
+              </div>
+              <div class="col">
+                <label>Вес, г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_parish" value="1" step="1" min="0" required>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Стоимость за г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="hop_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="hop_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="hop_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddHop(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="form-delete">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="Delete(); return false;">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

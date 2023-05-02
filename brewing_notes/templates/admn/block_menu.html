@@ -1,0 +1,38 @@
+<div class="row main-body mb-2 d-print-none">
+  <div class="col">
+    <nav class="navbar navbar-expand-md navbar-dark justify-content-end py-1">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-catalog-collaps" aria-controls="nav-catalog-collaps" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav-catalog-collaps">
+        <div class="head-menu">
+          <ul class="navbar-nav text-right">
+            <li class="nav-item">
+              <a class="nav-link{% if '/dashboard' in request.path %} active{% endif %}" href="{% url 'admn_main' %}">Дежурная</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/moderations' in request.path %} active{% endif %}" href="{% url 'admn_moderations' %}">Модерация</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/recipes' in request.path %} active{% endif %}" href="{% url 'admn_recipes_list' %}">Рецепты</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/users' in request.path %} active{% endif %}" href="{% url 'admn_users_list' %}">Пользователи</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/admn_devices_list' in request.path %} active{% endif %}" href="{% url 'admn_devices_list' %}">Устройства</a>
+            </li>
+            {% if user.is_admin %}
+            <li class="nav-item">
+              <a class="nav-link{% if '/actions' in request.path %} active{% endif %}" href="{% url 'admn_actions_list' %}">Действия</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/souls' in request.path %} active{% endif %}" href="{% url 'admn_souls_list' %}">Души</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>

@@ -1,0 +1,162 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}{{ box.yeast.name }}.Кладовая{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center my-2">
+    <div class="d-inline-flex justify-content-between">
+        <a class="link" href="{{ box.yeast.get_absolute_url }}"><h5 class="px-3">{{ box.yeast.name }}&nbsp;({{ box.yeast.short_name|default_if_none:'---' }})</h5></a>
+        {% if not box.yeastswriteoff_set.all %}
+        <a class="link" data-toggle="modal" data-target="#modalEditYeast" title="Редактировать"><i class="material-icons align-middle">edit</i></a>
+        {% endif %}
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="d-flex justify-content-around mb-3">
+      <span></span>
+      <span><i class="mr-2">Страна:</i><b>{{ box.yeast.country|default_if_none:'---' }}</b></span>
+    </div>
+  </div>
+  <div class="col-12 text-right">
+    <span class="small">Дате:&nbsp;{{ box.created_date|default_if_none:'---' }}</span>
+  </div>
+  <div class="col-12 mb-3">
+    <table class="table table-ing">
+      <thead class="thead text-center">
+        <tr>
+          <th>Магазин</th>
+          <th>Закуплено</th>
+          <th>Остаток</th>
+          <th>Стоимость за единицу</th>
+          <th>Срок годности</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        <tr>
+          <td class="text-left">{{ box.supplier }}</td>
+          <td>{{ box.parish|floatformat:"-2" }}&nbsp;{{ box.get_measure_display }}</td>
+          <td>{{ box.balance|floatformat:"-2" }}&nbsp;{{ box.get_measure_display }}</td>
+          <td>{{ box.cost_per_unit|floatformat:"-2" }}</td>
+          <td>{{ box.expiration_date|default_if_none:'---' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 mb-2">
+    <p>{{ box.note }}</p>
+  </div>
+  {% if box.yeastswriteoff_set.all %}
+  <div class="col-12 mb-2">
+    <h5 class="px-3">Расход дрожжей:</h5>
+  </div>
+  <div class="col-12 mb-3">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Хмель</th>
+            <th class="w80px" title="Количество">Кол-во</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+          </tr>
+        </thead>
+        <tbody id="malts-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for y in box.yeastswriteoff_set.all %}
+          <tr id="consumption-yeast-{{ y.id }}" {% if y.spent %} style="color: #656666"{% endif %}>
+            <td>{{ y.recipe.name }}</td>
+            <td>{% if y.yeast_reserve.yeast.short_name %}{{ y.yeast_reserve.yeast.short_name }} | {% endif %}{{ y.yeast_reserve.yeast.name }}</td>
+            <td>{{ y.amount|floatformat:"-2" }}&nbsp;{{ y.get_measure_display }}</td>
+            <td title="Стоимость">{{ y.cost }}</td>
+            <td class="d-none d-sm-table-cell">{{ y.date|date:"d.m.Y" }}</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalEditYeast" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Редактирование дрожжей</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-yeast"  action="{% url 'pantry_yeast_edit' box.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Дрожжи:</label>
+              <select class="form-control form-control-sm" name="yeasts">
+                {% for y in yeasts %}
+                <option value="{{ y.id }}"{% if y == box.yeast %} selected{% endif %}>{% if y.short_name %}{{ y.short_name }} | {% endif %}{{ y.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="yeast_parish" value="{{ box.parish }}" step="0.01" min="1" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Мера:</label>
+                <select class="form-control form-control-sm" name="yeast_measure">
+                  {% for m in measure %}
+                  <option value="{{ m.0 }}"{% if m.0 == box.measure %} selected{% endif %}>{{ m.1 }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col">
+                <label>Остаток:</label>
+                <input class="form-control form-control-sm" type="number" name="yeast_balance" value="{{ box.balance }}" step="0.01" min="0" max="999.99" required>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Стоимость за ед:</label>
+                <input class="form-control form-control-sm" type="number" name="yeast_cost_per_unit" value="{{ box.cost_per_unit }}" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="yeast_cr_date" class="form-control form-control-sm" value="{{ box.date|date:'d.m.Y' }}" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+              <div class="col">
+                <label>Срок годности:</label>
+                <input type="text" name="yeast_ex_date" class="form-control form-control-sm" value="{{ box.date|date:'d.m.Y' }}" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="yeast_supplier" value="{{ box.supplier }}">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="yeast_note" rows="5">{{ box.note }}</textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+{% endblock %}

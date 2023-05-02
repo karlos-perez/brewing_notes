@@ -1,0 +1,201 @@
+{% extends 'catalog/base_catalog.html' %}
+
+{% block page_title %}Добавление Стиля пива{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-start py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{% if '/edit/' in request.path %}Редактирование{% else %}Добавление{% endif %} Стиля пива</h4>
+      </div>
+    </div>
+    {% if form.non_field_errors %}
+    <div class="row my-2">
+      {% for error in form.non_field_errors %}
+      <div class="col-12 text-center">
+        <div class="alert alert-danger">
+          <strong>{{ error }}</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% include 'blocks/naming_rules.html' %}
+    <form id="form-add" class="w-100" method="post">{% csrf_token %}
+      <div class="form-row">
+        <div class="form-group col-12 col-md-4">
+          <label for="{{ form.guides.id_for_label }}">Руководство</label>
+          {{ form.guides }}
+          {% if form.guides.errors %}{{ form.guides.errors }}{% else %}<span class="helptext">{{ form.guides.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-12 col-md-4">
+          <label for="{{ form.type.id_for_label }}">Тип</label>
+          {{ form.type }}
+          {% if form.type.errors %}{{ form.type.errors }}{% else %}<span class="helptext">{{ form.type.help_text }}</span>{% endif %}
+        </div>        
+        <div class="form-group col-12 col-md-4">
+          <label for="{{ form.category.id_for_label }}">Категория</label>
+          {{ form.category }}
+          {% if form.category.errors %}{{ form.category.errors }}{% else %}<span class="helptext">{{ form.category.help_text }}</span>{% endif %}
+        </div>        
+      </div>
+      <div class="form-row">
+        <div class="form-group col-2">
+          <label for="{{ form.index.id_for_label }}">Код</label>
+          {{ form.index }}
+          {% if form.index.errors %}{{ form.index.errors }}{% else %}<span class="helptext">{{ form.index.help_text }}</span>{% endif %}
+        </div>        
+        <div class="form-group col-10">
+          <label for="{{ form.name.id_for_label }}">Название</label>
+          {{ form.name }}
+          {% if form.name.errors %}{{ form.name.errors }}{% else %}<span class="helptext">{{ form.name.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.description.id_for_label }}">Описание:</label>
+          {{ form.description }}
+          {% if form.description.errors %}{{ form.description.errors }}{% else %}<span class="helptext">{{ form.description.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.aroma.id_for_label }}">Аромат:</label>
+          {{ form.aroma }}
+          {% if form.aroma.errors %}{{ form.aroma.errors }}{% else %}<span class="helptext">{{ form.aroma.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.flavor.id_for_label }}">Внешний вид:</label>
+          {{ form.flavor }}
+          {% if form.flavor.errors %}{{ form.flavor.errors }}{% else %}<span class="helptext">{{ form.flavor.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.appearance.id_for_label }}">Вкус:</label>
+          {{ form.appearance }}
+          {% if form.appearance.errors %}{{ form.appearance.errors }}{% else %}<span class="helptext">{{ form.appearance.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.mouthfeel.id_for_label }}">Ощущение во рту:</label>
+          {{ form.mouthfeel }}
+          {% if form.mouthfeel.errors %}{{ form.mouthfeel.errors }}{% else %}<span class="helptext">{{ form.mouthfeel.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.comments.id_for_label }}">Комментарии:</label>
+          {{ form.comments }}
+          {% if form.comments.errors %}{{ form.comments.errors }}{% else %}<span class="helptext">{{ form.comments.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.history.id_for_label }}">История:</label>
+          {{ form.history }}
+          {% if form.history.errors %}{{ form.history.errors }}{% else %}<span class="helptext">{{ form.history.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.comparison.id_for_label }}">Сравнение стилей:</label>
+          {{ form.comparison }}
+          {% if form.comparison.errors %}{{ form.comparison.errors }}{% else %}<span class="helptext">{{ form.comparison.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.ingredients.id_for_label }}">Характерные ингредиенты:</label>
+          {{ form.ingredients }}
+          {% if form.ingredients.errors %}{{ form.ingredients.errors }}{% else %}<span class="helptext">{{ form.ingredients.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.OG_min.id_for_label }}">OG min</label>
+          {{ form.OG_min }}
+          {% if form.OG_min.errors %}{{ form.OG_min.errors }}{% else %}<span class="helptext">{{ form.OG_min.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.OG_max.id_for_label }}">OG max</label>
+          {{ form.OG_max }}
+          {% if form.OG_max.errors %}{{ form.OG_max.errors }}{% else %}<span class="helptext">{{ form.OG_max.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.FG_min.id_for_label }}">FG min</label>
+          {{ form.FG_min }}
+          {% if form.FG_min.errors %}{{ form.FG_min.errors }}{% else %}<span class="helptext">{{ form.FG_min.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.FG_max.id_for_label }}">FG max</label>
+          {{ form.FG_max }}
+          {% if form.FG_max.errors %}{{ form.FG_max.errors }}{% else %}<span class="helptext">{{ form.FG_max.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.ABV_min.id_for_label }}">ABV min</label>
+          {{ form.ABV_min }}
+          {% if form.ABV_min.errors %}{{ form.ABV_min.errors }}{% else %}<span class="helptext">{{ form.ABV_min.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.ABV_max.id_for_label }}">ABV max</label>
+          {{ form.ABV_max }}
+          {% if form.ABV_max.errors %}{{ form.ABV_max.errors }}{% else %}<span class="helptext">{{ form.ABV_max.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.IBUs_min.id_for_label }}">IBU min</label>
+          {{ form.IBUs_min }}
+          {% if form.IBUs_min.errors %}{{ form.IBUs_min.errors }}{% else %}<span class="helptext">{{ form.IBUs_min.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.IBUs_max.id_for_label }}">IBU max</label>
+          {{ form.IBUs_max }}
+          {% if form.IBUs_max.errors %}{{ form.IBUs_max.errors }}{% else %}<span class="helptext">{{ form.IBUs_max.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.SRM_min.id_for_label }}">SRM min</label>
+          {{ form.SRM_min }}
+          {% if form.SRM_min.errors %}{{ form.SRM_min.errors }}{% else %}<span class="helptext">{{ form.SRM_min.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.SRM_max.id_for_label }}">SRM max</label>
+          {{ form.SRM_max }}
+          {% if form.SRM_max.errors %}{{ form.SRM_max.errors }}{% else %}<span class="helptext">{{ form.SRM_max.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.CO2_min.id_for_label }}">CO2 min</label>
+          {{ form.CO2_min }}
+          {% if form.CO2_min.errors %}{{ form.CO2_min.errors }}{% else %}<span class="helptext">{{ form.CO2_min.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.CO2_max.id_for_label }}">CO2 max</label>
+          {{ form.CO2_max }}
+          {% if form.CO2_max.errors %}{{ form.CO2_max.errors }}{% else %}<span class="helptext">{{ form.CO2_max.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12 d-flex justify-content-end">
+          <button form="form-add" type="submit" class="btn btn-secondary ml-auto">{% if '/edit/' in request.path %}Сохранить{% else %}Добавить в справочник{% endif %}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

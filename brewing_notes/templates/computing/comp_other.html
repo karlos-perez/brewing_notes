@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+{% load static brew core %}
+
+{% block page_title %}Калькуляторы пивовара{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="/static/js/calcs.js"></script>
+{% endblock %}
+
+{% block center %}
+{% include 'computing/comp_menu.html' %}
+<div class="row main-body mb-2 py-3">
+	<div class="col-12 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseWater" role="button" aria-expanded="false" aria-controls="collapseWater">Дополнительные расчёты к водоподготовке</h4>
+		<div class="collapse mx-3" id="collapseWater">
+			<div class="row">
+				<div class="col-12 col-lg-6">
+					<h5 class="text-center mb-3">Анализ воды при помощи аквариумных тестов</h5>
+					<script>
+						function changeSourceWater() {
+							let gH = Number($('input[name="gH"]').val().replace(',', '.'));
+							let kH = Number($('input[name="kH"]').val().replace(',', '.'));
+							let ghUnit = $('select[name="gH_unit"] option:selected').val();
+							let khUnit = $('select[name="kH_unit"] option:selected').val();
+							let gHppm = 0;
+							let kHppm = 0;
+							if (ghUnit == 1) {
+									gHppm = gH;
+							}
+							else if (ghUnit == 2) {
+									gHppm = gH * 50.04;
+							}
+							else if (ghUnit == 3) {
+									gHppm = gH * 17.84;
+							}
+							if (khUnit == 1) {
+									kHppm = kH;
+							}
+							else if (khUnit == 2) {
+									kHppm = kH * 50.04;
+							}
+							else if (khUnit == 3) {
+									kHppm = kH * 17.84;
+							}
+							let ca =  gHppm * 0.7 / 17.8 * 7.14;
+							let mg =  gHppm * 0.3 / 17.8 * 4.33;
+							let hco =  kHppm / ((50 / 61) * (1 + (2 * Math.pow(10, -4))));
+							let hardness = 50 * ((ca / 20) + (mg / 12.15));
+							let alk = hco * (50 / 61) * (1 + (2 * Math.pow(10, -4)));
+							$('#tester-ca').text(round(ca, 1));
+							$('#tester-mg').text(round(mg, 1));
+							$('#tester-hco').text(round(hco, 1));
+							$('#tester-hn').text(round(hardness, 1));
+							$('#tester-alk').text(round(alk, 1));
+						}
+					</script>
+					<form onsubmit="return false;">
+						<div class="input-group input-group-sm flex-nowrap mb-3">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">gH (жёсткость):</span>
+  						</div>
+  						<input type="number" class="form-control" name="gH" value="0" step="0.1" onchange="changeSourceWater();">
+							<select class="form-control" name="gH_unit" onchange="changeSourceWater();">
+								<option value="1" selected>ppm (CaCO<sub>3</sub>)</option>
+								<option value="2">мг-экв./л (&deg;Ж)</option>
+								<option value="3">dH</option>
+							</select>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-3">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">kH (щёлочность):</span>
+  						</div>
+  						<input type="number" class="form-control" name="kH" value="0" step="0.1" onchange="changeSourceWater();">
+							<select class="form-control" name="kH_unit" onchange="changeSourceWater();">
+								<option value="1" selected>ppm (CaCO<sub>3</sub>)</option>
+								<option value="2">мг-экв./л (&deg;Ж)</option>
+								<option value="3">dH</option>
+							</select>
+						</div>
+					</form>
+					<div>
+						<table class="table-ing-noborder mb-3">
+    				  <thead>
+    				    <tr>
+    				      <th colspan="5" class="text-center">Профиль воды мг/л (ppm)</th>
+    				    </tr>
+								<tr>
+									<th colspan="3"></th>
+									<th rowspan="2" class="text-center" style="border-right: 1px solid black; border-bottom: 1px solid black;">Общая жёсткость</th>
+    				      <th rowspan="2" class="text-center" style="border-bottom: 1px solid black;">Щёлочность</th>
+    				    </tr>
+								<tr>
+    				      <th class="text-center" style="border-bottom: 1px solid black;">Ca<sup>+2</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black;">Mg<sup>+2</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black; border-right: 1px solid black;">HCO<sub>3</sub><sup>-</sup></th>
+    				    </tr>
+    				  </thead>
+    				  <tbody>
+    				    <tr class="text-center">
+									<td id="tester-ca">0</td>
+									<td id="tester-mg">0</td>
+									<td id="tester-hco" style="border-right: 1px solid black;">0</td>
+									<td id="tester-hn" style="border-right: 1px solid black;">0</td>
+									<td id="tester-alk">0</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="col-12 col-lg-6">
+					<h5 class="text-center">Ионный баланс воды</h5>
+					<script>
+						function changeIonBalance() {
+								let ca = Number($('input[name="ion_ca"]').val().replace(',', '.'));
+								let mg = Number($('input[name="ion_mg"]').val().replace(',', '.'));
+								let na = Number($('input[name="ion_na"]').val().replace(',', '.'));
+								let so = Number($('input[name="ion_cl"]').val().replace(',', '.'));
+								let cl = Number($('input[name="ion_so"]').val().replace(',', '.'));
+								let hco = Number($('input[name="ion_hco"]').val().replace(',', '.'));
+								let cations = ca / 20.05 + mg / 12.15 + na / 23;
+								let anions = hco / 61 + so / 48 + cl / 35.45;
+								let ionBalance = cations - anions;
+      					let hardness = 50 * ((ca / 20) + (mg / 12.15));
+      					let alk = hco * (50 / 61) * (1 + (2 * Math.pow(10, -4)));
+      					let socl = 0;
+      					let ib = $('#ion-ib');
+      					ib.removeClass('red green yellow');
+      					if (Math.abs(ionBalance) >= 0.5) {
+										ib.addClass('red');
+								}
+      					else if (Math.abs(ionBalance) >= 0.2) {
+      							ib.addClass('yellow');
+								}
+								else {
+										ib.addClass('green');
+								}
+      					if (cl > 0) {
+      						socl = so / cl;
+								}
+      					$('#ion-socl-text').removeClass('red green yellow');
+      					$('#ion-socl').removeClass('red green yellow');
+      					$('#ion-alk-text').removeClass('red green yellow');
+      					$('#ion-alk').removeClass('red green yellow');
+      					if (socl > 0 && socl <= 0.5) {
+    						   $('#ion-socl-text').text('Баланс смещен сильно в сторону хлоридов. Усилит солодовое тело и сладость в пиве.');
+    						   $('#ion-socl-text').addClass('yellow');
+									 $('#ion-socl').addClass('yellow');
+    						}
+    						if (socl > 0.5 && socl <= 0.7) {
+    						    $('#ion-socl-text').text('Баланс смещен в сторону хлоридов. Усилит солодовое тело.');
+    						    $('#ion-socl-text').addClass('yellow');
+									  $('#ion-socl').addClass('yellow');
+    						}
+    						if (socl > 0.7 && socl <= 1.3) {
+										$('#ion-socl-text').text('Хорошо сбалансирован между хмелевой горечью и солодовым телом.');
+								}
+    						if (socl > 1.3 && socl <= 2) {
+    						    $('#ion-socl-text').text('Баланс смещен в сторону сульфатов. Усилит хмелевую горечь.');
+    						    $('#ion-socl-text').addClass('green');
+									 	$('#ion-socl').addClass('green');
+    						}
+    						if (socl > 2) {
+    						    $('#ion-socl-text').text('Баланс сильно смещен в сторону сульфатов. Усилит хмелевую горечь и сухость в пиве.');
+    						    $('#ion-socl-text').addClass('green');
+									 	$('#ion-socl').addClass('green');
+    						}
+    						if (cl <= 5 && so <= 5) {
+    						    $('#ion-socl-text').text('Низкие содержание хлоридов/сульфатов. Баланс не определить.');
+    						}
+    						if (alk >= 0 && alk <= 50) {
+    						    $('#ion-alk-text').text('Хорошо для светлого пива (0-50 ppm).');
+    						}
+    						if (alk > 50 && alk <= 150) {
+    						    $('#ion-alk-text').text('Хорошо для янтарного пива (50-150 ppm).');
+    						}
+    						if (alk > 150 && alk <= 300) {
+    						    $('#ion-alk-text').text('Хорошо для тёмного пива (150-300 ppm).');
+    						}
+    						if (alk > 300) {
+    						    $('#ion-alk-text').text('Высокий уровень. Уменьшите. (>300 ppm).');
+    						    $('#ion-alk-text').addClass('red');
+									 	$('#ion-alk').addClass('red');
+    						}
+								$('#ion-cations').text(round(cations, 1));
+								$('#ion-anions').text(round(anions, 1));
+								$('#ion-ib').text(round(ionBalance, 1));
+								$('#ion-hn').text(round(hardness, 0));
+								$('#ion-alk').text(round(alk, 0));
+								$('#ion-socl').text(round(socl, 1));
+						}
+					</script>
+					<form onsubmit="return false;">
+						<div>
+							<table class="table-ing-noborder mb-3">
+    					  <thead>
+									<tr>
+										<th class="text-right" style="border-right: 1px solid black;">Катионы (+<span id="ion-cations"></span>)</th>
+										<th class="text-left">Анионы (-<span id="ion-anions"></span>)</th>
+    					    </tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td style="border-right: 1px solid black;">
+											<div class="input-group input-group-sm flex-nowrap mb-2 justify-content-end">
+  											<div class="input-group-prepend">
+    											<span class="input-group-text w50px">Ca<sup>+2</sup></span>
+  											</div>
+  											<input type="number" class="form-control" name="ion_ca" value="0" step="0.1" onchange="changeIonBalance();">
+											</div>
+										</td>
+										<td class="d-flex justify-content-start">
+											<div class="input-group input-group-sm flex-nowrap mb-2">
+  											<input type="number" class="form-control" name="ion_so" value="0" step="0.1" onchange="changeIonBalance();">
+												<div class="input-group-append">
+    											<span class="input-group-text w50px">SO<sub>4</sub><sup>-2</sup></span>
+  											</div>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td style="border-right: 1px solid black;">
+											<div class="input-group input-group-sm flex-nowrap mb-2 justify-content-end">
+  											<div class="input-group-prepend">
+    											<span class="input-group-text w50px">Mg<sup>+2</sup></span>
+  											</div>
+  											<input type="number" class="form-control" name="ion_mg" value="0" step="0.1" onchange="changeIonBalance();">
+											</div>
+										</td>
+										<td class="d-flex justify-content-start">
+											<div class="input-group input-group-sm flex-nowrap mb-2">
+  											<input type="number" class="form-control" name="ion_cl" value="0" step="0.1" onchange="changeIonBalance();">
+												<div class="input-group-append">
+    											<span class="input-group-text w50px">Cl<sup>-</sup></span>
+  											</div>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td style="border-right: 1px solid black;">
+											<div class="input-group input-group-sm flex-nowrap mb-2 justify-content-end">
+  											<div class="input-group-prepend">
+    											<span class="input-group-text w50px">Na<sup>+</sup></span>
+  											</div>
+  											<input type="number" class="form-control" name="ion_na" value="0" step="0.1" onchange="changeIonBalance();">
+											</div>
+										</td>
+										<td class="d-flex justify-content-start">
+											<div class="input-group input-group-sm flex-nowrap mb-2">
+  											<input type="number" class="form-control" name="ion_hco" value="0" step="0.1" onchange="changeIonBalance();">
+												<div class="input-group-append">
+    											<span class="input-group-text w50px">HCO<sub>3</sub><sup>-</sup></span>
+  											</div>
+											</div>
+										</td>
+									</tr>
+									<tr class="text-center">
+										<td colspan="2"><span id="ion-ib" class="h5" title="Ионный баланс">0.0</span></td>
+									</tr>
+								</tbody>
+							</table>
+							<div class="mb-2">
+								<span>Общая жёсткость:&nbsp;<storng id="ion-hn">0</storng> </span>
+							</div>
+							<div class="mb-2">
+								<span>Баланс хлоридов и сульфатов:&nbsp;<strong id="ion-socl">0</strong>&nbsp;</span>
+								<span id="ion-socl-text" class="d-block small"></span>
+							</div>
+							<div class="mb-2">
+								<span>Уровень щёлочности:&nbsp;<strong id="ion-alk">0</strong>&nbsp;</span>
+								<span id="ion-alk-text" class="d-block small"></span>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseBoil" role="button" aria-expanded="false" aria-controls="collapseBoil">Объём сусла в варочнике</h4>
+    <div class="collapse mx-3" id="collapseBoil">
+			<script>
+				function calcValueWort() {
+						let diametrBoilTank = Number($('input[name=dBLT]').val());
+					  let heightBoilTank = Number($('input[name=hBLT]').val());
+					  let edgeDistance = Number($('input[name=lBLT]').val());
+					  if (edgeDistance > heightBoilTank) {
+					  	return false;
+						}
+					  if (edgeDistance < 0) {
+					  	return false;
+						}
+					  let sqrInLitre = (Math.PI * Math.pow(diametrBoilTank / 100, 2)) / 4;
+					  let totalValueBoilTank = sqrInLitre * heightBoilTank / 100;
+					  let hotValueWort = totalValueBoilTank - (sqrInLitre * edgeDistance / 100);
+					  let coldValueWort = (totalValueBoilTank - (sqrInLitre * edgeDistance / 100)) * 0.96;
+					  $('#vBLT').text(round(totalValueBoilTank, 2));
+						$('#hVal').text(round(hotValueWort, 2));
+						$('#cVal').text(round(coldValueWort, 2));
+				}
+			</script>
+			<div class="m-2">
+        <span class="pb-2">Расчёт объёма сусла в варочнике по растоянию от поверхности сусла до края варочника при закипании (>90&deg;C)</span>
+			</div>
+      <form onsubmit="return false;">
+        <div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Внутренний диаметр варочника, мм:</span>
+  				</div>
+  				<input type="number" class="form-control" name="dBLT" value="358" step="1">
+				</div>
+        <div class="input-group flex-nowrap mb-3">
+          <div class="input-group-prepend">
+    				<span class="input-group-text">Внутренняя высота варочника, мм:</span>
+  				</div>
+  				<input type="number" class="form-control" name="hBLT" value="358" step="1">
+				</div>
+        <div class="input-group flex-nowrap mb-3">
+          <div class="input-group-prepend">
+    				<span class="input-group-text">Растояние от сусла до края варочника, мм:</span>
+  				</div>
+  				<input type="number" class="form-control" name="lBLT" value="100" step="1" onchange="calcValueWort();">
+				</div>
+				<div class="form-group text-right">
+					<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calcValueWort();">
+				</div>
+			</form>
+			<div>
+				<span class="mr-2">Холодный объём сусла, л:</span>
+				<strong id="cVal"></strong>
+			</div>
+			<div>
+				<span class="mr-2">Горячий объём сусла, л:</span>
+				<strong id="hVal"></strong>
+			</div>
+      <div>
+				<span class="mr-2">Полный объём варочника, л:</span>
+				<strong id="vBLT"></strong>
+			</div>
+    </div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseFerm" role="button" aria-expanded="false" aria-controls="collapseFerm">Объём сусла в ведре на 32л</h4>
+	  <div class="collapse mx-3" id="collapseFerm">
+			<script>
+				function calcValueWortFerm() {
+					let wortLevel = Number($('input[name=wLvl]').val());
+					let wortValue = 0.0000000104 * Math.pow(wortLevel, 3) + 0.0000249061 * Math.pow(wortLevel, 2) + 0.0795660148 * wortLevel - 0.4673680805;
+					$('#wortVal').text(round(wortValue, 2));
+				}
+			</script>
+			<div class="m-2">
+         <span class="pb-2">Расчёт объёма жидкости в пластиковом ведре на 32л по растоянию от поверхности на которой стоит ведро (дна) до уровня жидкости в ведре</span>
+			</div>
+			<form onsubmit="return false;">
+        <div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Высота, мм:</span>
+  				</div>
+  				<input type="number" class="form-control" name="wLvl" value="300" step="1" onchange="calcValueWortFerm(); return false;">
+				</div>
+				<div class="form-group d-flex justify-content-between">
+						<div class="">
+							<span class="mr-2">Объём сусла в ведре, л:</span>
+							<strong id="wortVal"></strong>
+						</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseKRIMS" role="button" aria-expanded="false" aria-controls="collapseKRIMS"><strong class="red mr-2">Test!!!</strong>Расчёт объёмов в системе К-РИМС</h4>
+		<div class="collapse mx-3" id="collapseKRIMS">
+			<script>
+				function calcValueKRIMS() {
+						let absorbtion = 1.04;
+						let levelSensor = Number($('input[name=level_sensor]').val());
+						let falseBottom = Number($('input[name=level_false_bottom]').val());
+						let minBoilKettle = Number($('input[name=min_level_boil]').val());
+						let maxBoilKettle = Number($('input[name=max_level_boil]').val());
+						let weightMalt = Number($('input[name=weight_malt]').val());
+						let usefulVolume = levelSensor * 0.9 - falseBottom;
+						let maxWeightMalt = usefulVolume / 2 * absorbtion;
+						let minWort = levelSensor + minBoilKettle;
+						let maxWort = maxBoilKettle * 0.92 + weightMalt * 1.67;
+						let minMashWater = minWort - weightMalt * (1.67 - 1.04);
+						let maxMashWater = maxWort - weightMalt * (1.67 - 1.04);
+						$('#min-wort-value').text(round(minWort, 1));
+						$('#max-wort-value').text(round(maxWort, 1));
+						$('#min-mash-water').text(round(minMashWater, 1));
+						$('#max-mash-water').text(round(maxMashWater, 1));
+						$('#min-hydro').text(round(minMashWater / weightMalt, 1));
+						$('#max-hydro').text(round(maxMashWater / weightMalt, 1));
+						$('#max-malt').text(round(maxWeightMalt, 1));
+						let min = weightMalt * absorbtion * 2 + falseBottom + minBoilKettle;
+						let max = weightMalt * 1.67 + weightMalt * absorbtion;
+						// $('#min-malt').text(round(min, 1));
+						// $('#max-malt').text(round(max, 1));
+				}
+			</script>
+			<form onsubmit="return false;">
+    	  <div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Максимальный объём заторника, л<i class="material-icons align-bottom mx-1" title="Максимальный объём при котором срабатывает поплавок или датчик уровня">error_outline</i>:</span>
+  				</div>
+  				<input type="number" class="form-control" name="level_sensor" value="30" step="0.1" onchange="calcValueKRIMS(); return false;">
+				</div>
+				<div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Объём под фальш-дном, л:</span>
+  				</div>
+  				<input type="number" class="form-control" name="level_false_bottom" value="1.5" step="0.1" onchange="calcValueKRIMS(); return false;">
+				</div>
+				<div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Мин <i class="material-icons align-bottom mx-1" title="1 см над ТЭНом + объём в шлангах">error_outline</i> и макс <i class="material-icons align-bottom mx-1" title="Объём варочника">error_outline</i> объём в варочнике, л:</span>
+  				</div>
+  				<input type="number" class="form-control" name="min_level_boil" value="8" step="0.1" onchange="calcValueKRIMS(); return false;">
+  				<input type="number" class="form-control" name="max_level_boil" value="50" step="0.1" onchange="calcValueKRIMS(); return false;">
+				</div>
+				<div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Вес солода, кг:</span>
+  				</div>
+  				<input type="number" class="form-control" name="weight_malt" value="8" step="0.1" onchange="calcValueKRIMS(); return false;">
+				</div>
+				<div class="form-group text-right">
+					<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="calcValueKRIMS(); return false;">
+				</div>
+				<div class="form-group">
+					<table class="table-ing-noborder">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Минимум</th>
+								<th>Максимум</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Объём затора, л:</td>
+								<td><strong id="min-wort-value"></strong></td>
+								<td><strong id="max-wort-value"></strong></td>
+							</tr>
+							<tr>
+								<td>Заторная вода, л:</td>
+								<td><strong id="min-mash-water"></strong></td>
+								<td><strong id="max-mash-water"></strong></td>
+							</tr>
+							<tr>
+								<td>Гидромодуль:</td>
+								<td id="min-hydro"></td>
+								<td id="max-hydro"></td>
+							</tr>
+							<tr>
+								<td>Вес солода, кг:</td>
+								<td id="min-malt"></td>
+								<td id="max-malt"></td>
+							</tr>
+							<tr>
+								<td>Объёмы, л:</td>
+								<td id="vol-1"></td>
+								<td id="vol-2"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}

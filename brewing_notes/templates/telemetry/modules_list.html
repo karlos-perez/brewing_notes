@@ -1,0 +1,617 @@
+{% extends 'base.html' %}
+{% load brew static %}
+
+{% block page_title %}Конфигурация оборудования{% endblock %}
+
+{% block center %}
+{% include 'telemetry/telemetry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center pt-3">
+    <h4>BNC-модули</h4>
+  </div>
+  <div class="col-12 text-right">
+    <a class="link" href="{% url 'equipments_list' %}"><h5>Конфигурация оборудования</h5></a>
+  </div>
+  {% for m in user.all_bnc_modules %}
+  <div class="col-12 col-sm-6 col-md-3 p-2">
+    <div class="card h-100 w-100">
+      <div class="card-header py-2">
+        <div class="d-flex justify-content-between">
+          <div><h5 class="card-title mb-0">{{ m.name }}</h5></div>
+          <div><i id="signal-module-{{ forloop.counter0 }}" class="connect material-icons align-middle red" title="Не в сети">leak_remove</i></div>
+        </div>
+      </div>
+      <div class="card-body py-2">
+        <div class="mb-3">
+          <div class="small">
+            <div class="d-flex justify-content-between">
+              <div>Токен:</div>
+              <div>
+                <strong>{{ m.token }}</strong>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div>Тип модуля:</div>
+              <div>
+                <strong id="info-type-{{ forloop.counter0 }}"></strong>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div>Версия ПО:</div>
+              <div>
+                <strong id="info-version-{{ forloop.counter0 }}"></strong>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div>Чип ID:</div>
+              <div>
+                <strong id="info-chip-{{ forloop.counter0 }}"></strong>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div>Датчик ID:</div>
+              <div>
+                <strong id="info-sensor-{{ forloop.counter0 }}"></strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="text-center">
+            <span><strong>Текущее состояние</strong></span>
+          </div>
+          <div class="small">
+              <div class="d-flex justify-content-between">
+                <td>Режим модуля:</td>
+                <td>
+                  <span id="module-mode-{{ forloop.counter0 }}"></span>
+                </td>
+              </div>
+              <div class="d-flex justify-content-between">
+                <div>Статус модуля:</div>
+                <div>
+                  <div id="module-status-{{ forloop.counter0 }}" style="width: 15px; height: 15px; border: #d4d4d4 solid 1px; border-radius: 50%;" title=""></div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <div>Температура:</div>
+                <div>
+                  <span id="module-temp-{{ forloop.counter0 }}"></span>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <div>Реле:</div>
+                <div>
+                  <div id="module-relay-{{ forloop.counter0 }}" style="width: 15px; height: 15px; border: #d4d4d4 solid 1px; border-radius: 50%;" title=""></div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <div>Интервал:</div>
+                <div>
+                  <span id="module-interval-{{ forloop.counter0 }}"></span>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <div>Время:</div>
+                <div>
+                  <span id="module-last-data-{{ forloop.counter0 }}"></span>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3 p-2" id="setting-module-{{ forloop.counter0 }}" >
+    <div class="card h-100 w-100">
+      <div class="card-header py-2">
+        <div>
+          <div><h5 class="card-title mb-0">Оборудование</h5></div>
+        </div>
+      </div>
+      <div class="card-body py-2">
+        <div>
+          <div class="small">
+            <div class="d-flex justify-content-between mb-2">
+              <div class="text-center">
+                <strong id="equipment-name-{{ forloop.counter0 }}">{% if m.main %}{{ m.main.name }}{% elif m.second %}{{ m.second.name }}{% elif m.third %}{{ m.third.name }}{% elif m.fourth %}{{ m.fourth.name }}{% endif %}</strong>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div>Тип:</div>
+              <div>
+                <strong id="equipment-type-{{ forloop.counter0 }}">{% if m.main %}{{ m.main.get_type_display }}{% elif m.second %}{{ m.second.get_type_display }}{% elif m.third %}{{ m.third.get_type_display }}{% elif m.fourth %}{{ m.fourth.get_type_display }}{% endif %}</strong>
+              </div>
+            </div>
+            <div class="text-center mt-2">
+              <strong>Параметры модуля</strong>
+            </div>
+            <div id="module-param-{{ forloop.counter0 }}">
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer py-1">
+        <div class="text-right my-2">
+          <input class="btn btn-secondary btn-sm" type="button" value="Сброс модуля" name="reset_module" data="{{ forloop.counter0 }}">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 p-2">
+    <div class="card h-100 w-100">
+      <div class="card-header py-2">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h5 class="card-title mb-0">Температура</h5>
+          </div>
+          <div class="text-right">
+              <a class="link" onclick="resetZoomChartTemp({{ forloop.counter0 }}); return false;" title="Сбросить масштаб"><i class="material-icons">refresh</i></a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body py-2">
+        <div>
+          <canvas id="chart-temp-{{ forloop.counter0 }}" style="height: 200px; width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block plugin %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js" integrity="sha256-7lWo7cjrrponRJcS6bc8isfsPDwSKoaYfGIHgSheQkk=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.1.1"></script>
+<script>
+  const modules = [
+      {% for m in user.all_bnc_modules %}
+      '{{ m.token }}',
+      {% endfor %}
+  ];
+  var temps = {
+      {% for m in user.all_bnc_modules %}
+      {{ forloop.counter0 }}: [],
+      {% endfor %}
+  };
+  var relays = {
+      {% for m in user.all_bnc_modules %}
+      {{ forloop.counter0 }}: [],
+      {% endfor %}
+  };
+  var labels = {
+      {% for m in user.all_bnc_modules %}
+      {{ forloop.counter0 }}: [],
+      {% endfor %}
+  };
+  var mode = {
+      {% for n, m in modes.items %}
+      {{ n }}: '{{ m }}',
+      {% endfor %}
+  };
+  var lastMsgTime = 0;
+  {% for m in user.all_bnc_modules %}
+  const ctxTemp_{{ forloop.counter0 }} = $('#chart-temp-{{ forloop.counter0 }}');
+  {% endfor %}
+  var optionCharts = {
+      responsive: true,
+      interaction: {
+          mode: 'index',
+          intersect: false,
+      },
+      stacked: false,
+      plugins: {
+          title: {
+              display: false,
+              text: 'Температура',
+              color: "#a8a2a2",
+          },
+          legend: {
+              display: false,
+              labels: {
+                  display: false,
+                  color: "#a8a2a2",
+              },
+          },
+          zoom: {
+              pan: {
+			       enabled: false,
+			       mode: 'x',
+			       threshold: 10
+              },
+              limits: {
+                  y: {min: -5, max: 50},
+                  y1: {min: 0, max: 3},
+              },
+              zoom: {
+                  wheel: {
+                      enabled: true,
+                  },
+                  pinch: {
+                      enabled: true,
+                  },
+                  drag: {
+                      enabled: true,
+                      backgroundColor: 'rgba(190, 190, 190, 0.2)',
+                      borderColor: 'rgba(190, 190, 190, 1)',
+                      borderWidth: 1,
+                      threshold: 100,
+                  },
+                  mode: 'x',
+              },
+          },
+      },
+      scales: {
+          x: {
+              color: "#a8a2a2",
+              grid: {
+                  borderColor: "#6a6a6a",
+                  display: false,
+              },
+              ticks: {
+                  color: '#a8a2a2',
+                  source: 'auto',
+              },
+              type: 'time',
+              time: {
+                  tooltipFormat: 'dd.MM.yyyy HH:mm',
+                  unit: 'day',
+                  unitStepSize: 1,
+                  displayFormats: {
+                      day: 'dd.MM.yyyy'
+                  }
+              }
+          },
+          y: {
+              // type: 'linear',
+              display: true,
+              position: 'left',
+              grid: {
+                  borderColor: "#6a6a6a",
+                  color: "#6a6a6a"
+              },
+              ticks: {
+                  color: '#a8a2a2',
+              },
+          },
+          y1: {
+              // type: 'linear',
+              display: false,
+              position: 'right',
+              min: 0,
+              max: 4,
+              grid: {
+                  // borderColor: "#6a6a6a",
+                  // color: "#6a6a6a",
+                  drawOnChartArea: false,
+              },
+              ticks: {
+                  color: '#a8a2a2',
+              },
+          },
+      },
+  };
+
+  {% for d in user.all_bnc_modules %}
+  var tempChart_{{ forloop.counter0 }} = new Chart(ctxTemp_{{ forloop.counter0 }}, {
+      type: 'line',
+      data: {
+          labels: labels[{{ forloop.counter0 }}],
+          datasets: [{
+              label: 'Температура',
+              data:  temps[{{ forloop.counter0 }}],
+              borderColor: "#90c990",
+              backgroundColor: "#90c990",
+              borderWidth: 1,
+              pointRadius: 0,
+              yAxisID: 'y',
+          },
+          {
+              label: 'Реле',
+              data:  relays[{{ forloop.counter0 }}],
+              borderColor: "#9090c9",
+              backgroundColor: "#9090c9",
+              borderWidth: 1,
+              pointRadius: 0,
+              fill: true,
+              yAxisID: 'y1',
+              stepped: true,
+          }],
+      },
+      options: optionCharts,
+  });
+  {% endfor %}
+
+  var Charts = [
+      {% for d in user.all_bnc_modules %}
+      tempChart_{{ forloop.counter0 }},
+      {% endfor %}
+  ];
+
+  function timeConverter(time){
+    let year = time.getFullYear();
+    let month = '0' + (time.getMonth() + 1);
+    let date = '0' + time.getDate();
+    let hour = '0' + time.getHours();
+    let min = '0' + time.getMinutes();
+    let sec = '0' + time.getSeconds();
+    let result = date.substr(-2)+'.'+month.substr(-2)+'.'+year+' '+hour.substr(-2)+':'+min.substr(-2)+':'+sec.substr(-2);
+    return result;
+  }
+  function getData(data) {
+      return JSON.parse(data);
+  }
+  function addParametrDOM(idEl, name, value) {
+      return $('<div id="'+idEl+'" class="d-flex justify-content-between">' +
+               '<div>'+name+':</div>' +
+               '<div><strong>'+value+'</strong></div>')
+  }
+  function updateModule(data, idx) {
+      $('#info-type-'+idx).text(data['info']['type']);
+      $('#info-version-'+idx).text(data['info']['version']);
+      $('#info-chip-'+idx).text(data['info']['chip_id']);
+      $('#info-sensor-'+idx).text(data['info']['sensor_id']);
+      $('#module-mode-'+idx).text(mode[data['mode']]);
+      if (data['active']) {
+          $('#module-status-'+idx).css('background', '#90c990');
+          $('#module-status-'+idx).attr('title', 'Активно');
+      }
+      else {
+          $('#module-status-'+idx).css('background', '#c99090');
+          $('#module-status-'+idx).attr('title', 'Не активно');
+      };
+      $('#module-temp-'+idx).html(data['current_temp'].toFixed(2)+' &deg;C');
+      if (data['relay'] == 1) {
+          $('#module-relay-'+idx).css('background', '#c99090');
+          $('#module-relay-'+idx).attr('title', 'Вкл.');
+      }
+      else {
+          $('#module-relay-'+idx).css('background', 'none');
+          $('#module-relay-'+idx).attr('title', 'Откл.');
+      }
+      let t = new Date(data['ts'] * 1000);
+      if (lastMsgTime == 0) {
+          lastMsgTime = data['ts'];
+      }
+      else {
+          $('#signal-module-'+idx).removeClass('red');
+          $('#signal-module-'+idx).addClass('green');
+          $('#signal-module-'+idx).text('leak_add');
+          $('#signal-module-'+idx).attr('title', 'В сети');
+      }
+      let i = Math.round(data['interval'] / 1000, 1);
+      $('#module-interval-'+idx).text(i+' сек');
+      $('#module-last-data-'+idx).text(timeConverter(t));
+      let moduleParamList = $('#module-param-'+idx)
+      if ('mode_param' in data) {
+          let idEl;
+          moduleParamList.attr('hidden', false);
+          let moduleParam = data['mode_param'];
+          idEl = 'target_temp-'+idx;
+          if ('target_temp' in moduleParam) {
+              // let idEl = 'target_temp-'+idx;
+              let val = moduleParam['target_temp']+'°C';
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Целевая температура';
+                let targetTemp = addParametrDOM(idEl, name, val);
+                moduleParamList.append(targetTemp);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+          idEl = 'diff_cooler-'+idx;
+          if ('diff_cooler' in moduleParam) {
+              // let idEl = 'diff_cooler-'+idx;
+              let val = moduleParam['diff_cooler']+'°C';
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Охлаждение (дифф)';
+                let coolerDiffTemp = addParametrDOM(idEl, name, val);
+                moduleParamList.append(coolerDiffTemp);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+          idEl = 'diff_heater-'+idx;
+          if ('diff_heater' in moduleParam) {
+              // let idEl = 'diff_heater-'+idx;
+              let val = moduleParam['diff_heater']+'°C';
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Нагрев (дифф)';
+                let heaterDiffTemp = addParametrDOM(idEl, name, val);
+                moduleParamList.append(heaterDiffTemp);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+          idEl = 'token_heater_module-'+idx;
+          if ('token_heater_module' in moduleParam) {
+              // let idEl = 'token_heater_module-'+idx;
+              let val;
+              if (moduleParam['token_heater_module'] == "null") {
+                  val = 'Нет';
+              }
+              else {
+                 val = moduleParam['token_heater_module'];
+              }
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Нагреватель';
+                let heaterToken = addParametrDOM(idEl, name, val);
+                moduleParamList.append(heaterToken);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+          idEl = 'heater_relay_state-'+idx;
+          if ('heater_relay_state' in moduleParam) {
+              // let idEl = 'heater_relay_state-'+idx;
+              let val = '';
+              if (moduleParam['heater_relay_state'] == 1) {
+                  val = 'Вкл';
+              }
+              else {
+                  val = 'Откл';
+              }
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Реле нагревателя';
+                let heaterToken = addParametrDOM(idEl, name, val);
+                moduleParamList.append(heaterToken);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+          idEl = 'wmode-'+idx;
+          if ('wmode' in moduleParam) {
+              // let idEl = 'wmode-'+idx;
+              let val = '';
+              if (moduleParam['wmode'] == "auto") {
+                  val = 'Авто';
+              }
+              else {
+                  val = 'Ручной';
+              }
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Режим';
+                let wmode = addParametrDOM(idEl, name, val);
+                moduleParamList.append(wmode);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+          idEl = 'hysteresys-'+idx;
+          if ('hysteresys' in moduleParam) {
+              // let idEl = 'wmode-'+idx;
+              let val = moduleParam['hysteresys']+'°C';
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).find('strong').text(val);
+              }
+              else {
+                let name = 'Гистерезис';
+                let hs = addParametrDOM(idEl, name, val);
+                moduleParamList.append(hs);
+              }
+          }
+          else {
+              if ($('#'+idEl).length) {
+                  $('#'+idEl).remove();
+              }
+          }
+      }
+      else {
+          $('#module-param-'+idx).attr('hidden', true);
+      }
+      labels[idx].push(t);
+      temps[idx].push((data['current_temp']).toFixed(1));
+      relays[idx].push((data['relay']));
+      Charts[idx].update();
+  }
+  window.onload = function () {
+      var client = new Paho.MQTT.Client('mqtt.brewingnotes.ru', Number(8883), "{{ user.id }}-{% if user.is_admin %}admin{% endif %}");
+      // set callback handlers
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
+      // connect the client
+      let connectParam = {
+          onSuccess: onConnect,
+          userName: 'webaccess',
+          password: 'qAt0imZ2GGJ1oJKTUzI',
+          useSSL: true,
+      };
+      client.connect(connectParam);
+      // called when the client connects
+      function onConnect() {
+          // Once a connection has been made, make a subscription and send a message.
+          {% if user.is_admin %}
+          console.log("onConnect");
+          {% endif %}
+          modules.forEach(function(t, i, r) {
+              client.subscribe('BNCmodule/'+t+'/state');
+          });
+      }
+      function onConnectionLost(responseObject) {
+          if (responseObject.errorCode !== 0) {
+              $('.connect').removeClass('green');
+              $('.connect').addClass('red');
+              $('.connecte').text('leak_remove');
+              $('.connect').attr('title', 'Не в сети');
+              {% if user.is_admin %}
+              console.log("onConnectionLost:" + responseObject.errorMessage);
+              {% endif %}
+          }
+      }
+      // called when a message arrives
+      function onMessageArrived(message) {
+          {% if user.is_admin %}
+          console.log("onMessageArrived:" + message.payloadString);
+          {% endif %}
+          let token = message.destinationName.split('/');
+          let data = getData(message.payloadString);
+          let idx = modules.indexOf(token[1]);
+          updateModule(data, idx);
+      }
+      // sent reset message
+      $('input[name="reset_module"]').click(function() {
+          let idx = this.getAttribute('data');
+          let msgM = JSON.stringify({"active": false, "relay": 0, "mode": 0, "reset": true});
+          let message = new Paho.MQTT.Message(msgM);
+          message.destinationName = 'BNCmodule/'+modules[idx]+'/control';
+          client.send(message);
+          sendFullResetModule(idx);
+			});
+  }
+  function resetZoomChartTemp(id) {
+      Charts[id].resetZoom();
+  }
+  function sendFullResetModule(idx) {
+      $.get("{% url 'module_full_reset' %}", {'tkn': modules[idx]}, function(data) {
+          if (data.success) {
+              $('#equipment-name-'+idx).text('');
+              $('#equipment-type-'+idx).text('');
+          }
+          else {
+              $('#alert').css('display', 'block');
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+          }
+      });
+  };
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'admn/admn_base.html' %}
+{% load brew core %}
+
+{% block content %}
+<div class="row main-body py-3">
+  <div class="col-12 col-md-6 mb-3">
+    <h5 class="d-block">Пользователи:</h5>
+    <a class="link" href="{% url 'admn_users_list' %}">
+      <span class="d-block px-3">Всего активных:&nbsp;<strong>{{ stat.users_all }}</strong></span>
+    </a>
+    {% if user.is_admin %}
+    <a class="link" href="{% url 'admn_souls_list' %}">
+      <span class="d-block px-3">Забанен:&nbsp;<strong>{{ stat.users_banned }}</strong></span>
+    </a>
+    {% endif %}
+    <a class="link" href="{% url 'admn_users_list' %}?filter=-1">
+      <span class="d-block px-3">Наказанный:&nbsp;<strong>{{ stat.users_punished }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_users_list' %}?filter=0">
+      <span class="d-block px-3">Сомнительный:&nbsp;<strong>{{ stat.users_dubious }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_users_list' %}?filter=1">
+      <span class="d-block px-3">Пользователь:&nbsp;<strong>{{ stat.users_user }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_users_list' %}?filter=2">
+      <span class="d-block px-3">Профессионал:&nbsp;<strong>{{ stat.users_pro }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_users_list' %}?filter=3">
+      <span class="d-block px-3">Организация:&nbsp;<strong>{{ stat.users_entity }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_users_list' %}?filter=10">
+      <span class="d-block px-3">Модератор:&nbsp;<strong>{{ stat.users_moderator }}</strong></span>
+    </a>
+    <a class="link" data-toggle="collapse" href="#collapse-today-users" role="button" aria-expanded="false" aria-controls="collapse-today-users">
+      <span class="d-block px-3">Посещения за последнии сутки:&nbsp;<strong>{{ stat.users_today.count }}</strong></span>
+    </a>
+    <div class="collapse" id="collapse-today-users">
+      <div class="table-div">
+        <table class="table table-list">
+          <thead class="thead">
+            <tr>
+              <th scope="col">Логин</th>
+              <th scope="col">Статус</th>
+            </tr>
+          </thead>
+          <tbody class="tbody-transporent">
+          {% for usr in stat.users_today %}
+            <tr>
+              <td><a class="link" href="{% url 'admn_user_one' usr.username %}">{{ usr.username }}</a></td>
+              <td>{{ usr.get_status_display }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <a class="link" data-toggle="collapse" href="#collapse-new-users" role="button" aria-expanded="false" aria-controls="collapse-new-users">
+      <span class="d-block mb-2 px-3">Новые за последнии сутки:&nbsp;<strong>{{ stat.new_users_today.count }}</strong></span>
+    </a>
+    <div class="collapse" id="collapse-new-users">
+      <div class="table-div">
+        <table class="table table-list">
+          <thead class="thead">
+            <tr>
+              <th scope="col">Логин</th>
+              <th scope="col">Почта</th>
+            </tr>
+          </thead>
+          <tbody class="tbody-transporent">
+          {% for usr in stat.new_users_today %}
+            <tr>
+              <td><a class="link" href="{% url 'admn_user_one' usr.username %}">{{ usr.username }}</a></td>
+              <td>{{ usr.email }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 mb-3">
+    <h5 class="d-block">Рецепты:</h5>
+    <a class="link" href="{% url 'admn_recipes_list' %}">
+      <span class="d-block px-3">Всего:&nbsp;<strong>{{ stat.recipes_all }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_recipes_list' %}?filter=3">
+      <span class="d-block px-3">Опубликовано:&nbsp;<strong>{{ stat.recipes_pub }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_moderations' %}">
+      <span class="d-block px-3">На модерации:&nbsp;<strong>{{ stat.recipes_mod }}</strong></span>
+    </a>
+    <a class="link" href="{% url 'admn_recipes_list' %}?filter=6">
+      <span class="d-block px-3">Черновики:&nbsp;<strong>{{ stat.recipes_draft }}</strong></span>
+    </a>
+    <a class="link" data-toggle="collapse" href="#collapse-today-recipe" role="button" aria-expanded="false" aria-controls="collapse-today-recipe">
+      <span class="d-block px-3">Рецепты за сутки:&nbsp;<strong>{{ stat.recipes_today.count }}</strong></span>
+    </a>
+    <div class="collapse" id="collapse-today-recipe">
+      <div class="table-div">
+        <table class="table table-list">
+          <thead class="thead">
+            <tr>
+              <th scope="col">Название</th>
+              <th scope="col">Стиль</th>
+              <th scope="col">Пользователь</th>
+            </tr>
+          </thead>
+          <tbody class="tbody-transporent">
+          {% for r in stat.recipes_today %}
+            <tr>
+              <td><a class="link" href="{% url 'admn_recipe_one' r.slug %}">{{ r.name }}</a></td>
+              <td>{{ r.style|default_if_none:'---' }}</td>
+              <td><a class="link" href="{% url 'admn_user_one' r.user.username %}">{{ r.user.username }}</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 mb-3">
+    <h5 class="d-block">Устройства:</h5>
+    <a class="link" href="{% url 'admn_devices_list' %}">
+      <span class="d-block px-3">Всего:&nbsp;<strong>{{ stat.devices_all }}</strong></span>
+    </a>
+    <span class="d-block px-3">Активных:&nbsp;<strong>{{ stat.devices_active }}</strong></span>
+    <span class="d-block px-3">BrewPiLess:&nbsp;<strong>{{ stat.devices_bpl }}</strong></span>
+    <span class="d-block px-3">iSpindel:&nbsp;<strong>{{ stat.devices_isp }}</strong></span>
+  </div>
+</div>
+{% endblock %}

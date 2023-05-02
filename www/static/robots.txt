@@ -1,0 +1,11 @@
+User-agent: Yandex
+Disallow:
+Clean-param: next /login
+
+User-agent: adsbot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://brewingnotes.ru/sitemap.xml

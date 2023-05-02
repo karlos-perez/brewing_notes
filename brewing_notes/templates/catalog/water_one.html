@@ -1,0 +1,169 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}{{ water }}{% endblock %}
+
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_editor %}
+      <a class="link" href="{% url 'water_edit' water.slug %}" title="Редактировать"><span class="small">Редактировать</span></a>
+      <a class="link ml-3" href="{% url 'water_add' %}" title="Добавить"><span class="small">Добавить</span></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <script>
+    function round(a, b) {
+        return Number(Math.round(a+'e'+b)+'e-'+b);
+    }
+    $(document).ready(function () {
+        let ca = Number($('#total-ca').text().replace(',', '.'));
+				let mg = Number($('#total-mg').text().replace(',', '.'));
+				let na = Number($('#total-na').text().replace(',', '.'));
+				let cl = Number($('#total-cl').text().replace(',', '.'));
+				let so = Number($('#total-so').text().replace(',', '.'));
+				let hco = Number($('#total-hco').text().replace(',', '.'));
+				let cations = ca / 20.05 + mg / 12.15 + na / 23;
+				let anions = hco / 61 + so / 48 + cl / 35.45;
+      	let hardness = 50 * ((ca / 20) + (mg / 12.15));
+      	let alk = hco * (50 / 61) * (1 + (2 * Math.pow(10, -4)));
+      	let socl = 0;
+      	if (cl > 0) {
+      		socl = so / cl;
+				}
+      	if (socl > 0 && socl <= 0.5) {
+    		   $('#socl-text').text('Баланс смещен сильно в сторону хлоридов. Усилит солодовое тело и сладость в пиве.');
+    		}
+    		if (socl > 0.5 && socl <= 0.7) {
+    		    $('#socl-text').text('Баланс смещен в сторону хлоридов. Усилит солодовое тело.');
+    		}
+    		if (socl > 0.7 && socl <= 1.3) {
+						$('#socl-text').text('Хорошо сбалансирован между хмелевой горечью и солодовым телом.');
+				}
+    		if (socl > 1.3 && socl <= 2) {
+    		    $('#socl-text').text('Баланс смещен в сторону сульфатов. Усилит хмелевую горечь.');
+    		}
+    		if (socl > 2) {
+    		    $('#socl-text').text('Баланс сильно смещен в сторону сульфатов. Усилит хмелевую горечь и сухость в пиве.');
+    		}
+    		if (cl <= 5 && so <= 5) {
+    		    $('#socl-text').text('Низкие содержание хлоридов/сульфатов. Баланс не определить');
+    		}
+    		if (alk >= 0 && alk <= 50) {
+    		    $('#alk-text').text('Хорошо для светлого пива (0-50 ppm).');
+    		}
+    		if (alk > 50 && alk <= 150) {
+    		    $('#alk-text').text('Хорошо для янтарного пива (50-150 ppm).');
+    		}
+    		if (alk > 150 && alk <= 300) {
+    		    $('#alk-text').text('Хорошо для тёмного пива (150-300 ppm).');
+    		}
+    		if (alk > 300) {
+    		    $('#alk-text').text('Высокий уровень. Уменьшите. (>300 ppm).');
+    		}
+				$('#total-cations').text(round(cations, 1));
+				$('#total-anions').text(round(anions, 1));
+				$('#total-ib').text(round(cations - anions, 1));
+				$('#total-hn').text(round(hardness, 0));
+				$('#total-alk').text(round(alk, 0));
+				$('#total-socl').text(round(socl, 1));
+    });
+  </script>
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{{ water.name }}</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 mb-2">
+        <table class="table-ing-noborder mb-4" >
+    		  <thead>
+    		    <tr>
+    		      <th colspan="6" class="text-center" style="border-right: 2px solid #6a6a6a;">Профиль воды мг/л (ppm)</th>
+    		      <th rowspan="3" class="text-center" style="border-bottom: 2px solid #6a6a6a;">Ионный баланс</th>
+    		    </tr>
+						<tr>
+							<th colspan="3" class="text-center" style="border-right: 2px solid #6a6a6a;">Катионы (+<span id="total-cations"></span>)</th>
+							<th colspan="3" class="text-center" style="border-right: 2px solid #6a6a6a;">Анионы (-<span id="total-anions"></span>)</th>
+    		    </tr>
+						<tr>
+    		      <th class="text-center" style="border-bottom: 2px solid #6a6a6a;">Ca<sup>+2</sup></th>
+    		      <th class="text-center" style="border-bottom: 2px solid #6a6a6a;">Mg<sup>+2</sup></th>
+    		      <th class="text-center" style="border-bottom: 2px solid #6a6a6a; border-right: 2px solid #6a6a6a;">Na<sup>+</sup></th>
+    		      <th class="text-center" style="border-bottom: 2px solid #6a6a6a;">SO<sub>4</sub><sup>-2</sup></th>
+    		      <th class="text-center" style="border-bottom: 2px solid #6a6a6a;">Cl<sup>-</sup></th>
+    		      <th class="text-center" style="border-bottom: 2px solid #6a6a6a; border-right: 2px solid #6a6a6a;">HCO<sub>3</sub><sup>-</sup></th>
+    		    </tr>
+    		  </thead>
+    		  <tbody>
+    		    <tr class="text-center">
+							<td id="total-ca">{{ water.calcum }}</td>
+							<td id="total-mg">{{ water.magnesium }}</td>
+							<td id="total-na" style="border-right: 2px solid #6a6a6a;">{{ water.sodium }}</td>
+							<td id="total-so">{{ water.sulfate }}</td>
+							<td id="total-cl">{{ water.chloride }}</td>
+							<td id="total-hco" style="border-right: 2px solid #6a6a6a;">{{ water.bicarbonate }}</td>
+							<td id="total-ib">0</td>
+						</tr>
+					</tbody>
+				</table>
+        <table class="table-ing my-3 text-center">
+          <thead>
+            <tr>
+              <th>Общая жёсткость, ppm (CaCO<sub>3</sub>)</th>
+              <th>Щёлочность, ppm (CaCO<sub>3</sub>)</th>
+              <th>SO<sub>4</sub><sup>-2</sup> / Cl<sup>-</sup></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+							<td id="total-hn">0</td>
+							<td id="total-alk">0</td>
+							<td id="total-socl">0</td>
+            </tr>
+          </tbody>
+        </table>
+        <div>
+					<strong>Баланс хлоридов и сульфатов: </strong>
+					<span id="socl-text"></span>
+				</div>
+				<div class="mb-3">
+					<strong>Уровень щёлочности: </strong>
+					<span id="alk-text"></span>
+				</div>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Описание:</h5>
+        <p>{{ water.description|linebreaks }}</p>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Применение в стилях:</h5>
+      </div>
+      {% for row in water.styles.all|columns:3 %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        {% for item in row %}
+        <div>
+          <a class="link" href="{% url 'style_one' item.slug %}">
+            <small>{{ item.index }}. {{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <div class="col-12 d-flex justify-content-start mt-4 mb-3">
+        <a class="btn btn-secondary" href="{% url 'waters_list' %}">Назад к списку</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

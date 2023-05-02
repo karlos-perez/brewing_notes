@@ -1,0 +1,1071 @@
+{% extends 'base.html' %}
+{% load static brew core %}
+
+{% block page_title %}Создание рецепта пива{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="/static/js/calcs.js"></script>
+{% endblock %}
+
+{% block center %}
+{% include 'computing/comp_menu.html' %}
+<div class="row main-body mb-2 py-3">
+  <script>
+    var batchSize,
+        mashWater,
+        spargeWater,
+        residue,
+        absorption,
+        efficiency,
+        evaporation,
+        sediment,
+        totalDryExtract,
+        totalGrain,
+        totalWater,
+        totalSRM,
+        totalIBU,
+        preBoilSize,
+        hydro,
+        water,
+        preBoilPlato,
+        originalPlato,
+        finalPlato = 0,
+        originalPlatoF,
+        finalPlatoF = 0,
+        fermentationSize,
+        nonFermAdditions = 0,
+        boilTime,
+        og_min,
+        og_max,
+        fg_min,
+        fg_max,
+        abv_min,
+        abv_max,
+        ibu_min,
+        ibu_max,
+        srm_min,
+        srm_max,
+        co_min,
+        co_max,
+        yeastAttenuation,
+        yeastTemp,
+        abv_old = 0,
+        abv_new = 0,
+        ibuOG_min,
+        ibuOG_max,
+        boil_IBU,
+        hs_IBU;
+    function setStyles() {
+        let opt = $('#select-styles option:not(:first-child)');
+        opt.show().prop('disabled', false);
+        let a = $('#select-types option:selected').val();
+        if (a) {
+            opt.each(function() {
+                let val = $(this).attr('value');
+                $(this).toggle(val.length && val == a);
+            });
+        }
+        else {
+            opt.show().prop('disabled', false);
+        }
+        $('#select-styles').val('');
+    }
+    function setStyleParam() {
+        let st = $('#select-styles option:selected').attr('data-style');
+        st = JSON.parse(st);
+        og_min = Number(st.og_min.replace(',', '.'));
+        og_max = Number(st.og_max.replace(',', '.'));
+        fg_min = Number(st.fg_min.replace(',', '.'));
+        fg_max = Number(st.fg_max.replace(',', '.'));
+        abv_min = Number(st.abv_min.replace(',', '.'));
+        abv_max = Number(st.abv_max.replace(',', '.'));
+        ibu_min = Number(st.ibu_min.replace(',', '.'));
+        ibu_max = Number(st.ibu_max.replace(',', '.'));
+        srm_min = Number(st.srm_min.replace(',', '.'));
+        srm_max = Number(st.srm_max.replace(',', '.'));
+        co_min = Number(st.co_min.replace(',', '.'));
+        co_max = Number(st.co_max.replace(',', '.'));
+        ibuOG_min = round(IBUOG(ibu_min, og_min), 3);
+        ibuOG_max = round(IBUOG(ibu_max, og_max), 3);
+        let stInd = $('#select-styles option:selected').attr('data-index');
+        $('input[name=style_index]').val(stInd);
+        updateStyle();
+    }
+    function setYeastParam() {
+        let yst = $('#select-yeast option:selected').attr('data-yeast');
+        yst = JSON.parse(yst);
+        yeastAttenuation = Number(yst.att.replace(',', '.'));
+        yeastTemp= yst.temp;
+        $('#yeast-att').text(yeastAttenuation+' %');
+        $('#yeast-temp').text(yst.temp+' \u00B0C');
+        updateAll();
+    }
+    function updateStyle() {
+        $('#style-op-min').text(og_min);
+        $('#style-op-max').text(og_max);
+        $('#style-fp-min').text(fg_min);
+        $('#style-fp-max').text(fg_max);
+        $('#style-abv-min').text(abv_min);
+        $('#style-abv-max').text(abv_max);
+        $('#style-ibu-min').text(ibu_min);
+        $('#style-ibu-max').text(ibu_max);
+        $('#style-srm-min').text(srm_min);
+        $('#style-srm-max').text(srm_max);
+        $('#style-io-min').text(ibuOG_min);
+        $('#style-io-max').text(ibuOG_max);
+        let sog,
+            og = convertPtG(originalPlatoF);
+        if (!originalPlatoF) {
+            sog = '1.000 (0 \u00B0P)';
+        }
+        else {
+            sog = round(og, 3) + ' (' + round(originalPlatoF, 1) + ' \u00B0P)';
+        }
+        let op = $('#calc-op');
+        op.text(sog);
+        op.removeClass();
+        if (og_min <= og && og <= og_max) {
+            op.addClass('green');
+        }
+        else {
+            op.addClass('red');
+        }
+        let srm = round(totalSRM, 1);
+        if (!srm) {
+            srm = 0;
+        }
+        let color = $('#calc-srm');
+        color.text(srm);
+        color.removeClass();
+        if (srm_min <= srm && srm <= srm_max) {
+            color.addClass('green');
+        }
+        else {
+            color.addClass('red');
+        }
+        let total_ibu = round(totalIBU, 0);
+        if (!total_ibu) {
+            total_ibu = 0;
+        }
+        let ib = $('#calc-ibu');
+        ib.text(total_ibu);
+        ib.removeClass();
+        if (ibu_min <= total_ibu && total_ibu <= ibu_max) {
+            ib.addClass('green');
+        }
+        else {
+            ib.addClass('red');
+        }
+        let sfg,
+            fg = convertPtG(finalPlatoF);
+        if (!finalPlatoF) {
+            sfg = '1.000 (0 \u00B0P)';
+        }
+        else {
+            sfg = round(fg, 3) + ' (' + round(finalPlatoF, 1) + ' \u00B0P)';
+        }
+        let fp = $('#calc-fp');
+        fp.text(sfg);
+        fp.removeClass();
+        if (fg_min <= fg && fg <= fg_max) {
+            fp.addClass('green');
+        }
+        else {
+            fp.addClass('red');
+        }
+        let abv = round(abv_old, 1);
+        let total_abv;
+        if (!abv) {
+            total_abv = '0.0 (0.0) %';
+        }
+        else {
+            total_abv = abv+' ('+round(abv_new, 1)+') %';
+        }
+        let ab = $('#calc-abv');
+        ab.text(total_abv);
+        ab.removeClass();
+        if (abv_min <= abv && abv <= abv_max) {
+            ab.addClass('green');
+        }
+        else {
+            ab.addClass('red');
+        }
+        let calcIO = $('#calc-io');
+        let io = round(IBUOG(total_ibu, og), 3);
+        if (!io) {
+            io = 0;
+        }
+        calcIO.text(io);
+        calcIO.removeClass();
+        if (ibuOG_min <= io && io <= ibuOG_max) {
+            calcIO.addClass('green');
+        }
+        else {
+            calcIO.addClass('red');
+        }
+    }
+    function getParams() {
+        batchSize = Number($('input[name=batch_size]').val().replace(',', '.'));
+        mashWater = Number($('input[name=mash_water]').val().replace(',', '.'));
+        spargeWater = Number($('input[name=sparge_water]').val().replace(',', '.'));
+        residue = Number($('input[name=residue]').val().replace(',', '.'));
+        absorption = Number($('input[name=absorption]').val().replace(',', '.'));
+        efficiency = Number($('input[name=efficiency]').val().replace(',', '.'));
+        evaporation = Number($('input[name=evaporation]').val().replace(',', '.'));
+        sediment = Number($('input[name=sediment]').val().replace(',', '.'));
+        boilTime = Number($('input[name=boil_time]').val().replace(',', '.'));
+        totalWater = mashWater + spargeWater;
+        let totalWeight = 0;
+        let dryExtract = 0;
+        $("#grain-items .grain").each(function (a) {
+            let amount = Number($(this).find('.grain-amount').val().replace(',', '.'));
+            totalWeight = totalWeight + amount;
+            let dr = $(this).find('.grain-color').val().split('-');
+            let dry = Number(dr[1].replace(',', '.'));
+            dryExtract = dryExtract + (amount * dry) / 100;
+        });
+        totalGrain = totalWeight;
+        totalDryExtract = dryExtract;
+        preBoilSize = totalWater - residue - (totalGrain * absorption);
+        hydro = Number($('input[name=hydro]').val().replace(',', '.'));
+        water = residue + (totalGrain * absorption) + batchSize / (1 - evaporation / 100)
+    }
+    function updateAll() {
+        getParams();
+        calcSRM();
+        calcPBP();
+        calcOP();
+        calcFS();
+        calcIBU();
+        calcABV();
+        $('#calc-pre-boil-size').text(round(preBoilSize, 1));
+        $('#calc-total-water').text(round(totalWater, 1));
+        $('#calc-total-weight').text(round(totalGrain, 2));
+        $('#calc-pbp').text(round(convertPtG(preBoilPlato), 3) + ' (' + round(preBoilPlato, 1) + ' \u00B0P)');
+        $('#calc-ferment-size').text(round(fermentationSize, 1));
+        updateStyle();
+        setPitchRates();
+    }
+    function calcSRM() {
+        let batch = 0.264172052 * batchSize;
+        let mcu = 0;
+        $("#grain-items .grain").each(function (a) {
+            let dr = $(this).find('.grain-color').val().split('-');
+            let lovibond = Number(dr[0].replace(',', '.'));
+            let amount = Number($(this).find('.grain-amount').val().replace(',', '.'));
+            mcu = mcu + 2.20462262 * lovibond * (amount / batch);
+            let pert = (amount / totalGrain) * 100;
+            $(this).find('.grain-percentage').text(round(pert, 1)+'%');
+        });
+        let srm = 1.4922 * Math.pow(mcu, 0.6859);
+        if (srm >= 40) {
+           srm = 40;
+        }
+        totalSRM = srm;
+    }
+    function calcIBU() {
+        let pre_boil_gravity = convertPtG(preBoilPlato);
+        let hsTime = Number($('input[name=ibu_hstime]').val().replace(',', '.'));
+			  let hsTemp = Number($('input[name=ibu_hstemp]').val().replace(',', '.'));
+        hs_IBU = 0;
+			  boil_IBU = 0;
+			  let hsUtil = 0;
+			  let hsTFactor = 0;
+        $('#hop-items .hop').each(function (a) {
+					  let am = Number($(this).find('.hop-amount').val().replace(',', '.'));
+					  let al = Number($(this).find('.hop-alfa').val().replace(',', '.'));
+					  let tp = Number($(this).find('.hop-type').val().replace(',', '.'));
+					  let gFactor = 1.65 * Math.pow(0.000125, pre_boil_gravity - 1);
+					  let aFactor = ((al * am) / batchSize * 10);
+					  let use = Number($(this).find('.hop-use').val().replace(',', '.'));
+            if (use == 1) {
+							  let tm = Number($(this).find('.hop-time').val().replace(',', '.'));
+							  let tFactor = (1 - Math.pow(Math.E, (-0.04 * tm))) / 4.15;
+							  let gt = gFactor * tFactor * tp;
+							  let ibu = gt * aFactor;
+							  $(this).find('.hop-ibu').text(round(ibu, 1));
+							  boil_IBU = boil_IBU + ibu;
+					  }
+            else {
+							  if (hsTFactor == 0) {
+							  		hsTFactor = (1 - Math.pow(Math.E, (-0.04 * hsTime))) / 4.15;
+							  }
+							  if (hsUtil == 0 ) {
+							  		hsUtil = 2.39 * Math.pow(10, 11) * Math.pow(Math.E, ( -9773 / (273.15 + hsTemp)));
+							  }
+							  let gt = gFactor * hsTFactor * tp;
+							  let ibu = gt * aFactor * hsUtil;
+							  $(this).find('.hop-ibu').text(round(ibu, 1));
+							  hs_IBU = hs_IBU + ibu;
+					  }
+        });
+			  let addBoil_IBU = boil_IBU * hsUtil * hsTFactor;
+			  totalIBU = boil_IBU + hs_IBU + addBoil_IBU;
+        if (totalIBU != 0) {
+            $('input[name="hop_total_ibu"]').prop('disabled', false);
+            $('input[name="hop_total_ibu_calc"]').prop('disabled', false);
+            $('input[name="hop_total_ibu"]').val(round(totalIBU, 0));
+        }
+    }
+    function calcABV() {
+        finalPlato = originalPlato * (1 - yeastAttenuation / 100);
+        let og = convertPtG(originalPlato);
+        let fg = convertPtG(finalPlato);
+        abv_old = (og - fg) * 131.25;
+        abv_new = (76.08 * (og - fg) / (1.775 - og)) * (fg / 0.794);
+        originalPlatoF = originalPlato + nonFermAdditions;
+        finalPlatoF = finalPlato + nonFermAdditions;
+    }
+    function calcPBP() {
+        preBoilPlato = ((efficiency / 100) * totalDryExtract / (preBoilSize + residue)) * 100;
+    }
+    function calcOP() {
+        let op = preBoilPlato / (1 - evaporation / 100);
+        let fermExtract = 0;
+        let nonFermExtract = 0;
+        let count = Number($('input[name=ferm_TOTAL_FORMS]').val().replace(',', '.'));
+        if (count > 0) {
+            $("#ferm-items .ferm").each(function (a) {
+                let amount = Number($(this).find('.ferm-amount').val().replace(',', '.'));
+                let dr = $(this).find('.ferm-extract').val().split('-');
+                let ext = Number(dr[0].replace(',', '.'));
+                let fType = $(this).find('.ferm-extract option:selected').attr('ftype');
+                if (fType == 5) {
+                    nonFermExtract = nonFermExtract + (amount * ext) / 100;
+                } else {
+                    fermExtract = fermExtract + (amount * ext) / 100;
+                }
+            });
+        }
+        let fermAdd = 100 * fermExtract / batchSize;
+        nonFermAdditions = 100 * nonFermExtract / batchSize;
+        originalPlato = op + fermAdd;
+    }
+    function calcFS() {
+        fermentationSize = batchSize - sediment;
+    }
+    function changeBatchSize() {
+        getParams();
+        mashWater = totalGrain * hydro;
+        spargeWater = water - mashWater;
+        $('input[name=mash_water]').val(round(mashWater, 1));
+        $('input[name=sparge_water]').val(round(spargeWater, 1));
+        updateAll();
+    }
+    function changeMashWater() {
+        getParams();
+        spargeWater = water - mashWater;
+        hydro = mashWater / totalGrain;
+        $('input[name=sparge_water]').val(round(spargeWater, 1));
+        $('input[name=hydro]').val(round(hydro, 1));
+        updateAll();
+    }
+    function changeSpargeWater() {
+        getParams();
+        water = mashWater + spargeWater;
+        preBoilSize = water - residue - (totalGrain * absorption);
+        batchSize = preBoilSize * (1 - evaporation / 100);
+        $('input[name=batch_size]').val(round(batchSize, 1));
+        updateAll();
+    }
+    function changeHydro() {
+        getParams();
+        mashWater = totalGrain * hydro;
+        spargeWater = water - mashWater;
+        $('input[name=mash_water]').val(round(mashWater, 1));
+        $('input[name=sparge_water]').val(round(spargeWater, 1));
+        updateAll();
+    }
+    function changeAbsorption() {
+        getParams();
+        preBoilSize = water - residue - (totalGrain * absorption);
+        water = residue + (totalGrain * absorption) + batchSize / (1 - evaporation / 100);
+        spargeWater = water - mashWater;
+        $('input[name=sparge_water]').val(round(spargeWater, 1));
+        updateAll();
+    }
+    function changeResidue() {
+        getParams();
+        water = residue + (totalGrain * absorption) + batchSize / (1 - evaporation / 100);
+        spargeWater = water - mashWater;
+        $('input[name=sparge_water]').val(round(spargeWater, 1));
+        updateAll();
+    }
+    function changeEfficiency() {
+        updateAll();
+    }
+    function changeEvaporation() {
+        getParams();
+        water = residue + (totalGrain * absorption) + batchSize / (1 - evaporation / 100);
+        spargeWater = water - mashWater;
+        $('input[name=sparge_water]').val(round(spargeWater, 1));
+        updateAll();
+    }
+    function changeSediment() {
+        updateAll();
+    }
+    function changeTotalIBU() {
+        let oldTotalIBU = boil_IBU;
+        let newTotalIBU = Number($('input[name=hop_total_ibu]').val().replace(',', '.'));
+        if (round(oldTotalIBU, 0) == newTotalIBU) {
+            return false;
+        }
+        totalIBU = newTotalIBU;
+        let amgr = 1;
+        let pre_boil_gravity = convertPtG(preBoilPlato);
+        let hsTime = Number($('input[name=ibu_hstime]').val().replace(',', '.'));
+			  let hsTemp = Number($('input[name=ibu_hstemp]').val().replace(',', '.'));
+			  let hsTFactor = (1 - Math.pow(Math.E, (-0.04 * hsTime))) / 4.15;
+			  let hsUtil = 2.39 * Math.pow(10, 11) * Math.pow(Math.E, ( -9773 / (273.15 + hsTemp)));
+        let bIBU = (newTotalIBU - hs_IBU) / (1 + hsTFactor * hsUtil);
+        $('#hop-items .hop').each(function (a) {
+            let use = Number($(this).find('.hop-use').val().replace(',', '.'));
+            if (use == 1) {
+                let tm = Number($(this).find('.hop-time').val().replace(',', '.'));
+                if (tm > 0) {
+                    let oldHopIBU = Number($(this).find('.hop-ibu').text().replace(',', '.'));
+                    let iFactor = oldHopIBU / round(oldTotalIBU, 1);
+                    let newHopIBU = bIBU * iFactor;
+                    let al = Number($(this).find('.hop-alfa').val().replace(',', '.'));
+                    let tp = Number($(this).find('.hop-type').val().replace(',', '.'));
+                    let gFactor = 1.65 * Math.pow(0.000125, pre_boil_gravity - 1);
+                    let tFactor = (1 - Math.pow(Math.E, (-0.04 * tm))) / 4.15;
+                    let gt = gFactor * tFactor * tp;
+                    let aFactorPerGram = (al / batchSize * 10);
+                    let ibu = gt * aFactorPerGram;
+                    let amount = newHopIBU / ibu;
+                    $(this).find('.hop-ibu').text(newHopIBU + ' IBU');
+                    $(this).find('.hop-amount').val(round(amount, 0));
+                }
+            }
+        });
+        updateAll();
+    }
+    function setPitchRates() {
+        let typeBeer = Number($('#select-styles option:selected').val());
+        let pitchRates = 0
+        if (typeBeer <= 4) {
+            if (originalPlato < levelGravity['light']) {
+                pitchRates = fermentationSize * pitchRateLager['light'];
+            }
+            else if (originalPlato > levelGravity['high']) {
+                pitchRates = fermentationSize * pitchRateLager['high'];
+            }
+            else {
+                pitchRates = fermentationSize * pitchRateLager['medium'];
+            }
+        }
+        else {
+            if (originalPlato < levelGravity['light']) {
+                pitchRates = fermentationSize * pitchRateAle['light'];
+            }
+            else if (originalPlato > levelGravity['high']) {
+                pitchRates = fermentationSize * pitchRateAle['high'];
+            }
+            else {
+                pitchRates = fermentationSize * pitchRateAle['medium'];
+            }
+        }
+        $('#calc-yeast-count').text(round(pitchRates, 0)+' млрд.клеток');
+    }
+    function saveRecipe(idx) {
+        updateAll();
+        if (idx) {
+            $('input[name="recipe"]').val(idx);
+        }
+        let pbg = convertPtG(preBoilPlato);
+        $('input[name="PBG"]').val(round(pbg, 3));
+        $('input[name="pre_boil_size"]').val(round(preBoilSize, 1));
+        $('input[name="pre_boil_size"]').val(round(preBoilSize, 1));
+        $('input[name="fermentation_size"]').val(round(fermentationSize, 1));
+        let og = convertPtG(originalPlatoF);
+        $('input[name="OG"]').val(round(og, 3));
+        if (finalPlatoF > 0) {
+            let fg = convertPtG(finalPlatoF);
+            $('input[name="FG"]').val(round(fg, 3));
+        }
+        if (abv_old > 0) {
+            $('input[name="abv"]').val(round(abv_old, 1));
+        }
+        $('input[name="ibu"]').val(round(totalIBU, 0));
+        $('input[name="srm"]').val(round(totalSRM, 1));
+        $('#create-form').submit();
+    }
+    </script>
+  <div class="col-12 text-center mb-3">
+    <div class="text-right">
+      <a class="link" data-toggle="modal" data-target="#modalHelp"><i class="material-icons align-bottom ml-2" title="Помощь">help_outline</i></a>
+    </div>
+    {% if recipe %}
+    <h4>Пересчёт рецепта: <a class="link" href="{% url 'recipe_detail' recipe.slug %}">{{ recipe.name }}</a></h4>
+    {% else %}
+    <h4>Создание рецепта</h4>
+    {% endif %}
+  </div>
+  <div class="col-6 mb-3">
+    <div class="">
+      <select id="select-types" class="form-control form-control-sm" name="types" onchange="setStyles();">
+        <option{% if not recipe %} selected{% endif %} value="">Категория</option>
+        {% for t in types %}
+		    <option{% if recipe and recipe.type == t.0 %} selected{% endif %} value="{{ t.0 }}">{{ t.1 }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="col-6 mb-3">
+    <div class="">
+      <select id="select-styles" class="form-control form-control-sm" name="styles" onchange="setStyleParam();">
+        <option{% if not recipe %} selected{% endif %} value="">Стиль</option>
+        {% for s in styles %}
+        <option{% if recipe and recipe.style == s %} selected{% endif %} value="{{ s.type }}" data-index="{{ s.index }}" data-style='{"og_min":"{{ s.OG_min }}", "og_max":"{{ s.OG_max }}", "fg_min":"{{ s.FG_min }}", "fg_max":"{{ s.FG_max }}", "abv_min":"{{ s.ABV_min }}", "abv_max":"{{ s.ABV_max }}", "ibu_min":"{{ s.IBUs_min }}", "ibu_max":"{{ s.IBUs_max }}", "srm_min":"{{ s.SRM_min }}", "srm_max":"{{ s.SRM_max }}", "co_min":"{{ s.CO2_min }}", "co_max":"{{ s.CO2_max }}"}'>{{ s.name }} | {{ s.index }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="col-12 col-md-6">
+    <table class="table-ing mb-3">
+      <thead>
+        <tr>
+          <th>Параметры стиля</th>
+          <th>Мин</th>
+          <th>Рецепт</th>
+          <th>Макс</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Начальная плотность</td>
+          <td><span id="style-op-min">{% if recipe and recipe.style %}{{ recipe.style.OG_min|formatted_float }}{% endif %}</span></td>
+          <td><span id="calc-op">{% if recipe %}{{ recipe.OG|gravity_to_plato }}{% endif %}</span></td>
+          <td><span id="style-op-max">{% if recipe and recipe.style %}{{ recipe.style.OG_max|formatted_float }}{% endif %}</span></td>
+        </tr>
+        <tr>
+          <td>Конечная плотность</td>
+          <td><span id="style-fp-min">{% if recipe and recipe.style %}{{ recipe.style.FG_min|formatted_float }}{% endif %}</span></td>
+          <td><span id="calc-fp">{% if recipe %}{{ recipe.FG|gravity_to_plato }}{% endif %}</span></td>
+          <td><span id="style-fp-max">{% if recipe and recipe.style %}{{ recipe.style.FG_max|formatted_float }}{% endif %}</span></td>
+        </tr>
+        <tr>
+          <td>Алкоголь, %</td>
+          <td><span id="style-abv-min">{% if recipe and recipe.style %}{{ recipe.style.ABV_min }}{% endif %}</span></td>
+          <td><span id="calc-abv">{% if recipe %}{{ recipe.abv }}{% endif %}</span></td>
+          <td><span id="style-abv-max">{% if recipe and recipe.style %}{{ recipe.style.ABV_max }}{% endif %}</span></td>
+        </tr>
+        <tr>
+          <td>Горечь (IBU)</td>
+          <td><span id="style-ibu-min">{% if recipe and recipe.style %}{{ recipe.style.IBUs_min }}{% endif %}</span></td>
+          <td><span id="calc-ibu">{% if recipe %}{{ recipe.ibu }}{% endif %}</span></td>
+          <td><span id="style-ibu-max">{% if recipe and recipe.style %}{{ recipe.style.IBUs_max }}{% endif %}</span></td>
+        </tr>
+        <tr>
+          <td>Цвет (SRM)</td>
+          <td><span id="style-srm-min">{% if recipe and recipe.style %}{{ recipe.style.SRM_min }}{% endif %}</span></td>
+          <td><span id="calc-srm">{% if recipe %}{{ recipe.srm }}{% endif %}</span></td>
+          <td><span id="style-srm-max">{% if recipe and recipe.style %}{{ recipe.style.SRM_max }}{% endif %}</span></td>
+        </tr>
+        <tr>
+          <td>Kоэффициент баланса (IBU/OG)</td>
+          <td><span id="style-io-min"></span></td>
+          <td><span id="calc-io"></span></td>
+          <td><span id="style-io-max"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 col-md-6">
+    <table class="table-ing mb-3">
+      <thead>
+        <tr>
+          <th>Параметры рецепта</th>
+          <th>Расчитанные</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Вес зерна, кг</td>
+          <td><span id="calc-total-weight"></span></td>
+        </tr>
+        <tr>
+          <td>Объём воды, л</td>
+          <td><span id="calc-total-water"></span></td>
+        </tr>
+        <tr>
+          <td>Плотность перед кипячением, &deg;P</td>
+          <td><span id="calc-pbp"></span></td>
+        </tr>
+        <tr>
+          <td>Объём перед кипячением, л</td>
+          <td><span id="calc-pre-boil-size"></span></td>
+        </tr>
+        <tr>
+          <td>Объём на брожение, л</td>
+          <td><span id="calc-ferment-size"></span></td>
+        </tr>
+        <tr>
+          <td>Норма засева дрожжей, млрд.клеток</td>
+          <td><span id="calc-yeast-count"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <form id="create-form" method="post" class="w-100" action="{% url 'save_recipe' %}">{% csrf_token %}
+      <div class="row">
+        <div class="col-12 col-sm-6">
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Размер партии, л</span>
+            </div>
+            <input class="form-control" type="number" name="batch_size" value="{% if recipe %}{{ recipe.batch_size|comma_to_dot }}{% else %}28{% endif %}" step="0.1" min="0" onchange="changeBatchSize();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Вода на затор, л</span>
+            </div>
+            <input class="form-control" type="number" name="mash_water" value="{% if recipe %}{{ recipe.mash_water|comma_to_dot }}{% else %}24{% endif %}" step="0.1" min="0"  onchange="changeMashWater();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Промывочная вода, л</span>
+            </div>
+            <input class="form-control" type="number" name="sparge_water" value="{% if recipe %}{{ recipe.sparge_water|comma_to_dot }}{% else %}16{% endif %}" step="0.1" min="0" onchange="changeSpargeWater();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Гидромодуль</span>
+            </div>
+            <input class="form-control" type="number" name="hydro" value="4" step="0.1" min="0" onchange="changeHydro();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Время кипячения, мин</span>
+            </div>
+            <input class="form-control" type="number" name="boil_time" value="{% if recipe %}{{ recipe.boil_time }}{% else %}60{% endif %}" step="1" min="0">
+          </div>
+        </div>
+        <div class="col-12 col-sm-6">
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Коэф. впитывания, л/кг</span>
+            </div>
+            <input class="form-control" type="number" name="absorption" value="1.04" step="0.01" min="0.5" maxlength="2" onchange="changeAbsorption();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Несливаемый остаток, л</span>
+            </div>
+            <input class="form-control" type="number" name="residue" value="0.5" step="0.1" min="0" onchange="changeResidue();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Эфф. затирания, %</span>
+            </div>
+            <input class="form-control" type="number" name="efficiency" value="{% if recipe and recipe.efficiency_mash %}{{ recipe.efficiency_mash|comma_to_dot }}{% else %}75{% endif %}" step="0.1" min="0" maxlength="100" onchange="changeEfficiency();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Выпаривание, %</span>
+            </div>
+            <input class="form-control" type="number" name="evaporation" value="15" step="0.1" min="0" maxlength="100" onchange="changeEvaporation();">
+          </div>
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Осадок брух, л</span>
+            </div>
+            <input class="form-control" type="number" name="sediment" value="{% if recipe %}{{ recipe.sediment_after_boil|comma_to_dot }}{% else %}2{% endif %}" step="0.1" min="0" onchange="changeSediment();">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h5>Солод / Зерно</h5>
+          <script>
+			  	  function addGrainItem() {
+			  	  	  $('.grain').first().clone().appendTo('#grain-items');
+			  	  	  $('#delete-grain-item').attr('hidden', false);
+			  	  	  let lastItem = $('.grain').last();
+			  	  	  let count = $('.grain').length;
+                $('input[name=grain_TOTAL_FORMS]').val(count);
+			  	  	  let grainColor = $(lastItem).find('.grain-color');
+			  	  	  grainColor.val('');
+			  	  	  grainColor.attr('name', 'grain_color_'+count);
+                let grainAmount = $(lastItem).find('.grain-amount');
+                grainAmount.val('');
+			  	  	  grainAmount.attr('name', 'grain_amount_'+count);
+			  	  }
+			  	  function deleteGrainItem() {
+			  	      $('.grain').last().remove();
+			  	      let count = $('.grain').length;
+			  	      $('input[name=grain_TOTAL_FORMS]').val(count);
+			  	      if (count <= 1) {
+			  	          $('#delete-grain-item').attr('hidden', true);
+                }
+            }
+			    </script>
+          <div class="">
+            <div id="grain-items">
+              <input type="hidden" name="grain_TOTAL_FORMS" value="{% if recipe %}{{ recipe.grainingredients_set.all.count }}{% else %}1{% endif %}">
+              {% if recipe %}
+                {% for i in recipe.grainingredients_set.all %}
+                <div class="input-group input-group-sm mb-3 grain align-middle">
+                  <select class="form-control grain-color" name="grain_color_{{ forloop.counter }}">
+        	      	  {% for g in grains %}
+					      	  <option{% if i.ingredient == g %} selected{% endif %} value="{{ g.color }}-{{ g.extractivity }}-{{ g.id }}">{% if g.company %}{{ g.company.name }} | {% endif %}{{ g }} ({{ g.color|floatformat }} &deg;L)</option>
+        	      	  {% endfor %}
+      		        </select>
+                  <input class="form-control grain-amount w80px" type="number" name="grain_amount_{{ forloop.counter }}" value="{{ i.amount|comma_to_dot }}" step="0.01" min="0" maxlength="5" placeholder="Вес" required>
+                  <div class="input-group-append">
+                    <span class="input-group-text">кг</span>
+                    <span class="input-group-text grain-percentage w50px text-center">%</span>
+                  </div>
+                </div>
+                {% endfor %}
+              {% else %}
+              <div class="input-group input-group-sm mb-3 grain align-middle">
+                <select class="form-control grain-color" name="grain_color_1">
+        	    	  <option selected value="">--- Солод / Зерно ---</option>
+        	    	  {% for g in grains %}
+					    	  <option value="{{ g.color }}-{{ g.extractivity }}-{{ g.id }}">{% if g.company %}{{ g.company.name }} | {% endif %}{{ g }} ({{ g.color|floatformat }} &deg;L)</option>
+        	    	  {% endfor %}
+      		      </select>
+                <input class="form-control grain-amount w80px" type="number" name="grain_amount_1" value="" step="0.01" min="0" maxlength="5" placeholder="Вес" required>
+                <div class="input-group-append">
+                  <span class="input-group-text">кг</span>
+                  <span class="input-group-text grain-percentage w50px text-center">%</span>
+                </div>
+              </div>
+              {% endif %}
+				    </div>
+            <div class="mb-2 d-flex justify-content-between">
+              <div>
+                <a class="link" onclick="javascript: addGrainItem();" title="Добавить"><i class="material-icons">add_box</i></a>
+                <a id="delete-grain-item" hidden class="link" onclick="javascript: deleteGrainItem();" title="Убрать"><i class="material-icons">indeterminate_check_box</i></a>
+              </div>
+				    </div>
+				  </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h5>Сахаросодержащие на кипение</h5>
+          <script>
+			  	    function addFermItem() {
+			  	        let ferm_count = parseInt($('input[name="ferm_TOTAL_FORMS"]').val());
+			  	        if (ferm_count == 0) {
+			  	            $('#ferm-1').attr('hidden', false);
+			  	            $('input[name=ferm_TOTAL_FORMS]').val(1);
+			  	            $('#delete-ferm-item').attr('hidden', false);
+                  }
+                  else {
+                      $('.ferm').first().clone().appendTo('#ferm-items');
+			  	    	      let lastItem = $('.ferm').last();
+			  	    	      let count = $('.ferm').length;
+                      $('input[name=ferm_TOTAL_FORMS]').val(count);
+                      $(lastItem).attr('id', 'ferm-'+count);
+			  	    	      let fermExtract = $(lastItem).find('.ferm-extract');
+					            fermExtract.val('');
+					            fermExtract.attr('name', 'ferm_extract_'+count);
+                      let fermAmount = $(lastItem).find('.ferm-amount');
+                      fermAmount.val('');
+					            fermAmount.attr('name', 'ferm_amount_'+count);
+                }
+				      }
+				      function deleteFermItem() {
+				          let count = $('.ferm').length;
+			  	        $('input[name=ferm_TOTAL_FORMS]').val(count-1);
+			  	        if (count <= 1) {
+			  	            $('#delete-ferm-item').attr('hidden', true);
+			  	            $('.ferm').last().attr('hidden', true);
+			  	            $('.ferm').last().find('.ferm-extract').val('');
+			  	            $('.ferm').last().find('.ferm-amount').val('');
+                  }
+			  	        else {
+			  	            $('.ferm').last().remove();
+                  }
+              }
+			    </script>
+          <div class="">
+            <div id="ferm-items">
+              <input type="hidden" name="ferm_TOTAL_FORMS" value="{% if recipe %}{{ recipe.fermentableingredients_set.all.count }}{% else %}0{% endif %}">
+              {% if recipe and recipe.fermentableingredients_set.all %}
+                {% for i in recipe.fermentableingredients_set.all %}
+                <div id="ferm-{{ forloop.counter }}" class="input-group input-group-sm mb-3 ferm align-middle">
+                  <select class="form-control ferm-extract" name="ferm_extract_{{ forloop.counter }}">
+        	      	  {% for f in ferms %}
+					      	  <option{% if i.ingredient == f %} selected{% endif %} value="{{ f.extractivity }}-{{ f.id }}" ftype="{{ f.type }}">{% if f.company %}{{ f.company.name }} | {% endif %}{{ f }} ({{ f.color|floatformat }} &deg;L)</option>
+        	      	  {% endfor %}
+      		        </select>
+					        <input class="form-control ferm-amount w80px " type="number" name="ferm_amount_{{ forloop.counter }}" value="{% if i.measure == 1 or i.measure == 3 %}{{ i.amount|gram_to_kg|comma_to_dot }}{% else %}{{ i.amount }}{% endif %}" step="0.01" min="0" maxlength="5" placeholder="кг(л)">
+                  <div class="input-group-append">
+                    <span class="input-group-text">кг(л)</span>
+                    <span class="input-group-text ferm-percentage">%</span>
+                  </div>
+                </div>
+                {% endfor %}
+              {% else %}
+              <div id="ferm-1" class="input-group input-group-sm mb-3 ferm align-middle" hidden>
+                <select class="form-control ferm-extract" name="ferm_extract_1">
+        	    	  <option selected  value="0-0" type="0">--- Сбраживаемое ---</option>
+        	    	  {% for f in ferms %}
+					    	  <option value="{{ f.extractivity }}-{{ f.id }}" ftype="{{ f.type }}">{% if f.company %}{{ f.company.name }} | {% endif %}{{ f }} ({{ f.color|floatformat }} &deg;L)</option>
+        	    	  {% endfor %}
+      		      </select>
+					      <input class="form-control ferm-amount w80px " type="number" name="ferm_amount_1" value="" step="0.01" min="0" maxlength="5" placeholder="Вес">
+                <div class="input-group-append">
+                  <span class="input-group-text">кг</span>
+                  <span class="input-group-text ferm-percentage">%</span>
+                </div>
+              </div>
+              {% endif %}
+				    </div>
+            <div class="mb-2 d-flex justify-content-between">
+              <div>
+                <a class="link" onclick="javascript: addFermItem();" title="Добавить"><i class="material-icons">add_box</i></a>
+                <a id="delete-ferm-item" {% if not recipe or recipe and not recipe.fermentableingredients_set.all %} hidden{% endif %} class="link" onclick="javascript: deleteFermItem();" title="Убрать"><i class="material-icons">indeterminate_check_box</i></a>
+              </div>
+				    </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h5>Хмель</h5>
+          <script>
+				    function addHopItem() {
+				    	  $('.hop').first().clone().appendTo('#hop-items');
+				    	  $('#delete-hop-item').attr('hidden', false);
+				    	  var lastItem = $('.hop').last();
+				    	  let count = $('.hop').length;
+                $('input[name=hop_TOTAL_FORMS]').val(count);
+			      		let hopName = $(lastItem).find('.hop-name');
+			      		hopName.val('');
+			      		hopName.attr('name', 'hop_name_'+count);
+                let hopAmount = $(lastItem).find('.hop-amount');
+                hopAmount.val('');
+			      		hopAmount.attr('name', 'hop_amount_'+count);
+				    	  let hopAlfa = $(lastItem).find('.hop-alfa');
+                hopAlfa.val('');
+			      		hopAlfa.attr('name', 'hop_alfa_'+count);
+				    	  let hopType = $(lastItem).find('.hop-type');
+			      		hopType.attr('name', 'hop_type_'+count);
+			      		let hopUse = $(lastItem).find('.hop-use');
+			      		hopUse.attr('name', 'hop_use_'+count);
+				    	  let hopTime = $(lastItem).find('.hop-time');
+                hopTime.val('');
+                hopTime.prop('disabled', false);
+			      		hopTime.attr('name', 'hop_time_'+count);
+			      		$(lastItem).find('.hop-ibu').text('');
+				    }
+				    function deleteHopItem() {
+                $('.hop').last().remove();
+                let count = $('.hop').length;
+                $('input[name=hop_TOTAL_FORMS]').val(count);
+                if (count <= 1) {
+                    $('#delete-hop-item').attr('hidden', true);
+                }
+            }
+				    function changeIBUUseHop(obj) {
+				    		let inp = $(obj).closest('.hop');
+				    		let use = $(obj).val();
+				    		if (use == 2) {
+				    				$(inp).find('.hop-time').prop('disabled', true);
+				    				$(inp).find('.hop-time').val('');
+				    		}
+				    		else {
+				    				$(inp).find('.hop-time').prop('disabled', false);
+				    		}
+				    }
+			    </script>
+          <div class="">
+            <div class="input-group input-group-sm mb-3">
+					  	<div class="input-group-prepend">
+                <span class="input-group-text"><b>Hop Stand</b></span>
+  				  	</div>
+					  	<div class="input-group-prepend">
+    			  		<span class="input-group-text">Время, мин:</span>
+  				  	</div>
+					  	<input class="form-control" type="number" name="ibu_hstime" value="{% if hs %}{{ hs.time }}{% else %}0{% endif %}" step="1" min="0" maxlength="3" title="Время хмелевой паузы" required>
+					  	<div class="input-group-prepend">
+    			  		<span class="input-group-text">Темп. &deg;C:</span>
+  				  	</div>
+					  	<input class="form-control" type="number" name="ibu_hstemp" value="{% if hs %}{{ hs.temp }}{% else %}0{% endif %}" step="1" min="0" maxlength="3" title="Температура хмелевой паузы" required>
+					  </div>
+					  <div id="hop-items">
+              <input type="hidden" name="hop_TOTAL_FORMS" value="{% if recipe %}{{ hops_ingredients.count }}{% else %}1{% endif %}">
+              {% if recipe and hops_ingredients %}
+                {% for i in hops_ingredients %}
+                  {% if i.use == 0 or i.use == 1 %}
+                  <div class="row hop">
+                    <div class="col-12 col-md-6 mb-2">
+                      <select class="form-control form-control-sm hop-name" name="hop_name_{{ forloop.counter }}">
+        	  	    	  	{% for h in hops %}
+					  	    	  	<option{% if i.ingredient == h %} selected{% endif %} value="{{ h.id }}">{{ h }} ({{ h.alfa_acid }} %) | {{ h.company.name }}</option>
+        	  	    	  	{% endfor %}
+      		  	    	  </select>
+                    </div>
+                    <div class="col-12 col-md-6 mb-2">
+                      <div class="input-group input-group-sm">
+					  	        	<input class="form-control hop-amount" type="number" name="hop_amount_{{ forloop.counter }}" value="{{ i.amount }}" step="1" min="0" maxlength="5" placeholder="Вес, г" required>
+					  	        	<input class="form-control hop-alfa" type="number" name="hop_alfa_{{ forloop.counter }}" value="{{ i.alfa|comma_to_dot }}" step="0.1" min="0" maxlength="3" placeholder="&alpha;, %" required>
+					  	        	<select class="form-control hop-type" name="hop_type_{{ forloop.counter }}">
+        	  	        		<option selected value="1.1">Гранул.</option>
+					  	        		<option value="1">Цельный</option>
+      		  	        	</select>
+					  	        	<select class="form-control hop-use" name="hop_use_{{ forloop.counter }}" onchange="changeIBUUseHop(this);">
+					  	        		<option{% if i.use == 0 %} selected{% endif %} value="1">Кип</option>
+					  	        		<option{% if i.use == 1 %} selected{% endif %} value="2">ХП</option>
+      		  	        	</select>
+					  	        	<input class="form-control hop-time" type="number" name="hop_time_{{ forloop.counter }}" {% if i.use == 0 %}value="{{ i.time }}"{% else %}value="" disabled{% endif %} step="1" min="0" maxlength="3" placeholder="Время, мин" required>
+                        <div class="input-group-append">
+                          <span class="input-group-text hop-ibu">IBU</span>
+                        </div>
+					  	        </div>
+					  	      </div>
+					  	    </div>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+              <div class="row hop">
+                <div class="col-12 col-md-6 mb-2">
+                  <select class="form-control form-control-sm hop-name" name="hop_name_1">
+        	  		  	<option selected value="">--- Хмель ---</option>
+        	  		  	{% for h in hops %}
+					  		  	<option value="{{ h.id }}">{{ h }} ({{ h.alfa_acid }} %) | {{ h.company.name }}</option>
+        	  		  	{% endfor %}
+      		  		  </select>
+                </div>
+                <div class="col-12 col-md-6 mb-2">
+                  <div class="input-group input-group-sm">
+					  	    	<input class="form-control hop-amount" type="number" name="hop_amount_1" value="" step="1" min="0" maxlength="5" placeholder="Вес, г" required>
+					  	    	<input class="form-control hop-alfa" type="number" name="hop_alfa_1" value="" step="0.1" min="0" maxlength="3" placeholder="&alpha;, %" required>
+					  	    	<select class="form-control hop-type" name="hop_type_1">
+        	  	    		<option selected value="1.1">Гранул.</option>
+					  	    		<option value="1">Цельный</option>
+      		  	    	</select>
+					  	    	<select class="form-control hop-use" name="hop_use_1" onchange="changeIBUUseHop(this);">
+					  	    		<option selected value="1">Кип</option>
+					  	    		<option value="2">ХП</option>
+      		  	    	</select>
+					  	    	<input class="form-control hop-time" type="number" name="hop_time_1" value="" step="1" min="0" maxlength="3" placeholder="Время, мин" required>
+                    <div class="input-group-append">
+                      <span class="input-group-text hop-ibu">IBU</span>
+                    </div>
+					  	    </div>
+					  	  </div>
+					  	</div>
+            {% endif %}
+            </div>
+            <div class="d-flex justify-content-start mb-2">
+              <div>
+                <a class="link" onclick="javascript: addHopItem();" title="Добавить"><i class="material-icons">add_box</i></a>
+                <a id="delete-hop-item" hidden class="link" onclick="javascript: deleteHopItem();" title="Убрать"><i class="material-icons">indeterminate_check_box</i></a>
+              </div>
+            </div>
+            <div class="input-group input-group-sm justify-content-end mb-3">
+					  	<div class="input-group-prepend">
+                <span class="input-group-text">Пересчитать вес хмеля для горечи (IBU):</span>
+  				  	</div>
+              <input class="form-control w80px" type="number" name="hop_total_ibu" value="" step="1" min="0" maxlength="3" disabled>
+              <input class="btn btn-secondary btn-sm" type="button" name="hop_total_ibu_calc" value="Пересчитать" onclick="changeTotalIBU();" disabled>
+				    </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-12">
+          <h5>Дрожжи</h5>
+          {% if recipe %}
+            {% with yst=recipe.yeastsingredients_set.all|first %}
+            <div class="input-group input-group-sm">
+              <select id="select-yeast" class="form-control" name="select-yeast" onchange="setYeastParam()">
+       	        {% for y in yeast %}
+	  	          <option{% if yst.ingredient == y %} selected{% endif %} value="{{ y.id }}" data-yeast='{"att":"{{ y.attenuation }}", "temp":"{{ y.min_temperature }}-{{ y.max_temperature }}"}'>{{ y.short_name }} | {{ y.name }} ({{ y.company.name }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endwith %}
+          {% else %}
+            <div class="input-group input-group-sm">
+              <select id="select-yeast" class="form-control" name="select-yeast" onchange="setYeastParam()">
+       	        <option selected value="">--- Дрожжи ---</option>
+       	        {% for y in yeast %}
+	  	          <option value="{{ y.id }}" data-yeast='{"att":"{{ y.attenuation }}", "temp":"{{ y.min_temperature }}-{{ y.max_temperature }}"}'>{{ y.short_name }} | {{ y.name }} ({{ y.company.name }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-12 col-sm-6">
+          <small class="mr-2"><span class="mr-1">Средняя аттенюация:</span><strong id="yeast-att"></strong></small>
+        </div>
+        <div class="col-12 col-sm-6">
+          <small class="mr-2"><span class="mr-1">Рекомендуемая температура:</span><strong id="yeast-temp"></strong></small>
+        </div>
+      </div>
+      <input type="hidden" name="recipe" value="">
+      <input type="hidden" name="style_index" value="{% if recipe and recipe.style %}{{ recipe.style.index }}{% endif %}">
+      <input type="hidden" name="PBG" value="1.0">
+      <input type="hidden" name="pre_boil_size" value="0">
+      <input type="hidden" name="fermentation_size" value="0">
+      <input type="hidden" name="OG" value="1.0">
+      <input type="hidden" name="FG" value="1.0">
+      <input type="hidden" name="abv" value="0">
+      <input type="hidden" name="ibu" value="0">
+      <input type="hidden" name="srm" value="0">
+      <div class="row">
+        <div class="col d-flex justify-content-between">
+          <div>
+            {% if recipe %}
+            <button class="btn btn-secondary" type="button" name="save-recipe" {% if user.ability_to_add %}id="form-save" onclick="saveRecipe();"{% else %}title="Ваш лимит черновиков закончился" disabled{% endif %}>Сохранить как новый рецепт</button>
+            <button class="btn btn-secondary" type="button" name="save-recipe" id="form-save" onclick="saveRecipe({{ recipe.id }});">Перезаписать рецепт</button>
+            {% else %}
+            <button class="btn btn-secondary" type="button" name="save-recipe" {% if user.ability_to_add %}id="form-save" onclick="saveRecipe();"{% else %}title="Ваш лимит черновиков закончился" disabled{% endif %}>Сохранить рецепт как черновик</button>
+            {% endif %}
+          </div>
+          <div>
+            <input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="updateAll();">
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  $(document).ready(function() {
+      setYeastParam();
+      setStyleParam();
+      updateAll();
+  });
+</script>
+{% endblock %}
+
+
+{% block modal %}
+<div class="modal fade" id="modalHelp" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Помощь</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Размер партии (batch size)</strong> - Объём сусла поле варки и охлаждения</p>
+        <p><strong>Вода на затор (mash water)</strong> - Объём воды на затирание</p>
+        <p><strong>Промывочная вода (sparge water)</strong> - Объём воды на промывку</p>
+        <p><strong>Гидромодуль</strong> - Отношение объёма заторной воды к весу засыпи</p>
+        <p><strong>Коэффициент впитывания (Абсорбция)</strong> - Примерный объём воды которое впитывает зерно</p>
+        <p><strong>Несливаемый остаток</strong> - Объём сусла которое остается в заторном чане (в 2х или 3х посудных системах: RIMS, K-RIMS, HERMS). Для одно посудных порядков (BIAB) нужно установить в 0</p>
+        <p><strong>Эффективность затирания</strong> - Выход экстрактивных веществ из зерновых ингредиентов после затирания относительно экстрактивности указанной производителем</p>
+        <p><strong>Выпаривание</strong> - Процент испарения воды во время варки</p>
+        <p><strong>Осадок брух</strong> - Объём осадка который остается в варочнике. Размер партии - Осадок брух = Объем на брожение</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

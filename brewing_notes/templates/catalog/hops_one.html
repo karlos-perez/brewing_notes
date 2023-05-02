@@ -1,0 +1,64 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}{{ hop.name }} ({{ hop.company }}){% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_editor %}
+      <a class="link" href="{% url 'hop_edit' hop.slug %}" title="Редактировать"><span class="small">Редактировать</span></a>
+      <a class="link ml-3" href="{% url 'hop_add' %}" title="Добавить"><span class="small">Добавить</span></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{{ hop.name }}&nbsp;({{ hop.company|default_if_none:'---' }})</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Категория:</i><b>{{ hop.get_type_display }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Страна:</i><b>{{ hop.country|default_if_none:'---' }}</b></span>
+      </div>
+      <div class="col-12 text-sm-center mb-2">
+        <span><i class="mr-2">&alpha;-кислота:</i><b>{{ hop.alfa_acid }} %</b></span>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Описание:</h5>
+        <p>{{ hop.description|linebreaks }}</p>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Применение в стилях:</h5>
+      </div>
+      {% for row in hop.styles.all|columns:3 %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        {% for item in row %}
+        <div>
+          <a class="link" href="{% url 'style_one' item.slug %}">
+            <small>{{ item.index }}. {{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <div class="col-12 d-flex justify-content-between mt-4 mb-2">
+        <a class="btn btn-secondary mr-2" href="{% url 'hops_list' %}">Назад к списку</a>
+        <a class="btn btn-secondary ml-2" href="{% url 'recipes_list' %}?hop={{ hop.pk }}">Показать рецепты с ингредиентом</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

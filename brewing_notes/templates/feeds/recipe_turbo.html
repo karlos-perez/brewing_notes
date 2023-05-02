@@ -1,0 +1,30 @@
+{% load brew %}
+
+<header>
+  <h1>{{ obj.get_type_display }}</h1>
+  <h2>{{ obj.name }}</h2>
+  <figure>
+    <img src="{{ obj.get_avatar }}">
+  </figure>
+</header>
+<h4>{{ obj.style }} ({{ obj.get_сonformity_display }})</h4>
+
+<p>{{ obj.description }}</p>
+<p><small>Начальная плотность: {{ obj.OG|gravity_to_plato }}</small></p>
+<p><small>Конечная плотность: {{ obj.FG|gravity_to_plato }}</small></p>
+<p><small>Алкоголь: {{ obj.abv }} %</small></p>
+<p><small>Горечь (IBU): {{ obj.ibu }}</small></p>
+<p><small>Цвет (SRM): {{ obj.srm }}</small></p>
+<h3>Солод</h3>
+{% for g in obj.grainingredients_set.all %}
+<p>{{ g }}</p>
+{% endfor %}
+<h3>Хмель</h3>
+{% for h in obj.hopsingredients_set.all|qs_distinct:'ingredient' %}
+<p>{{ h }}</p>
+{% endfor %}
+<h3>Дрожжи</h3>
+{% for y in obj.yeastsingredients_set.all %}
+<p>{{ y }}</p>
+{% endfor %}
+<button formaction="{{ obj.get_full_short_link }}" data-background-color="#5B97B0" data-color="white" data-primary="true">Посмотреть рецепт</button>

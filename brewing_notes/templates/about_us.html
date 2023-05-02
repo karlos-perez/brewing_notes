@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block center %}
+<div class="row main-body p-4">
+  <div class="col-12">
+
+  <h1 class="text-center">Пивоваренные заметки</h1>
+  <p class="">Brewingnotes.ru - Это:</p>
+  <p class="px-4">Развивающийся сайт в помощь пивовару</p>
+  <p class="px-4">База проверенных рецептов пива</p>
+  <p class="px-4">База стилей пива и ингредиентов</p>
+  <p class="px-4">Возможность расcчитать рецепт, сохранить или поделится с друзьями</p>
+  <p class="px-4">Набор основных калькуляторов пивовара</p>
+  <p class="px-4">Возможность подключить контроллер брожения или электронный ареометр и контролировать этапы брожения</p>
+  <p class="px-4">И множество других интересных функций</p>
+  <div class="mt-4">
+    <p class="h6"><a class="link" href="{% url 'regulations' %}" target="_blank">Наши правила использования сайта</a></p>
+  </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load core brew static %}
+
+{% block page_title %}{% if request.user == object %}Мои рецепты{% else %}Рецепты пользователя {{ object.username }}{% endif %}{% endblock %}
+
+{% block center %}
+<script>
+  function RecipeDelete(url, name){
+    $('#name-recipe').text(name);
+    $('#delete-form').attr('action', url);
+    $('#modalDelete').modal('show');
+	}
+
+	function Visibility(url, id) {
+      $.post(url, function (data) {
+          if (data.success) {
+              if (data.private) {
+                  $('#private-'+id).text('visibility_off');
+                  $('#private-menu-'+id).text('visibility');
+                  $('#private-small-'+id).text('Открыть рецепт');
+              }
+              else {
+                  $('#private-'+id).text('visibility');
+                  $('#private-menu-'+id).text('visibility_off');
+                  $('#private-small-'+id).text('Закрыть рецепт');
+              }
+          }
+          else {
+               if (_alert.hasClass('alert-success')) {
+                  _alert.removeClass('alert-success');
+              }
+              _alert.addClass('alert-danger')
+              _alert.css("display", "block");
+              $('#alert-msg').text(data.error);
+          };
+      });
+  }
+</script>
+<div class="row main-body mb-2">
+  {% if request.user == object %}
+  <div class="col-12 d-flex justify-content-end py-2">
+    <div>
+      {% if request.user.ability_to_add %}
+      <a class="link" href="{% url 'recipe_add' %}" title="Добавить рецепт">
+        <span class="small">Создать</span>
+      </a>
+      {% endif %}
+      <a class="link ml-2" href="{% url 'user_favorites' user.username %}" title="Избранные рецепты">
+        <span class="small">Избранное</span>
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-4 col-sm-4 my-2 d-flex justify-content-center">
+      <img id="avatar-place" class="img-thumbnail" src='{{ object.get_avatar|thumbnail:"width=150, height=150" }}' alt="{{ user.get_name }}">
+  </div>
+  <div class="col-8 col-sm-6 my-2">
+    <div>
+      <h5>Рецепты <b>{{ object }}</b></h5>
+    </div>
+    <div>
+      <small><b class="mr-2">Последний вход:</b>{{ object.last_login|date:"d.m.Y H:i" }}</small>
+    </div>
+    <div>
+      <small><b class="mr-2">Статус: </b> {{ object.get_status_display }}</small>
+    </div>
+    <div>
+      <small><b class="mr-2">Опубликованно рецептов: </b> {{ object_list.count }}</small>
+    </div>
+    <div class="mt-1">
+      <a class="link" href="" data-toggle="modal" data-target="#modalSend" title="Написать пользователю">
+        <small class="d-sm-none">Написать пользователю</small>
+      </a>
+    </div>
+  </div>
+  <div class="col-12 col-sm-2">
+    <div class="text-sm-right mt-2">
+      <a class="link" href="" data-toggle="modal" data-target="#modalSend" title="Написать пользователю">
+        <i class="material-icons align-bottom d-none d-sm-block">mail</i>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+<div class="row main-body mb-2">
+  <div class="col p-0 pt-2 p-sm-3">
+    {% if request.user == object %}
+    <h5 class="text-center">Мои рецепты</h5>
+    {% endif %}
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            {% if request.user == object %}
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'brew_number' '-' %}">#</a></th>
+            {% endif %}
+            <th class="d-none {% if request.user != object %}d-sm-table-cell{% else %}d-lg-table-cell{% endif %}" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'type' '-' %}">Тип</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'name' '-' %}">Название</a></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'style' '-' %}">Стиль</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'OG' '-' %}" title="Начальная плотность">НП</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'abv' '-' %}" title="Алкоголь">ABV</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'ibu' '-' %}" title="Горечь">IBU</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'srm' '-' %}" title="Цвет, &deg;L">SRM</a></th>
+            <th class="d-none d-lg-table-cell" scope="col">
+            {% if request.user != object %}
+              <a class="link" href="?{% url_replace view.request 'order_by' 'public_date' '-' %}" title="Опубликован"><i class="material-icons align-bottom">&#xe916;</i></a>
+              {% else %}
+              <a class="link" href="?{% url_replace view.request 'order_by' 'created_date' '-' %}" title="Добавлен"><i class="material-icons align-bottom">&#xe916;</i></a>
+              {% endif %}
+            </th>
+            {% if request.user != object %}
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'сonformity' '-' %}" title="Cоответствие"><i class="material-icons align-bottom">&#xe25d;</i></a></th>
+            {% endif %}
+            {% if request.user == object %}
+            <th class="d-none d-sm-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'status' '-' %}">Статус</a></th>
+            <th scope="col"></th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for recipe in object_list %}
+          <tr>
+            {% if request.user == object %}
+            <td class="d-none d-lg-table-cell">{{ recipe.brew_number }}</td>
+            {% endif %}
+            <td class="d-none {% if request.user != object %}d-sm-table-cell{% else %}d-lg-table-cell{% endif %}" >{{ recipe.get_type_display }}</td>
+            <td>
+              {% if recipe.matches_style %}
+              <i class="material-icons align-bottom green" title="Рецепт соответствуют выбранному стилю">verified</i>
+              {% else %}
+              <i class="material-icons align-bottom yellow" title="Рецепт не соответствует выбранному стилю">report</i>
+              {% endif %}&nbsp;
+              {% if request.user == object %}
+              {% if recipe.private %}
+              <i id="private-{{ recipe.id }}" class="material-icons align-bottom">visibility_off</i>
+              {% else %}
+              <i id="private-{{ recipe.id }}" class="material-icons align-bottom">visibility</i>
+              {% endif %}&nbsp;
+              {% endif %}
+              <a class="link" href="{% url 'recipe_detail' recipe.slug %}">&nbsp;{{ recipe.name }}</a>
+            </td>
+            <td class="d-none d-md-table-cell">{{ recipe.style|default_if_none:'---' }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.OG|gravity_to_plato }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.abv }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.ibu }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.srm|default_if_none:'' }}</td>
+            <td class="d-none d-lg-table-cell">{% if request.user != object %}{{ recipe.public_date|date:"d.m.Y" }}{% else %}{{ recipe.created_date|date:"d.m.Y" }}{% endif %}</td>
+            {% if request.user != object %}
+            <td class="d-none d-md-table-cell">
+              {% if recipe.сonformity == 1 %}
+              <i class="material-icons align-bottom сonformity-1" title="Обычный рецепт">people</i>
+              {% elif recipe.сonformity == 2 %}
+              <i class="material-icons align-bottom сonformity-2" title="Классический рецепт">history_edu</i>
+              {% elif recipe.сonformity == 3 %}
+              <i class="material-icons align-bottom сonformity-3" title="Рецепт для новичков">child_friendly</i>
+              {% elif recipe.сonformity == 4 %}
+              <i class="material-icons align-bottom сonformity-4" title="Перенесённый из другого источника">menu_book</i>
+              {% else %}
+              <i class="material-icons align-bottom сonformity-{{ recipe.сonformity }}" title="Не определено">sentiment_neutral</i>
+              {% endif %}
+            </td>
+            {% endif %}
+            {% if request.user == object %}
+            <td class="d-none d-sm-table-cell">{{ recipe.get_status_display }}</td>
+            <td>
+              <div class="dropdown dropleft">
+                <a class="link" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <i class="material-icons" title="Меню рецепта">&#xe5d2;</i>
+                </a>
+                <div class="dropdown-menu bg-dark" aria-labelledby="dropdownMenuLink">
+                  {% if recipe.status == 6 %}
+                  <a class="dropdown-item" href="{% url 'recipe_edit'  recipe.slug %}"><i class="material-icons align-bottom">&#xe3c9;</i>&nbsp;<small>Редактировать</small></a>
+                  <a class="dropdown-item" href="#" onclick="Visibility('{% url 'set_recipe_visibility' recipe.slug %}', {{ recipe.id }}); return false;">{% if recipe.private %}<i id="private-menu-{{ recipe.id }}" class="material-icons align-bottom private">visibility</i>&nbsp;<small id="private-small-{{ recipe.id }}">Открыть рецепт</small>{% else %}<i id="private-menu-{{ recipe.id }}" class="material-icons align-bottom">visibility_off</i>&nbsp;<small id="private-small-{{ recipe.id }}">Закрыть рецепт</small>{% endif %}</a>
+                  {% endif %}
+                  <a class="dropdown-item" href="#" onclick="RecipeShortURL('{{ recipe.get_short_url }}', '{{ recipe.slug }}', '{{ recipe.get_temp_full_link }}'); return false;"><i class="material-icons align-bottom">&#xe80d;</i>&nbsp;<small>Поделиться</small></a>
+                  <a class="dropdown-item" href="{% url 'recipe_card' recipe.uid %}"><i class="material-icons align-bottom">receipt</i>&nbsp;<small>Карточка рецепта</small></a>
+                  <a class="dropdown-item" href="{% url 'recipes_print_lite' recipe.uid %}"><i class="material-icons align-bottom">receipt_long</i>&nbsp;<small>Компактный вид</small></a>
+                  <a class="dropdown-item" href="{% url 'recipes_ingredients' recipe.slug %}"><i class="material-icons align-bottom">&#xe242;</i>&nbsp;<small>Список ингредиентов</small></a>
+                  <a class="dropdown-item" href="" onclick="RecipeDelete('{% url 'recipe_delete' recipe.slug %}', '{{recipe.name}}'); return false;"><i class="material-icons align-bottom">&#xe872;</i>&nbsp;<small>Удалить</small></a>
+                </div>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить: "<span id="name-recipe"></span>"?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="delete-form" action="">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    function SendMessage(url, pk){
+        var subject = $('#send-subject');
+        var message = $('#send-message');
+        var _alert = $('#alert')
+        $.post(url, {subject: subject.val(), message: message.val()}, function (data) {
+            if (data.success) {
+                subject.val('');
+                message.val('');
+                if (_alert.hasClass('alert-danger')) {
+                    _alert.removeClass('alert-danger');
+                }
+                _alert.addClass('alert-success')
+                _alert.css("display", "block");
+                $('#alert-msg').text(data.result);
+
+            } else {
+                 if (_alert.hasClass('alert-success')) {
+                    _alert.removeClass('alert-success');
+                }
+                _alert.addClass('alert-danger')
+                _alert.css("display", "block");
+                $('#alert-msg').text(data.error);
+            };
+            $('#modalSend').modal('hide')
+        });
+    };
+</script>
+<div class="modal fade" id="modalSend" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Быстрое сообщение пользователю</h5>
+      </div>
+      <div class="modal-body">
+        <form method="post">{% csrf_token %}
+          <div class="form-group">
+            <label>Тема сообщения</label>
+            <input id="send-subject" class="form-control"  type="text" name="subject"/>
+          </div>
+          <div class="form-group">
+            <textarea id="send-message" class="form-control" name="message"></textarea>
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            <button onclick="SendMessage('{% url 'push_message' object.pk %}', {{ object.pk }}); return false;" type="button" class="btn btn-dark">Отправить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% include 'blocks/modal_short_link.html' %}
+{% endblock %}

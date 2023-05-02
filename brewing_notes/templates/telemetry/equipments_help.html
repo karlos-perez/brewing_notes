@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Типы оборудования{% endblock %}
+
+{% block center %}
+{% include 'telemetry/telemetry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 mt-3">
+    <div>
+      <a class="btn btn-secondary" href="{% url 'equipments_list' %}">
+        <span>Назад</span>
+      </a>
+    </div>
+  </div>
+  <div class="col-12 text-center">
+    <h3>Виды оборудования</h3>
+  </div>
+  <div class="col-12 p-3">
+    <div class="ml-4">
+      <p>При помощи модулей можно сконфигурировать различные виды оборудования и автоматизировать процесс управления ими.</p>
+      <p>В настоящее время поддерживаются следующие типы и профили оборудования:</p>
+    </div>
+  </div>
+  <div class="col-12 mb-3 p-2">
+    <div class="col-12 text-center pt-3">
+      <h4><a name="fermenter">Ферментер / Охладитель</a></h4>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2 mb-3">
+    <div class="text-center">
+      <h5>Схема</h5>
+    </div>
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div style="height: 300px;">
+        <img class="h-100" src="/media/equipment/type/fermenter.png" alt="Схема Ферментер">
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2 mb-3">
+    <div class="text-center mb-2">
+      <h5>Описание</h5>
+    </div>
+    <div class="mb-2">
+      <p>Позволяет автоматизировать сбраживание путем нагрева или охлаждения.</p>
+      <p>Контроль холодильного оборудования. Может контролировать гликолевый (пивной) охладитель, бытовой холодильник и т.д.</p>
+      <p>Контроль осуществляется за счет температуры в холодильной камере или температуре охлаждающей жидкости гликолевого охладителя, температуре сусла. Управление холодильной установкой осуществляется с учётом особенности работы компрессора.</p>
+      <p>Есть возможность подключить второй модуль для управления нагревом.</p>
+    </div>
+    <div class="mb-2">
+      <strong>Количество модулей: 2</strong>
+    </div>
+    <div class="mx-3">
+      <span>Модуль 1 - Охлаждение</span>
+    </div>
+    <div class="mx-3">
+      <span>Модуль 2 - Нагрев (не обязательно)</span>
+    </div>
+  </div>
+
+  <div class="col-12 my-3">
+    <div class="text-center">
+      <h4><a name="kettle">Заторник / Нагреватель</a></h4>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2">
+    <div class="text-center">
+      <h5>Схема</h5>
+    </div>
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div style="height: 300px;">
+        <img class="h-100" src="/media/equipment/type/heater.png" alt="Схема Нагревателя">
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-3 p-sm-2">
+    <div class="text-center mb-2">
+      <h5>Описание</h5>
+    </div>
+    <div class="mb-2">
+      <p>Предназначен для управления электроплитой или непосредственно ТЭНом для нагрева воды или сусла.</p>
+      <p>Имеет два режима работы:</p>
+      <p><strong>Ручной</strong> — задается нужная температура и отклонение (гистерезис). Модуль в автоматическом режиме нагревает и поддерживает заданную температуру.</p>
+      <p><strong>Автоматический</strong> — позволяет затереть сусло, пройдя по паузам в автоматическом режиме. Схема затирания загружается с выбранного рецепта Пользователя.</p>
+    </div>
+    <div class="mb-2">
+      <strong>Количество модулей: 1</strong>
+    </div>
+    <div class="mx-3">
+      <span>Модуль 1 - Нагрев</span>
+    </div>
+  </div>
+  {% if user.is_admin %}
+  <div class="col-12 my-3 p-2">
+    <div class="col-12 text-center pt-3">
+      <h4>BIAB (brew in a bag) <span class="red">( In future )</span></h4>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2">
+    <div class="text-center">
+      <h5>Схема</h5>
+    </div>
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div style="height: 340px;">
+        <img class="h-100" src="/media/equipment/type/biab.png" alt="Схема BIAB">
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2">
+    <div class="text-center mb-2">
+      <h5>Описание</h5>
+    </div>
+    <div class="mb-2">
+      <p>BIAB с циркуляцией - один из самых распространенных вариантов домашних пивоварен в мире. Собрать такую пивоварню самостоятельно не составляет особого труда. Заменой насосу может послужить мешалка перемешивающая затор.</p>
+      <p>Такой тип часто применяется в пивоварнях промышленного изготовления. Самые известные на российском рынке это Grainfather, RoboBrew, iBrew, EasyBrew и многие другие.</p>
+    </div>
+    <div>
+      <span>Количество модулей: 2</span>
+    </div>
+    <div class="mb-2">
+      <span>Еще какая-нибудь характистика: 2342</span>
+    </div>
+    <div>
+      <span>Модуль 1 - Нагрев (ТЭН)</span>
+    </div>
+    <div>
+      <span>Модуль 2 - Циркуляция (насос)</span>
+    </div>
+  </div>
+  <div class="col-12 my-3 p-2">
+    <div class="col-12 text-center pt-3">
+      <h4>Двухуровневый K-RIMS <span class="red">( In future )</span></h4>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2">
+    <div class="text-center">
+      <h5>Схема</h5>
+    </div>
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div style="height: 340px;">
+        <img class="h-100" src="/media/equipment/type/krims_tt.png" alt="Схема Двухуроынего K-RIMS">
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2">
+    <div class="text-center mb-2">
+      <h5>Описание</h5>
+    </div>
+    <div class="mb-2">
+      <p>описание 1-2 предложение</p>
+      <p></p>
+    </div>
+    <div>
+      <span>Количество модулей: 2</span>
+    </div>
+    <div class="mb-2">
+      <span>Еще какая-нибудь характистика: 2342</span>
+    </div>
+    <div>
+      <span>Модуль 1 - Нагрев (ТЭН)</span>
+    </div>
+    <div>
+      <span>Модуль 2 - Циркуляция (насос)</span>
+    </div>
+  </div>
+  <div class="col-12 my-3 p-2">
+    <div class="text-center">
+      <h4>Одноуровневый K-RIMS <span class="red">( In future )</span></h4>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-2">
+    <div class="text-center">
+      <h5>Схема подключения</h5>
+    </div>
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div style="max-height: 340px; height: auto;">
+        <img class="w-100 h-auto" src="/media/equipment/type/krims_sl.png" alt="Схема одноуровнего K-RIMS">
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 p-3 p-sm-2">
+    <div class="text-center mb-2">
+      <h5>Описание</h5>
+    </div>
+    <div>
+      <p>описание 1-2 предложение</p>
+    </div>
+    <div>
+      <span>Количество модулей: 3</span>
+    </div>
+    <div>
+      <span>Еще какая-нибудь характистика: 2342</span>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

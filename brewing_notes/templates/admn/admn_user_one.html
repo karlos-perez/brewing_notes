@@ -1,0 +1,283 @@
+{% extends 'admn/admn_base.html' %}
+{% load brew core static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 mb-3 text-center">
+    <h3>Пользователь: <a class="link" href="{% url 'user_recipes' object.username %}">{{ object }}</a></h3>
+  </div>
+  <div class="col-6 mb-3 text-center">
+    <h5 class="">Аватар</h5>
+    <div>
+      <img class="img-thumbnail" src="{{ object.get_avatar|thumbnail:"width=150, height=150" }}">
+    </div>
+  </div>
+  <div class="col-6 mb-3 text-center">
+    <h5 class="">Логотип</h5>
+    <div>
+      <img class="img-thumbnail" src="{{ object.get_logo|thumbnail:"width=150, height=150" }}">
+    </div>
+  </div>
+  <div class="col-12 text-center">
+    <h4>Статистика</h4>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3 mb-3">
+    <div class="ml-2">
+      <div class="mb-1"><small class=""><strong><i>Данные пользователя</i></strong></small></div>
+      <div><small class=""><b class="mr-2">Последний&nbsp;вход:</b>{{ object.last_login|date:"d.m.Y H:i" }}</small></div>
+      <div><small class=""><b class="mr-2">Регистрация:</b>{{ object.date_joined|date:"d.m.Y H:i" }}</small></div>
+      <div><small class=""><b class="mr-2">E-mail:</b>{{ object.email }}</small></div>
+      <div><small class=""><b class="mr-2">Статус:</b>{{ object.get_status_display }}</small></div>
+      {% if object.status == 2 %}
+      <div><small class=""><b class="mr-2">Премиум до:</b>{{ object.premium_end|date:"d.m.Y" }}</small></div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3 mb-3">
+    <div class="ml-2">
+      <div class="mb-1"><small class=""><strong><i>Подключённый функционал</i></strong></small></div>
+      <div><small class=""><b class="mr-2">Телеграм:</b>{% if object.available_telegram %}Подключён{% else %}Не подключён{% endif %}</small></div>
+      <div><small class=""><b class="mr-2">Кладовая:</b>{% if object.available_pantry %}Подключён{% else %}Не подключён{% endif %}</small></div>
+      <div><small class=""><b class="mr-2">Тестер:</b>{% if object.tester %}Да{% else %}Нет{% endif %}</small></div>
+      <div><small class=""><b class="mr-2">Редактор:</b>{% if object.editor %}Да{% else %}Нет{% endif %}</small></div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3 mb-3">
+    <div class="ml-2">
+      <div class="mb-1"><small class=""><strong><i>Рецепты</i></strong></small></div>
+        <div><small class="{% if not object.ability_to_add %} red{% endif %}"><b class="mr-2">Черновики:</b>{{ object.recipe_draft_count }} из {{ object.limit_draft }}</small></div>
+        <div><small class=""><b class="mr-2">Опубликованные:</b>{{ object.recipe_publish_count }}</small></div>
+        <div><small class=""><a class="link" href="{% url 'user_recipes' object.username %}"><b class="mr-2">Всего рецептов:</b>{{ object.recipe_count }}</a></small></div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3 mb-3">
+    <div class="ml-2">
+      <div class="mb-1"><small class=""><strong><i>Устройства</i></strong></small></div>
+        <div><small class="{% if not object.device_available %} red{% endif %}"><b class="mr-2">Всего устройств:</b>{{ object.all_device.count }} из {{ object.limit_device }}</small></div>
+        <div><small class="{% if not object.module_available %} red{% endif %}"><b class="mr-2">Всего модулей:</b>{{ object.all_bnc_modules.count }} из {{ object.limit_modules }}</small></div>
+        <div><small class="{% if not object.equipment_available %} red{% endif %}"><b class="mr-2">Всего оборудования:</b>{{ object.all_equipment.count }} из {{ object.limit_equipment }}</small></div>
+        <div><small class=""><b class="mr-2">Лимит логов:</b>{{ object.records_limit }} д.</small></div>
+    </div>
+  </div>
+  <div class="col-12 text-center">
+    <h4>Параметры</h4>
+  </div>
+  <div class="col-12">
+    {% if request.user.status > object.status or request.user.is_admin %}
+    <form method="post">{% csrf_token %}
+      <div class="ml-2 mb-2">
+        <span class="h5">Лимиты:</span>
+      </div>
+      <div class="form-row ml-2 mb-2">
+        <div class="form-group col-auto pl-0 w150px">
+          <label for="{{ form.limit_draft.id_for_label }}">Черновики</label>
+          {{ form.limit_draft }}
+          {% if form.limit_draft.errors %}{{ form.limit_draft.errors }}{% else %}<span class="helptext">{{ form.limit_draft.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-auto w150px">
+          <label for="{{ form.limit_device.id_for_label }}">Устройства</label>
+          {{ form.limit_device }}
+          {% if form.limit_device.errors %}{{ form.limit_device.errors }}{% else %}<span class="helptext">{{ form.limit_device.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-auto w150px">
+          <label for="{{ form.limit_modules.id_for_label }}">BNC-модули</label>
+          {{ form.limit_modules }}
+          {% if form.limit_modules.errors %}{{ form.limit_modules.errors }}{% else %}<span class="helptext">{{ form.limit_modules.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-auto w150px">
+          <label for="{{ form.limit_equipment.id_for_label }}">Оборудования</label>
+          {{ form.limit_equipment }}
+          {% if form.limit_equipment.errors %}{{ form.limit_equipment.errors }}{% else %}<span class="helptext">{{ form.limit_equipment.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-auto w150px">
+          <label for="{{ form.records_limit.id_for_label }}">Запись (дней):</label>
+          {{ form.records_limit }}
+          {% if form.records_limit.errors %}{{ form.records_limit.errors }}{% else %}<span class="helptext">{{ form.records_limit.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="ml-2 mb-2">
+        <span class="h5">Статус пользователя:</span>
+      </div>
+      <div class="form-row ml-2 mb-2">
+        <div class="form-group col-auto pl-0 mr-2">
+          <label for="{{ form.status.id_for_label }}">Статус</label>
+          {% if request.user.is_admin %}
+          {{ form.status }}
+          {% else %}
+          <select class="form-control" name="status">
+            {% for st in stat %}
+            <option {% if object.status == st.0 %}selected{% endif %} value="{{ st.0 }}">{{ st.1 }}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
+          {% if form.status.errors %}{{ form.status.errors }}{% else %}<span class="helptext">{{ form.status.help_text }}</span>{% endif %}
+        </div>
+        <div id="premium" class="form-group col-auto"{% if object.status != 2 %} hidden{% endif %}>
+          <label for="id_premium_end">Окончание <strong>Премиум</strong></label>
+          <input id="id_premium_end" class="form-control" type="text" name="premium_end" value="{{ object.premium_end|date:'d.m.Y' }}" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+        </div>
+      </div>
+      <div class="ml-2 mb-2">
+        <span class="h5">Разрешения:</span>
+      </div>
+      <div class="form-row ml-2 mb-2">
+        {% if object.is_pro %}
+        <div class="form-group col-auto pl-0">
+          <div class="custom-control custom-switch">
+            <input id="id_editor" class="custom-control-input" type="checkbox" name="editor" {% if object.editor %}checked{% endif %}>
+            <label class="custom-control-label" for="id_editor">Может добавлять ингредиенты</label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="form-group d-flex justify-content-end">
+        <button type="submit" class="btn btn-secondary">Сохранить</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+  <div class="col-12 text-center">
+    <h4>Активность на сайте</h4>
+  </div>
+  {% if request.user.status > object.status or request.user.is_admin %}
+  <div class="col-12 mb-3">
+    <a class="link" data-toggle="collapse" href="#collapseVisitor" role="button" aria-expanded="false" aria-controls="collapseVisitor">
+      <h5 class="mt-4">Активность пользователя за последнюю неделю ({{ object.visitorhit_set.all.count }})</h5>
+    </a>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="collapse" id="collapseVisitor">
+      <span class="mb-2">Уникальные подключения:</span>
+      <div class="table-div overflow-auto mb-2" style="max-height: 50vh;">
+        <table class="table table-list mb-0">
+          <thead class="thead">
+            <tr>
+              <th scope="col">Время</a></th>
+              <th class="" scope="col">IP адрес</th>
+              <th class="d-none d-lg-table-cell" scope="col">User-agent</th>
+            </tr>
+          </thead>
+          <tbody class="tbody-transporent">
+          {% for i in object.visitordata_set.all %}
+            <tr>
+              <td>{{ i.date|date:"d.m.Y H:i:s" }}</td>
+              <td class="">{{ i.ip }}</td>
+              <td class="d-none d-lg-table-cell">{{ i.user_agent }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <span class="mb-2">Последняя активность:</span>
+      <div class="table-div overflow-auto" style="max-height: 50vh;">
+        <table class="table table-list mb-0">
+          <thead class="thead">
+            <tr>
+              <th scope="col">Время</a></th>
+              <th class="" scope="col">IP адрес</th>
+              <th scope="col">URL</th>
+              <th class="d-none d-lg-table-cell" scope="col">User-agent</th>
+            </tr>
+          </thead>
+          <tbody class="tbody-transporent">
+          {% for i in object.visitorhit_set.all|slice:":40"%}
+            <tr>
+              <td>{{ i.date|date:"d.m.Y H:i:s" }}</td>
+              <td class="">{{ i.ip }}</td>
+              <td>{{ i.url }}</td>
+              <td class="d-none d-lg-table-cell">{{ i.user_agent }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12 mb-3">
+    <a class="link" data-toggle="collapse" href="#collapseRecipes" role="button" aria-expanded="false" aria-controls="collapseRecipes">
+      <h5 class="mt-4">Рецепты пользователя ({{ object.recipe_count }})</h5>
+    </a>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="collapse" id="collapseRecipes">
+      <div class="table-div">
+        <table class="table table-list">
+          <thead class="thead">
+            <tr>
+              <th scope="col">Название</th>
+              <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'o' 'type' '-' %}">&#9660;Тип&#9650;</a></th>
+              <th class="d-none d-sm-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'o' 'style' '-' %}">&#9660;Стиль&#9650;</a></th>
+              <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'o' 'сonformity' '-' %}">&#9660;Cоответствие&#9650;</a></th>
+              <th scope="col"><a class="link" href="?{% url_replace view.request 'o' 'status' '-' %}">&#9660;Статус&#9650;</a></th>
+              <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'o' 'created_date' '-' %}" title="Создан">&#9660;<i class="material-icons align-bottom">&#xe916;</i>&#9650;</a></th>
+            </tr>
+          </thead>
+          <tbody class="tbody-transporent">
+          {% for recipe in object.all_recipes %}
+            <tr>
+              <td><a class="link" href="{% url 'recipe_detail' recipe.slug %}">{{ recipe.name }}</a></td>
+              <td class="d-none d-lg-table-cell">{{ recipe.get_type_display }}</td>
+              <td class="d-none d-sm-table-cell">{{ recipe.style|default_if_none:'---'  }}</td>
+              <td class="d-none d-md-table-cell">{{ recipe.get_сonformity_display }}</td>
+              <td>{{ recipe.get_status_display }}</td>
+              <td class="d-none d-lg-table-cell">{{ recipe.created_date|date:"d.m.Y" }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 d-flex justify-content-between">
+    <a class="btn btn-secondary" href="{{ request.META.HTTP_REFERER }}">Назад</a>
+    <a class="btn btn-secondary" href="" data-toggle="modal" data-target="#modalBan" title="Забанить пользователя"><i class="material-icons align-bottom mr-2">voice_over_off</i>Забанить</a>
+  </div>
+</div>
+
+
+<script>
+  $(document).ready(function () {
+      $('select[name="status"]').change(function() {
+          let status = $(this).find(":checked").val();
+          if (status == 2) {
+              $('#premium').attr('hidden', false);
+          }
+          else {
+              $('#premium').attr('hidden', true);
+          }
+      });
+  });
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalBan" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header d-flex justify-content-center">
+        <div class="">
+          <img class="img" src="{% static 'img/in_ban.jpg' %}" alt="Забанить пользователя">
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <h3>Уверен???</h3>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form id="delete-form" action="{% url 'admn_user_ban' object.username %}">
+          <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-dark">Забанить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}{{ misc }}{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_editor %}
+      <a class="link" href="{% url 'misc_edit' misc.slug %}" title="Редактировать"><span class="small">Редактировать</span></a>
+      <a class="link ml-3" href="{% url 'misc_add' %}" title="Добавить"><span class="small">Добавить</span></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{{ misc.name }} ({{ misc.company|default_if_none:'---' }})</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Категория:</i><b>{{ misc.get_type_display }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Страна:</i><b>{{ misc.country|default_if_none:'---' }}</b></span>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Описание:</h5>
+        <p>{{ misc.description|linebreaks }}</p>
+      </div>
+      <div class="col-12 d-flex justify-content-start mt-4 mb-2">
+        <a class="btn btn-secondary" href="{% url 'misc_list' %}">Назад к списку</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

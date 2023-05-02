@@ -1,0 +1,1992 @@
+{% extends 'base.html' %}
+{% load static brew core %}
+
+{% block page_title %}Расчет профиля вода{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="/static/js/calcs.js"></script>
+{% endblock %}
+
+{% block center %}
+{% include 'computing/comp_menu.html' %}
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 text-center mb-3">
+    <h4>Расчёт профиля воды</h4>
+  </div>
+	<div class="col-12">
+		<form name="calc_water" class="w-100" onsubmit="return false;">
+			<script>
+				var	original = {"ca": 0, "mg": 0, "na": 0, "cl": 0, "so": 0, "hco": 0, "co": 0, "ph": 8},
+						target = {"ca": 0, "mg": 0, "na": 0, "cl": 0, "so": 0, "hco": 0},
+						added = {"ca": 0, "mg": 0, "na": 0, "cl": 0, "so": 0, "hco": 0},
+						result = {"ca": 0, "mg": 0, "na": 0, "cl": 0, "so": 0, "hco": 0},
+						origAlkalinity = 0,
+						targAlkalinity = 0,
+						totalWeight = 0,
+						batchSize = 0,
+						mashWater = 0,
+						spargeWater = 0,
+						targetSpargePH = 0,
+						ph = 0,
+						i25 = 0,
+						j25 = 0,
+						SRM = 0;
+				function changeChoiceCalculate() {
+						let choice = $('input[name="input_recipe"]:checked').val();
+						if (choice == 'new') {
+								$('#select-recipe').prop('hidden', true);
+								$('#input-grain').prop('hidden', false);
+								$('input[name="mash_water"]').prop('disabled', false);
+								$('input[name="sparge_water"]').prop('disabled', false);
+								$('input[name="batch_size"]').prop('disabled', false);
+								setNewCalcParam();
+						}
+						else {
+								$('#select-recipe').prop('hidden', false);
+								$('#input-grain').prop('hidden', true);
+								$('input[name="mash_water"]').prop('disabled', true);
+								$('input[name="sparge_water"]').prop('disabled', true);
+								$('input[name="batch_size"]').prop('disabled', true);
+								choiceRecipe();
+						}
+						$('input[name="step_1"]').prop('hidden', false);
+				}
+				function choiceRecipe() {
+						let recipe = $('select[name="user_recipes"] option:selected').attr('data-recipe');
+      			let data = JSON.parse(recipe);
+      			let mash = Number(data.mash.replace(',', '.'));
+      			let sparge = Number(data.sparge.replace(',', '.'));
+      			let batch = Number(data.batch.replace(',', '.'));
+      			let srm = Number(data.srm.replace(',', '.'));
+      			let i25_ = data.i25['I25'];
+      			let j25_ = data.i25['J25'];
+      			$('input[name="mash_water"]').val(mash);
+      			$('input[name="sparge_water"]').val(sparge);
+      			$('input[name="batch_size"]').val(batch);
+      			$('#srm').text(srm);
+      			i25 = i25_;
+      			j25 = j25_;
+      			SRM = srm;
+						mashWater = mash;
+						spargeWater = sparge;
+						batchSize = batch;
+						calcPH();
+						if ($('.acidification-needed').is(":visible")) {
+								setSpargingWaterTargetPH();
+								calcSpargingWaterAcidification();
+						}
+						setTargetPH();
+						if (!($('#output-result').is(':hidden'))) {
+								$('#save-result').prop('hidden', false);
+						}
+						$('input[name="recipe_id"]').val($('select[name="user_recipes"] option:selected').val());
+				}
+
+				function setNewCalcParam() {
+						mashWater = Number($('input[name="mash_water"]').val().replace(',', '.'));
+						spargeWater = Number($('input[name="sparge_water"]').val().replace(',', '.'));;
+						batchSize = Number($('input[name="batch_size"]').val().replace(',', '.'));
+						calcI25SRM();
+						calcPH();
+						if ($('.acidification-needed').is(":visible")) {
+								setSpargingWaterTargetPH();
+								calcSpargingWaterAcidification();
+						}
+						$('#save-result').prop('hidden', true);
+						$('input[name="recipe_id"]').val('');
+				}
+				function setGrains() {
+						calcI25SRM();
+						calcPH();
+						if ($('.acidification-needed').is(":visible")) {
+								setSpargingWaterTargetPH();
+								calcSpargingWaterAcidification();
+						}
+				}
+    		function calcI25SRM() {
+						let totalW = 0;
+    		    let I25 = 0;
+    		    let batch = 0.264172052 * batchSize;
+    		    let mcu = 0;
+    		    $("#grain-items .grain").each(function (a) {
+								let amount = Number($(this).find('.grain-amount').val().replace(',', '.'));
+								totalW += amount;
+								let I6 = 0;
+								let dt = $(this).find('.grain-color').val().split('-');
+								let lov = Number(dt[0].replace(',', '.'));
+								let h6 = 2.20462262 * lov * (amount / batch);
+								mcu += h6;
+								if (dt[1] == 4) {
+									I6 = amount * 2.21 * ((0.28 * lov) - 2.7);
+								} else if (dt[1] == 3) {
+										I6 = amount * 2.21 * 95;
+								} else if (dt[1] == 2) {
+										I6 = amount * 2.21 * 38;
+								} else if (dt[1] == 1) {
+										I6 = amount * 2.21 * ((0.21 * lov) + 2.5);
+								} else {
+										I6 = amount * 2.21 * 0.28 * lov;
+								}
+								I25 += I6;
+						});
+    		    i25 = I25;
+    		    let srm = 1.4922 * Math.pow(mcu, 0.6859);
+      	  	if (srm >= 40) {
+      	  	   srm = 40;
+      	  	}
+      	  	SRM = srm;
+      	  	totalWeight = totalW;
+      	  	let j25_ = 0.4792 * mashWater / totalWeight;
+      	  	j25 = j25_;
+      	  	$('#srm').text(round(srm, 1));
+      	  	setTargetPH();
+    		}
+    		function calcPH() {
+						let v16 = result['hco'] * (50 / 61) * (1 + 2 * Math.pow(10, -4))
+						let u16 = v16 - (result['ca'] * 0.7143 + result['mg'] * 0.5879);
+						let i24 = (u16 / 50) * mashWater;
+						let i26 = (i25 - (i24 * j25 / 1.5)) / mashWater;
+						let pph = 5.76 - 0.17 * i26;
+						if (pph < 0) {
+							ph = 0.1;
+						}
+						else {
+							ph = pph || 0;
+						}
+						setPH();
+				}
+				function setPH() {
+						$('.ph').removeClass('red green yellow');
+						if (ph < 5.15 || ph >= 6 ) {
+								$('.ph').addClass('red');
+						}
+						else {
+								if (SRM < 7) {
+										if (5.2 <= ph && ph <= 5.3 ) {
+												$('.ph').addClass('green');
+										}
+										else {
+											$('.ph').addClass('yellow');
+										}
+								}
+								else if (7 <= SRM && SRM < 18) {
+										if (5.3 <= ph && ph <= 5.4 ) {
+												$('.ph').addClass('green');
+										}
+										else {
+											$('.ph').addClass('yellow');
+										}
+								}
+								else if (18 <= SRM) {
+										if (5.4 <= ph && ph <= 5.6 ) {
+												$('.ph').addClass('green');
+										}
+										else {
+											$('.ph').addClass('yellow');
+										}
+								}
+						}
+						$('.ph').text(round(ph, 2));
+						$('#total-ph').text(round(ph, 2));
+				}
+				function setTargetPH() {
+						let targetPH;
+						if (SRM < 7) {
+								targetPH = '5.2-5.3';
+								$('input[name="final_profile_ph"]').val(5.2);
+						}
+						else if (7 <= SRM && SRM < 18) {
+								targetPH = '5.3-5.4';
+								$('input[name="final_profile_ph"]').val(5.3);
+						}
+						else if (18 <= SRM && SRM < 30) {
+								targetPH = '5.4-5.5';
+								$('input[name="final_profile_ph"]').val(5.4);
+						}
+						else if ( 30 <= SRM) {
+								targetPH = '5.5-5.6';
+								$('input[name="final_profile_ph"]').val(5.5);
+						}
+						else {
+								targetPH = '0.0';
+								$('input[name="final_profile_ph"]').val(0);
+						}
+						$('#target-ph').text(targetPH);
+				}
+				function changeChoiceOriginalWater() {
+						let choice = $('input[name="input_water_original"]:checked').val();
+						if (choice == 'new') {
+								$('#select-water').prop('hidden', true);
+								$('input[name="original_Ca"]').prop('disabled', false);
+								$('input[name="original_Mg"]').prop('disabled', false);
+								$('input[name="original_Na"]').prop('disabled', false);
+								$('input[name="original_Cl"]').prop('disabled', false);
+								$('input[name="original_SO"]').prop('disabled', false);
+								$('input[name="original_CO"]').prop('disabled', false);
+								$('input[name="original_HCO"]').prop('disabled', false);
+								$('input[name="original_PH"]').prop('disabled', false);
+								setNewWaterProfile('O');
+						}
+						else {
+								$('#select-water').prop('hidden', false);
+								$('input[name="original_Ca"]').prop('disabled', true);
+								$('input[name="original_Mg"]').prop('disabled', true);
+								$('input[name="original_Na"]').prop('disabled', true);
+								$('input[name="original_Cl"]').prop('disabled', true);
+								$('input[name="original_SO"]').prop('disabled', true);
+								$('input[name="original_CO"]').prop('disabled', true);
+								$('input[name="original_HCO"]').prop('disabled', true);
+								$('input[name="original_PH"]').prop('disabled', true);
+								choiceOriginalWaterProfile();
+						}
+						$('input[name="step_2"]').prop('hidden', false);
+				}
+				function choiceOriginalWaterProfile() {
+						let profile = $('select[name="input_water_original"] option:selected').attr('data-water');
+      			let data = JSON.parse(profile);
+      			let Ca = Number(data.ca.replace(',', '.'));
+      			let Mg = Number(data.mg.replace(',', '.'));
+      			let Na = Number(data.na.replace(',', '.'));
+      			let Cl = Number(data.cl.replace(',', '.'));
+      			let SO = Number(data.so.replace(',', '.'));
+      			let HCO = Number(data.hco.replace(',', '.'));
+      			let PH = Number(data.ph.replace(',', '.'));
+      			original = {"ca": Ca, "mg": Mg, "na": Na, "cl": Cl, "so": SO, "hco": HCO, "co": 0, "ph": PH};
+      			$('input[name="original_Ca"]').val(Ca);
+      			$('input[name="original_Mg"]').val(Mg);
+      			$('input[name="original_Na"]').val(Na);
+      			$('input[name="original_Cl"]').val(Cl);
+      			$('input[name="original_SO"]').val(SO);
+      			$('input[name="original_HCO"]').val(HCO);
+      			$('input[name="original_PH"]').val(PH);
+      			$('input[name="original_profile_ph"]').val(round(PH, 0));
+      			origWaterProfile();
+      			checkIonBalance('O');
+      			calcPH();
+				}
+				function changeChoiceTargetProfile() {
+						let choice = $('input[name="input_water_target"]:checked').val();
+						if (choice == 'classic') {
+								$('#select-target-classic').prop('hidden', false);
+								$('#select-target-recipe').prop('hidden', true);
+								$('input[name="target_Ca"]').prop('disabled', true);
+								$('input[name="target_Mg"]').prop('disabled', true);
+								$('input[name="target_Na"]').prop('disabled', true);
+								$('input[name="target_Cl"]').prop('disabled', true);
+								$('input[name="target_SO"]').prop('disabled', true);
+								$('input[name="target_CO"]').prop('disabled', true);
+								$('input[name="target_HCO"]').prop('disabled', true);
+								choiceTargetWaterProfile();
+						}
+						else if (choice == 'recipe') {
+								$('#select-target-classic').prop('hidden', true);
+								$('#select-target-recipe').prop('hidden', false);
+								$('input[name="target_Ca"]').prop('disabled', true);
+								$('input[name="target_Mg"]').prop('disabled', true);
+								$('input[name="target_Na"]').prop('disabled', true);
+								$('input[name="target_Cl"]').prop('disabled', true);
+								$('input[name="target_SO"]').prop('disabled', true);
+								$('input[name="target_CO"]').prop('disabled', true);
+								$('input[name="target_HCO"]').prop('disabled', true);
+								choiceTargetWaterProfile();
+						}
+						else {
+								$('#select-target-classic').prop('hidden', true);
+								$('#select-target-recipe').prop('hidden', true);
+								$('input[name="target_Ca"]').prop('disabled', false);
+								$('input[name="target_Mg"]').prop('disabled', false);
+								$('input[name="target_Na"]').prop('disabled', false);
+								$('input[name="target_Cl"]').prop('disabled', false);
+								$('input[name="target_SO"]').prop('disabled', false);
+								$('input[name="target_CO"]').prop('disabled', false);
+								$('input[name="target_HCO"]').prop('disabled', false);
+								setNewWaterProfile('T');
+						}
+						$('input[name="step_3"]').prop('hidden', false);
+				}
+				function choiceTargetWaterProfile() {
+						let profile;
+						let choice = $('input[name="input_water_target"]:checked').val();
+						if (choice == 'classic') {
+								profile = $('select[name="target_classic"] option:selected').attr('data-water');
+						}
+						else if (choice == 'recipe') {
+								profile = $('select[name="target_recipe"] option:selected').attr('data-water');
+						}
+      			let data = JSON.parse(profile);
+      			let Ca = Number(data.ca.replace(',', '.'));
+      			let Mg = Number(data.mg.replace(',', '.'));
+      			let Na = Number(data.na.replace(',', '.'));
+      			let Cl = Number(data.cl.replace(',', '.'));
+      			let SO = Number(data.so.replace(',', '.'));
+      			let HCO = Number(data.hco.replace(',', '.'));
+      			target = {"ca": Ca, "mg": Mg, "na": Na, "cl": Cl, "so": SO, "hco": HCO, "co": 0};
+      			$('input[name="target_Ca"]').val(Ca);
+      			$('input[name="target_Mg"]').val(Mg);
+      			$('input[name="target_Na"]').val(Na);
+      			$('input[name="target_Cl"]').val(Cl);
+      			$('input[name="target_SO"]').val(SO);
+      			$('input[name="target_HCO"]').val(HCO);
+      			targWaterProfile();
+      			checkIonBalance('T');
+				}
+				function setNewWaterProfile(p) {
+						let profile;
+						let PH;
+						if (p == 'O') {
+							profile = 'original';
+							PH = Number($('input[name="original_PH"]').val().replace(',', '.'));
+							$('input[name="original_profile_ph"]').val(round(PH, 0));
+						}
+						else if (p == 'T') {
+							profile = 'target';
+						}
+						else {
+							return false;
+						}
+						let Ca = Number($('input[name='+profile+'_Ca]').val().replace(',', '.'));
+						let Mg = Number($('input[name='+profile+'_Mg]').val().replace(',', '.'));
+						let Na = Number($('input[name='+profile+'_Na]').val().replace(',', '.'));
+						let Cl = Number($('input[name='+profile+'_Cl]').val().replace(',', '.'));
+						let SO = Number($('input[name='+profile+'_SO]').val().replace(',', '.'));
+						let CO = Number($('input[name='+profile+'_CO]').val().replace(',', '.'));
+						let HCO = Number($('input[name='+profile+'_HCO]').val().replace(',', '.'));
+						if (p == 'O') {
+							original = {"ca": Ca, "mg": Mg, "na": Na, "cl": Cl, "so": SO, "hco": HCO, "co": CO, "ph": PH};
+						}
+						else {
+							target = {"ca": Ca, "mg": Mg, "na": Na, "cl": Cl, "so": SO, "co": 0, "hco": HCO};
+						}
+						checkIonBalance(p);
+						calcPH();
+				}
+				function checkIonBalance(p) {
+						let profile;
+						let Ca,
+								Mg,
+								Na,
+								Cl,
+								SO,
+								CO,
+								HCO;
+						if (p == 'O') {
+							profile = 'original';
+							Ca = original['ca'];
+							Mg = original['mg'];
+							Na = original['na'];
+							Cl = original['cl'];
+							SO = original['so'];
+							CO = original['co'];
+							HCO = original['hco'];
+						}
+						else if (p == 'T') {
+							profile = 'target';
+							Ca = target['ca'];
+							Mg = target['mg'];
+							Na = target['na'];
+							Cl = target['cl'];
+							SO = target['so'];
+							CO = target['co'];
+							HCO = target['hco'];
+						}
+						else {
+								return false;
+						}
+						let cations = Ca / 20.05 + Mg / 12.15 + Na / 23;
+						let anions = HCO / 61 + CO / 30 + SO / 48 + Cl / 35.45;
+						let ionBalance = cations - anions;
+						let a = 50 * ((HCO / 61) + (2 * CO / 60));
+						let txt = round(cations, 1)+' | '+round(anions, 1);
+						let ib = $('#' + profile + '_ion_balance');
+						ib.text(round(ionBalance, 2));
+						let ca = $('#' + profile + '_ca');
+						ca.text(txt);
+						let alc = $('#' + profile + '_alc');
+						alc.removeClass();
+						if (a < 25) {
+								alc.addClass('green');
+						}
+						else {
+								alc.addClass('red');
+						}
+						alc.text(round(a, 1));
+						if (p == 'O') {
+							origAlkalinity = a;
+							origWaterProfile();
+							if (origAlkalinity < 25) {
+									$('.acidification-needed').prop('hidden', true);
+									$('#acidification-not-needed').prop('hidden', false);
+							}
+							else {
+									$('.acidification-needed').prop('hidden', false);
+									$('#acidification-not-needed').prop('hidden', true);
+									if ($('.acidification-needed').is(":visible")) {
+											setSpargingWaterTargetPH();
+											calcSpargingWaterAcidification();
+									}
+							}
+						}
+						else if (p == 'T') {
+							targAlkalinity = a;
+							targWaterProfile();
+						}
+						ib.removeClass();
+						ca.removeClass();
+						if (Math.abs(ionBalance) > 0.5) {
+								ib.addClass('red');
+								ca.addClass('red');
+								$('#error-ib-' + profile).prop('hidden', false);
+						}
+						else {
+								ib.addClass('green');
+								ca.addClass('green');
+								$('#error-ib-' + profile).prop('hidden', true);
+						}
+						diffWaterProfile();
+						diffAdditionsWaterProfile();
+						resultWaterProfile();
+				}
+				function origWaterProfile() {
+						$('#orig-ca').text(round(original['ca'], 0));
+      			$('#orig-mg').text(round(original['mg'], 0));
+      			$('#orig-na').text(round(original['na'], 0));
+      			$('#orig-cl').text(round(original['cl'], 0));
+      			$('#orig-so').text(round(original['so'], 0));
+      			$('#orig-hco').text(round(original['hco'], 0));
+      			$('input[name="original_profile_ca"]').val(round(original['ca'], 0));
+      			$('input[name="original_profile_mg"]').val(round(original['mg'], 0));
+      			$('input[name="original_profile_na"]').val(round(original['na'], 0));
+      			$('input[name="original_profile_cl"]').val(round(original['cl'], 0));
+      			$('input[name="original_profile_so"]').val(round(original['so'], 0));
+      			$('input[name="original_profile_hco"]').val(round(original['hco'], 0));
+				}
+				function targWaterProfile() {
+						$('#targ-ca').text(round(target['ca'], 0));
+      			$('#targ-mg').text(round(target['mg'], 0));
+      			$('#targ-na').text(round(target['na'], 0));
+      			$('#targ-cl').text(round(target['cl'], 0));
+      			$('#targ-so').text(round(target['so'], 0));
+      			$('#targ-hco').text(round(target['hco'], 0));
+				}
+				function diffWaterProfile() {
+						$('#diff-ca').text(round(target['ca'] - original['ca'], 0));
+      			$('#diff-mg').text(round(target['mg'] - original['mg'], 0));
+      			$('#diff-na').text(round(target['na'] - original['na'], 0));
+      			$('#diff-cl').text(round(target['cl'] - original['cl'], 0));
+      			$('#diff-so').text(round(target['so'] - original['so'], 0));
+      			$('#diff-hco').text(round(target['hco'] - original['hco'], 0));
+				}
+				function addedWaterProfile() {
+						$('#added-ca').text(round(added['ca'], 0));
+      			$('#added-mg').text(round(added['mg'], 0));
+      			$('#added-na').text(round(added['na'], 0));
+      			$('#added-cl').text(round(added['cl'], 0));
+      			$('#added-so').text(round(added['so'], 0));
+      			$('#added-hco').text(round(added['hco'], 0));
+				}
+				function diffAdditionsWaterProfile() {
+						let ca = (original['ca'] + added['ca']) - target['ca'];
+						let mg = (original['mg'] + added['mg']) - target['mg'];
+						let na = (original['na'] + added['na']) - target['na'];
+						let cl = (original['cl'] + added['cl']) - target['cl'];
+						let so = (original['so'] + added['so']) - target['so'];
+						let hco = (original['hco'] + added['hco']) - target['hco'];
+						$('#diff-additions-ca').text(round(ca, 0));
+      			$('#diff-additions-mg').text(round(mg, 0));
+      			$('#diff-additions-na').text(round(na, 0));
+      			$('#diff-additions-cl').text(round(cl, 0));
+      			$('#diff-additions-so').text(round(so, 0));
+      			$('#diff-additions-hco').text(round(hco, 0));
+				}
+				function resultWaterProfile() {
+						let ca = added['ca'] + original['ca'];
+						let mg = added['mg'] + original['mg'];
+						let na = added['na'] + original['na'];
+						let cl = added['cl'] + original['cl'];
+						let so = added['so'] + original['so'];
+						let hco = added['hco'] + original['hco'];
+						result = {"ca": ca, "mg": mg, "na": na, "cl": cl, "so": so, "hco": hco};
+						let resultCa = round(ca, 0);
+						let resultMg = round(mg, 0);
+						let resultNa = round(na, 0);
+						let resultCl = round(cl, 0);
+						let resultSo = round(so, 0);
+						let resultHco = round(hco, 0);
+						$('#result-ca').text(resultCa);
+      			$('#result-mg').text(resultMg);
+      			$('#result-na').text(resultNa);
+      			$('#result-cl').text(resultCl);
+      			$('#result-so').text(resultSo);
+      			$('#result-hco').text(resultHco);
+      			$('#total-ca').text(resultCa);
+      			$('#total-mg').text(resultMg);
+      			$('#total-na').text(resultNa);
+      			$('#total-cl').text(resultCl);
+      			$('#total-so').text(resultSo);
+      			$('#total-hco').text(resultHco);
+      			$('input[name="final_profile_ca"]').val(resultCa);
+      			$('input[name="final_profile_mg"]').val(resultMg);
+      			$('input[name="final_profile_na"]').val(resultNa);
+      			$('input[name="final_profile_cl"]').val(resultCl);
+      			$('input[name="final_profile_so"]').val(resultSo);
+      			$('input[name="final_profile_hco"]').val(resultHco);
+						let cations = ca / 20.05 + mg / 12.15 + na / 23;
+						let anions = hco / 61 + so / 48 + cl / 35.45;
+      			let hardness = 50 * ((ca / 20) + (mg / 12.15));
+      			let alk = hco * (50 / 61) * (1 + (2 * Math.pow(10, -4)));
+      			let socl = 0;
+      			if (cl > 0) {
+      				socl = so / cl;
+						}
+      			if (socl > 0 && socl <= 0.5) {
+    				   $('#socl-text').text('Баланс смещен сильно в сторону хлоридов. Усилит солодовое тело и сладость в пиве.');
+    				}
+    				if (socl > 0.5 && socl <= 0.7) {
+    				    $('#socl-text').text('Баланс смещен в сторону хлоридов. Усилит солодовое тело.');
+    				}
+    				if (socl > 0.7 && socl <= 1.3) {
+								$('#socl-text').text('Хорошо сбалансирован между хмелевой горечью и солодовым телом.');
+						}
+    				if (socl > 1.3 && socl <= 2) {
+    				    $('#socl-text').text('Баланс смещен в сторону сульфатов. Усилит хмелевую горечь.');
+    				}
+    				if (socl > 2) {
+    				    $('#socl-text').text('Баланс сильно смещен в сторону сульфатов. Усилит хмелевую горечь и сухость в пиве.');
+    				}
+    				if (cl <= 5 && so <= 5) {
+    				    $('#socl-text').text('Низкие содержание хлоридов/сульфатов. Баланс не определить');
+    				}
+    				if (alk >= 0 && alk <= 50) {
+    				    $('#alk-text').text('Хорошо для светлого пива (0-50 ppm).');
+    				}
+    				if (alk > 50 && alk <= 150) {
+    				    $('#alk-text').text('Хорошо для янтарного пива (50-150 ppm).');
+    				}
+    				if (alk > 150 && alk <= 300) {
+    				    $('#alk-text').text('Хорошо для тёмного пива (150-300 ppm).');
+    				}
+    				if (alk > 300) {
+    				    $('#alk-text').text('Высокий уровень. Уменьшите. (>300 ppm).');
+    				}
+						$('#total-cations').text(round(cations, 1));
+						$('#total-anions').text(round(anions, 1));
+						$('#total-ib').text(round(cations - anions, 1));
+						$('#total-hn').text(round(hardness, 0));
+						$('#total-alk').text(round(alk, 0));
+						$('#total-socl').text(round(socl, 1));
+						checkResult('ca');
+						checkResult('mg');
+						checkResult('na');
+						checkResult('so');
+						checkResult('cl');
+						checkResult('hco');
+				}
+				function checkResult(m) {
+						let r = result[m]
+						$('#diff-additions-'+m).removeClass('red green yellow');
+						$('#result-'+m).removeClass('red green yellow');
+						if (m == 'hco' && result[m] < 0) {
+								$('#diff-additions-' + m).addClass('red');
+								$('#result-'+m).addClass('red');
+						}
+						else {
+								if (Math.floor(target[m] * 0.98) <= r && r <= Math.ceil(target[m] * 1.02)) {
+									$('#diff-additions-' + m).addClass('green');
+									$('#result-' + m).addClass('green');
+								} else {
+									$('#diff-additions-' + m).addClass('yellow');
+									$('#result-' + m).addClass('yellow');
+								}
+						}
+						let lb = $('#total-add-'+m);
+						lb.removeClass('red green yellow');
+						if (m == 'ca') {
+								if (result[m] < 40) {
+										lb.text('warning');
+										lb.addClass('yellow')
+										lb.prop('title', 'Низкий уровень. Рекомендуется 40...150ppm');
+								}
+								if (40 <= result[m] && result[m] < 150) {
+										lb.text('check_circle');
+										lb.addClass('green')
+										lb.prop('title', 'Рекомендуемый уровень');
+								}
+								if (150 <= result[m] && result[m] <= 250) {
+										lb.text('warning');
+										lb.addClass('yellow')
+										lb.prop('title', 'Высокий уровень. Рекомендуется 40...150ppm');
+								}
+								if (result[m] > 250) {
+										lb.text('dangerous');
+										lb.addClass('red')
+										lb.prop('title', 'Опасный уровень!. Рекомендуется 40...150ppm');
+								}
+						}
+						if (m == 'mg') {
+								if (0 <= result[m] && result[m] <= 30) {
+										lb.text('check_circle');
+										lb.addClass('green')
+										lb.prop('title', 'Рекомендуемый уровень');
+								}
+								if (30 < result[m] && result[m] <= 50) {
+										lb.text('warning');
+										lb.addClass('yellow')
+										lb.prop('title', 'Высокий уровень. Рекомендуется 0...30ppm');
+								}
+								if (result[m] > 50) {
+										lb.text('dangerous');
+										lb.addClass('red')
+										lb.prop('title', 'Опасный уровень! Рекомендуется 0...30ppm');
+								}
+						}
+						if (m == 'na') {
+								if (0 <= result[m] && result[m] <= 150) {
+										lb.text('check_circle');
+										lb.addClass('green')
+										lb.prop('title', 'Рекомендуемый уровень');
+								}
+								if (150 < result[m] && result[m] <= 200) {
+										lb.text('warning');
+										lb.addClass('yellow')
+										lb.prop('title', 'Высокий уровень. Рекомендуется 0...150ppm');
+								}
+								if (result[m] > 200) {
+										lb.text('dangerous');
+										lb.addClass('red')
+										lb.prop('title', 'Опасный уровень! Рекомендуется 0...150ppm');
+								}
+						}
+						if (m == 'so') {
+								if (0 <= result[m] && result[m] <= 350) {
+										lb.text('check_circle');
+										lb.addClass('green')
+										lb.prop('title', 'Рекомендуемый уровень');
+								}
+								if (350 < result[m] && result[m] <= 750) {
+										lb.text('warning');
+										lb.addClass('yellow')
+										lb.prop('title', 'Высокий уровень. Рекомендуется 0...350ppm');
+								}
+								if (result[m] > 750) {
+										lb.text('dangerous');
+										lb.addClass('red')
+										lb.prop('title', 'Опасный уровень! Рекомендуется 0...350ppm');
+								}
+						}
+						if (m == 'cl') {
+								if (0 <= result[m] && result[m] <= 100) {
+										lb.text('check_circle');
+										lb.addClass('green')
+										lb.prop('title', 'Рекомендуемый уровень');
+								}
+								if (100 < result[m] && result[m] <= 250) {
+										lb.text('warning');
+										lb.addClass('yellow')
+										lb.prop('title', 'Высокий уровень. Рекомендуется 0...100ppm');
+								}
+								if (result[m] > 300) {
+										lb.text('dangerous');
+										lb.addClass('red')
+										lb.prop('title', 'Опасный уровень! Рекомендуется 0...100ppm');
+								}
+						}
+						if (m == 'hco') {
+								if (result[m] < 0) {
+										lb.text('dangerous');
+										lb.addClass('red')
+										lb.prop('title', 'Низкий уровень. Не должен быть меньше 0ppm');
+								}
+								else {
+										lb.addClass('green')
+								}
+						}
+				}
+				function setSpargingWaterTargetPH() {
+						if (SRM < 7) {
+								targetSpargePH = 5.3;
+						} else if (7 <= SRM && SRM < 18) {
+								targetSpargePH = 5.4;
+						} else if (18 <= SRM && SRM < 30) {
+								targetSpargePH = 5.5;
+						} else if ( 30 <= SRM) {
+								targetSpargePH = 5.6;
+						}
+						else {
+								targetSpargePH = 5.5;
+						}
+						$('input[name="sparge_target_PH"]').val(targetSpargePH);
+				}
+				function calcSpargingWaterAcidification() {
+						let b6 = Number($('input[name="sparge_target_PH"]').val().replace(',', '.'));
+						let b5 = original['ph'];
+						let t40 = Math.pow(10, (b6 - 6.38));
+						let t41 = Math.pow(10, (b6 - 10.33));
+						let t42 = 1 + t40 + (t40 * t41);
+						let t45 = (t40 * t41) / t42;
+						let t43 = 1 / t42;
+						let t22 = Math.pow(10, (b5 - 6.38));
+						let t23 = Math.pow(10, (b5 - 10.33));
+						let t24 = 1 + t22 + (t22 * t23);
+						let t27 = (t22 * t23) / t24;
+						let t25 = 1 / t24;
+						let t29 = 4.3;
+						let t30 = Math.pow(10, (t29 - 6.38));
+						let t31 = Math.pow(10, (t29 - 10.33));
+						let t32 = 1 + t30 + (t30 * t31);
+						let t33 = 1 / t32;
+						let t35 = (t30 * t31) / t32;
+						let t37 = (origAlkalinity / 50) / ((t33 - t25) + (t27 - t35));
+						let t47 = t37 * ((t43 - t25) + (t27 - t45)) + Math.pow(10, (-1 * b6)) - Math.pow(10, (-1 * b5)) + 0.01;
+						let finalAlk = round(origAlkalinity - (t47 * 50), 1);
+						$('#sparge_final_alc').removeClass();
+						if (finalAlk < 25) {
+								$('#sparge_final_alc').addClass('green');
+						}
+						else if (25 <= finalAlk && finalAlk < 50) {
+								$('#sparge_final_alc').addClass('yellow');
+						}
+						else if (50 <= finalAlk) {
+								$('#sparge_final_alc').addClass('red');
+						}
+						$('#sparge_final_alc').text(finalAlk+ ' ppm');
+						let acidType = $('select[name="sparge_acid_type"] option:selected').val();
+						let f10 = Number($('input[name="sparge_acid_strength"]').val().replace(',', '.'));
+						let acidRequred = 0;
+						let SG;
+						let b7 = 1;
+						let c50;
+						let d50;
+						let e50;
+						let f50;
+						let j57 = 1;
+						let measure = 'мл/л';
+						if (acidType == 'lactic') {
+								SG = 1000 * ((-5.6193 * Math.pow(10, -10) * Math.pow(f10, 4)) + (5.115 * Math.pow(10, -8) * Math.pow(f10, 3)) + (-1.1408 * Math.pow(10, -6) * Math.pow(f10, 2)) + (2.4529 * Math.pow(10, -3) * f10) + 0.998);
+								c50 = 3.86;
+								d50 = 20;
+								e50 = 20;
+								f50 = 90.08;
+						}
+						else if (acidType == 'phosphoric') {
+								SG = 1000 * ((-3.9523 * Math.pow(10, -9) * Math.pow(f10, 4)) + (6.8571 * Math.pow(10, -7) * Math.pow(f10, 3)) + (5.4475 * Math.pow(10, -7) * Math.pow(f10, 2)) + (5.51368 * Math.pow(10, -3) * f10) + 0.99778);
+								c50 = 2.12;
+								d50 = 7.2;
+								e50 = 12.44;
+								f50 = 98;
+						}
+						else if (acidType == 'acetic') {
+								SG = 1000 * ((-7.575 * Math.pow(10, -10) * Math.pow(f10, 4)) + (7.01 * Math.pow(10, -8) * Math.pow(f10, 3)) + (-9.254 * Math.pow(10, -6) * Math.pow(f10, 2)) + (1.575 * Math.pow(10, -3) * f10) + 0.9979);
+								c50 = 4.75;
+								d50 = 20;
+								e50 = 20;
+								f50 = 60.05;
+						}
+						else if (acidType == 'citric') {
+								c50 = 3.14
+								d50 = 4.77;
+								e50 = 6.39;
+								f50 = 192.13;
+								measure = 'г/л';
+						}
+						let t53 = Math.pow(10, (b6 - c50));
+						let t54 = Math.pow(10, (b6 - d50));
+						let t55 = Math.pow(10, (b6 - e50));
+						let t56 = 1 / (1 + t53 + (t53 * t54) + (t53 * t54 * t55));
+						let t58 = t56 * t53;
+						let t59 = t53 * t54 * t56;
+						let t60 = t53 * t54 * t55 * t56;
+						let t61 = t58 + (2 * t59) + (3 * t60);
+						let t63 = t47 / t61;
+						let o51 = t63 * f50 * b7 * j57;
+						if (acidType == 'citric') {
+								acidRequred = (t63 * f50 * b7 * j57) / 1000;
+						}
+						else {
+								acidRequred = o51 / ((f10 / 100) * SG);
+						}
+						$('#sparge_acid_added').text(round(acidRequred, 1)+' '+measure);
+						let acidSparge = $('#total-acid-sparge');
+						if (acidRequred > 0) {
+								let text = $('select[name="sparge_acid_type"] option:selected').text()+' ('+$('input[name="sparge_acid_strength"]').val()+'%)';
+								$('#total-acid-type-sparge').text(text);
+								$('#total_acid_sparge').text(round(acidRequred, 1)+' '+measure);
+								acidSparge.find('.total-sparge').text(round(acidRequred * spargeWater, 1));
+								acidSparge.prop('hidden', false);
+								$('input[name="recipe_sparge_acid"]').val($('select[name="sparge_acid_type"] option:selected').text());
+								$('input[name="recipe_sparge_acid_amount"]').val(round(acidRequred * spargeWater, 1));
+								// $('#add-recipe-acid-sparge').prop('hidden', false);
+								// $('select[name="select_sparge_acid"]').prop('required', true);
+								// $('#add-recipe-acid-sparge').find('.input-group-text').text($('select[name="sparge_acid_type"] option:selected').text()+' (промывка)');
+						}
+						else {
+								acidSparge.prop('hidden', true);
+								$('input[name="recipe_sparge_acid"]').val('');
+								$('input[name="recipe_sparge_acid_amount"]').val(0);
+								// $('#add-recipe-acid-sparge').prop('hidden', true);
+								// $('select[name="select_sparge_acid"]').prop('required', false);
+
+						}
+				}
+				function calcMashWaterAcidification() {
+						let acidType = $('select[name="mash_acid_type"] option:selected').val();
+						let b29 = Number($('input[name="add_mash_acid"]').val().replace(',', '.'));
+						let d29 = Number($('input[name="mash_acid_strength"]').val().replace(',', '.'));
+						let SG;
+						let v14 = 1;
+						let v40 = 5.4;
+						let v35;
+						let w35;
+						let x35;
+						let y35;
+						if (acidType == 'lactic') {
+								SG = 1000 * ((-5.311 * Math.pow(10, -8) * Math.pow(d29, 3)) + (5.1587 * Math.pow(10, -6) * Math.pow(d29, 2)) + (2.32499 * Math.pow(10, -3) * d29) + 0.9986);
+								v35 = 3.86;
+								w35 = 20;
+								x35 = 20;
+								y35 = 90.08;
+						}
+						else if (acidType == 'phosphoric') {
+								SG = 1000 * ((-8.333 * Math.pow(10, -10) * Math.pow(d29, 4)) + (2.6448 * Math.pow(10, -7) * Math.pow(d29, 3)) + (1.4442 * Math.pow(10, -5) * Math.pow(d29, 2)) + (5.4705 * Math.pow(10, -3) * d29) + 0.9958);
+								v35 = 2.12;
+								w35 = 7.2;
+								x35 = 12.44;
+								y35 = 98;
+						}
+						else if (acidType == 'acetic') {
+								SG = 1000 * ((-7.575 * Math.pow(10, -10) * Math.pow(d29, 4)) + (7.01 * Math.pow(10, -8) * Math.pow(d29, 3)) + (-9.254 * Math.pow(10, -6) * Math.pow(d29, 2)) + (1.575 * Math.pow(10, -3) * d29) + 0.9979);
+								v35 = 4.75;
+								w35 = 20;
+								x35 = 20;
+								y35 = 60.05;
+						}
+						else if (acidType == 'citric') {
+								SG = 1480;
+								v35 = 3.14
+								w35 = 4.77;
+								x35 = 6.39;
+								y35 = 192.13;
+						}
+						let v41 = Math.pow(10, (v40 - v35));
+						let v42 = Math.pow(10, (v40 - w35));
+						let v43 = Math.pow(10, (v40 - x35));
+						let v44 = 1 / (1 + v41 + (v41 * v42) + (v41 * v42 * v43));
+						let v46 = v44 * v41;
+						let v47 = v41 * v42 * v44;
+						let v48 = v41 * v42 * v43 * v44;
+						let v49 = v46 + (2 * v47) + (3 * v48);
+						let HCO = -(b29 / v14) * (d29 / 100) * ((SG * v49 * 61) / y35);
+						return HCO;
+				}
+				var CaSO = {'ca': 0, 'so': 0};
+				var CaCl = {'ca': 0, 'cl': 0};
+				var MgSO = {'mg': 0, 'so': 0};
+				var MgCl = {'mg': 0, 'cl': 0};
+				var NaCl = {'na': 0, 'cl': 0};
+				var NaHCO = {'na': 0, 'hco': 0};
+				var CaCO = {'ca': 0, 'hco': 0};
+				var CaOH = {'ca': 0, 'hco': 0};
+				var hco3 = 0;
+				function setAdditions(m) {
+						let input = $('input[name=add_'+m+']');
+						let add = Number(input.val().replace(',', '.'));
+						if (m == 'caso') {
+							let Ca = 61.5 * 3.785 * add;
+							let SO = 147.43 * 3.785 * add;
+							$('#'+m).find('.additions-ca').text(round(Ca, 1));
+							$('#'+m).find('.additions-so').text(round(SO, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							$('#'+m).find('.total_add_sparge').text(round(add * spargeWater, 1));
+							let caso = $('#total-caso');
+							if (add > 0) {
+									caso.find('.total-mash').text(round(add * mashWater, 1));
+									caso.find('.total-sparge').text(round(add * spargeWater, 1));
+									caso.prop('hidden', false);
+									$('input[name="add_mash_caso"]').val(round(add * mashWater, 1));
+									$('input[name="add_sparge_caso"]').val(round(add * spargeWater, 1));
+									$('#add-recipe-caso').prop('hidden', false);
+									$('select[name="select_caso"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_caso"]').val(0);
+									$('input[name="add_sparge_caso"]').val(0);
+									$('#add-recipe-caso').prop('hidden', true);
+									$('select[name="select_caso"]').prop('required', false);
+									caso.prop('hidden', true);
+							}
+							CaSO = {'ca': Ca, 'so': SO};
+						}
+						else if (m == 'cacl') {
+							let Ca = 95.4 * 3.785 * add;
+							let Cl = 168.79 * 3.785 * add;
+							$('#'+m).find('.additions-ca').text(round(Ca, 1));
+							$('#'+m).find('.additions-cl').text(round(Cl, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							$('#'+m).find('.total_add_sparge').text(round(add * spargeWater, 1));
+							let cacl = $('#total-cacl');
+							if (add > 0) {
+									cacl.find('.total-mash').text(round(add * mashWater, 1));
+									cacl.find('.total-sparge').text(round(add * spargeWater, 1));
+									cacl.prop('hidden', false);
+									$('input[name="add_mash_cacl"]').val(round(add * mashWater, 1));
+									$('input[name="add_sparge_cacl"]').val(round(add * spargeWater, 1));
+									$('#add-recipe-cacl').prop('hidden', false);
+									$('select[name="select_cacl"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_cacl"]').val(0);
+									$('input[name="add_sparge_cacl"]').val(0);
+									$('#add-recipe-cacl').prop('hidden', true);
+									$('select[name="select_cacl"]').prop('required', false);
+									cacl.prop('hidden', true);
+							}
+							CaCl = {'ca': Ca, 'cl': Cl};
+						}
+						else if (m == 'mgso') {
+							let Mg = 26.05 * 3.785 * add;
+							let SO = 102.96 * 3.785 * add;
+							$('#'+m).find('.additions-mg').text(round(Mg, 1));
+							$('#'+m).find('.additions-so').text(round(SO, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							$('#'+m).find('.total_add_sparge').text(round(add * spargeWater, 1));
+							let mgso = $('#total-mgso');
+							if (add > 0) {
+									mgso.find('.total-mash').text(round(add * mashWater, 1));
+									mgso.find('.total-sparge').text(round(add * spargeWater, 1));
+									mgso.prop('hidden', false);
+									$('input[name="add_mash_mgso"]').val(round(add * mashWater, 1));
+									$('input[name="add_sparge_mgso"]').val(round(add * spargeWater, 1));
+									$('#add-recipe-mgso').prop('hidden', false);
+									$('select[name="select_mgso"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_mgso"]').val(0);
+									$('input[name="add_sparge_mgso"]').val(0);
+									$('#add-recipe-mgso').prop('hidden', true);
+									$('select[name="select_mgso"]').prop('required', false);
+									mgso.prop('hidden', true);
+							}
+							MgSO = {'mg': Mg, 'so': SO};
+						}
+						else if (m == 'mgcl') {
+							let Mg = 31.57 * 3.785 * add;
+							let Cl = 92.12 * 3.785 * add;
+							$('#'+m).find('.additions-mg').text(round(Mg, 1));
+							$('#'+m).find('.additions-cl').text(round(Cl, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							$('#'+m).find('.total_add_sparge').text(round(add * spargeWater, 1));
+							let mgcl = $('#total-mgcl');
+							if (add > 0) {
+									mgcl.find('.total-mash').text(round(add * mashWater, 1));
+									mgcl.find('.total-sparge').text(round(add * spargeWater, 1));
+									mgcl.prop('hidden', false);
+									$('input[name="add_mash_mgcl"]').val(round(add * mashWater, 1));
+									$('input[name="add_sparge_mgcl"]').val(round(add * spargeWater, 1));
+									$('#add-recipe-mgcl').prop('hidden', false);
+									$('select[name="select_mgcl"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_mgcl"]').val(0);
+									$('input[name="add_sparge_mgcl"]').val(0);
+									$('#add-recipe-mgcl').prop('hidden', true);
+									$('select[name="select_mgcl"]').prop('required', false);
+									mgcl.prop('hidden', true);
+							}
+							MgCl = {'mg': Mg, 'cl': Cl};
+						}
+						else if (m == 'nacl') {
+							let Na = 103.94 * 3.785 * add;
+							let Cl = 160.26 * 3.785 * add;
+							$('#'+m).find('.additions-na').text(round(Na, 1));
+							$('#'+m).find('.additions-cl').text(round(Cl, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							$('#'+m).find('.total_add_sparge').text(round(add * spargeWater, 1));
+							let nacl = $('#total-nacl');
+							if (add > 0) {
+									nacl.find('.total-mash').text(round(add * mashWater, 1));
+									nacl.find('.total-sparge').text(round(add * spargeWater, 1));
+									nacl.prop('hidden', false);
+									$('input[name="add_mash_nacl"]').val(round(add * mashWater, 1));
+									$('input[name="add_sparge_nacl"]').val(round(add * spargeWater, 1));
+									$('#add-recipe-nacl').prop('hidden', false);
+									$('select[name="select_nacl"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_nacl"]').val(0);
+									$('input[name="add_sparge_nacl"]').val(0);
+									$('#add-recipe-nacl').prop('hidden', true);
+									$('select[name="select_nacl"]').prop('required', false);
+									nacl.prop('hidden', true);
+							}
+							NaCl = {'na': Na, 'cl': Cl};
+						}
+						else if (m == 'nahco') {
+							let Na = 72.31 * 3.785 * add;
+							let HCO = 191.88 * 3.785 * add;
+							$('#'+m).find('.additions-na').text(round(Na, 1));
+							$('#'+m).find('.additions-hco').text(round(HCO, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							let nahco = $('#total-nahco');
+							if (add > 0) {
+									nahco.find('.total-mash').text(round(add * mashWater, 1));
+									nahco.prop('hidden', false);
+									$('input[name="add_mash_nahco"]').val(round(add * mashWater, 1));
+									$('#add-recipe-nahco').prop('hidden', false);
+									$('select[name="select_nahco"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_nahco"]').val(0);
+									$('#add-recipe-nahco').prop('hidden', true);
+									$('select[name="select_nahco"]').prop('required', false);
+									nahco.prop('hidden', true);
+							}
+							NaHCO = {'na': Na, 'hco': HCO};
+						}
+						else if (m == 'caco') {
+							let Ca = 105.8 * 3.785 * add / 2;
+							let HCO = 322.27 * 3.785 * add / 2;
+							$('#'+m).find('.additions-ca').text(round(Ca, 1));
+							$('#'+m).find('.additions-hco').text(round(HCO, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							let caco = $('#total-caco');
+							if (add > 0) {
+									caco.find('.total-mash').text(round(add * mashWater, 1));
+									caco.prop('hidden', false);
+									$('input[name="add_mash_caco"]').val(round(add * mashWater, 1));
+									$('#add-recipe-caco').prop('hidden', false);
+									$('select[name="select_caco"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_caco"]').val(0);
+									$('#add-recipe-caco').prop('hidden', true);
+									$('select[name="select_caco"]').prop('required', false);
+									caco.prop('hidden', true);
+							}
+							CaCO = {'ca': Ca, 'hco': HCO};
+						}
+						else if (m == 'caoh') {
+							let Ca = 142.93 * 3.785 * add;
+							let HCO = 434.75 * 3.785 * add;
+							$('#'+m).find('.additions-ca').text(round(Ca, 1));
+							$('#'+m).find('.additions-hco').text(round(HCO, 1));
+							$('#'+m).find('.total_add_mash').text(round(add * mashWater, 1));
+							let caoh = $('#total-caoh');
+							if (add > 0) {
+									caoh.find('.total-mash').text(round(add * mashWater, 1));
+									caoh.prop('hidden', false);
+									$('input[name="add_mash_caoh"]').val(round(add * mashWater, 1));
+									$('#add-recipe-caoh').prop('hidden', false);
+									$('select[name="select_caoh"]').prop('required', true);
+							}
+							else {
+									$('input[name="add_mash_caoh"]').val(0);
+									$('#add-recipe-coao').prop('hidden', true);
+									$('select[name="select_caoh"]').prop('required', false);
+									caoh.prop('hidden', true);
+							}
+							CaOH = {'ca': Ca, 'hco': HCO};
+						}
+						else if (m == 'mash_acid') {
+								hco3 = calcMashWaterAcidification();
+								$('#mash-acid').find('.additions-hco3').text(round(hco3, 1));
+								$('#mash-acid').find('.total_add_mash').text(round(add * mashWater, 1));
+								let acidMash = $('#total-acid-mash');
+								if (add > 0) {
+										let text = $('select[name="mash_acid_type"] option:selected').text()+'('+$('input[name="mash_acid_strength"]').val()+'%)';
+										$('#total-acid-type-mash').text(text);
+										acidMash.find('.total-mash').text(round(add * mashWater, 1));
+										acidMash.prop('hidden', false);
+										$('input[name="recipe_mash_acid"]').val($('select[name="mash_acid_type"] option:selected').text());
+										$('input[name="recipe_mash_acid_amount"]').val(round(add * mashWater, 1));
+								}
+								else {
+										acidMash.prop('hidden', true);
+										$('input[name="recipe_mash_acid"]').val('');
+										$('input[name="recipe_mash_acid_amount"]').val(0);
+								}
+						}
+						added['ca'] = CaSO['ca'] + CaCl['ca'] + CaCO['ca'] + CaOH['ca'];
+						added['mg'] = MgSO['mg'] + MgCl['mg'];
+						added['na'] = NaCl['na'] + NaHCO['na'];
+						added['so'] = CaSO['so'] + MgSO['so'];
+						added['cl'] = CaCl['cl'] + MgCl['cl'] + NaCl['cl'];
+						added['hco'] = NaHCO['hco'] + CaCO['hco'] + CaOH['hco'] + hco3;
+						addedWaterProfile();
+						diffAdditionsWaterProfile();
+						resultWaterProfile();
+						calcPH();
+				}
+				$(document).ready(function () {
+						$('input[name="step_1"]').click(function() {
+								let choice = $('input[name="input_recipe"]:checked').val();
+								if (choice == 'new') {
+										calcI25SRM();
+								}
+								calcPH();
+								$('#input-original').prop('hidden', false);
+								$(this).remove();
+						});
+						$('input[name="step_2"]').click(function() {
+								$('#input-target').prop('hidden', false);
+								$(this).remove();
+						});
+						$('input[name="step_3"]').click(function() {
+							$('#input-acidification').prop('hidden', false);
+							if (origAlkalinity < 25) {
+								$('#acidification-not-needed').prop('hidden', false);
+							} else {
+								$('.acidification-needed').prop('hidden', false);
+								setSpargingWaterTargetPH();
+								calcSpargingWaterAcidification();
+							}
+							$('input[name="step_3"]').remove();
+							$('input[name="step_4"]').prop('hidden', false);
+						});
+						$('input[name="step_4"]').click(function() {
+								$('#table-profiles').prop('hidden', false);
+								$('#input-additions').prop('hidden', false);
+								$(this).remove();
+						});
+						$('input[name="step_result"]').click(function() {
+								$('#output-result').prop('hidden', false);
+								if ($('input[name="input_recipe"]:checked').val() == 'recipe') {
+									$('#save-result').prop('hidden', false);
+								}
+								$(this).remove();
+						});
+						$('#save-in-recipe').on('submit', function(){});
+				});
+				function addGrainItem() {
+					  $('.grain').first().clone().appendTo('#grain-items');
+					  $('#delete-grain-item').attr('hidden', false);
+					  let lastItem = $('.grain').last();
+					  let count = $('.grain').length;
+      	    $('input[name=grain_TOTAL_FORMS]').val(count);
+					  let grainColor = $(lastItem).find('.grain-color');
+					  grainColor.val('');
+					  grainColor.attr('name', 'grain_color_'+count);
+      	    let grainAmount = $(lastItem).find('.grain-amount');
+      	    grainAmount.val('');
+					  grainAmount.attr('name', 'grain_amount_'+count);
+				}
+				function deleteGrainItem() {
+				    $('.grain').last().remove();
+				    let count = $('.grain').length;
+				    $('input[name=grain_TOTAL_FORMS]').val(count);
+				    if (count <= 1) {
+				        $('#delete-grain-item').attr('hidden', true);
+      	     }
+						setGrains();
+				}
+      	function increment(i) {
+						let input = $('input[name=add_'+i+']');
+						let val = Number(input.val().replace(',', '.'));
+						input.val(round(val + 0.1, 2));
+						setAdditions(i);
+				}
+				function decrement(i) {
+						let input = $('input[name=add_'+i+']');
+						let val = Number(input.val().replace(',', '.'));
+						if (val > 0.09) {
+								input.val(round(val - 0.1, 2));
+								setAdditions(i);
+						}
+				}
+			</script>
+			<div class="row">
+				<div class="col-12 col-md-6 mb-3">
+					<h5>Параметры исходной воды</h5>
+					<div class="form-group mb-2">
+						<span class="mr-2">Расчёт:</span>
+						<input id="choiсe-recipe" type="radio" name="input_recipe" value="recipe" onchange="changeChoiceCalculate();">
+						<label for="choiсe-recipe" class="mr-2">По рецепту</label>
+						<input id="choiсe-new" type="radio" name="input_recipe" value="new" onchange="changeChoiceCalculate();">
+						<label for="choiсe-new">Новый</label>
+					</div>
+					<div id="select-recipe" class="input-group input-group-sm mb-2" hidden>
+						<select class="form-control" name="user_recipes" onchange="choiceRecipe();">
+							{% for r in user.all_recipes %}
+							<option value="{{ r.id }}" data-recipe='{"mash":"{{ r.mash_water }}", "sparge":"{{ r.sparge_water }}", "batch":"{{ r.batch_size }}", "i25":{{ r.id|i25 }}, "srm":"{{ r.id|srm }}"}'>{{ r.name }}</option>
+      				{% endfor %}
+      			</select>
+					</div>
+					<div class="input-group input-group-sm input-group-sm flex-nowrap mb-1">
+  					<div class="input-group-prepend">
+    					<span class="input-group-text">Заторная вода:</span>
+  					</div>
+  					<input type="number" class="form-control step-1" name="mash_water" value="30" step="0.1" maxlength="5" onchange="setNewCalcParam();" disabled>
+						<div class="input-group-append">
+    					<span class="input-group-text">л</span>
+  					</div>
+					</div>
+					<div class="input-group input-group-sm input-group-sm flex-nowrap mb-1">
+  					<div class="input-group-prepend">
+    					<span class="input-group-text">Промывочная вода:</span>
+  					</div>
+  					<input type="number" class="form-control step-1" name="sparge_water" value="10" step="0.1" maxlength="5" onchange="setNewCalcParam();" disabled>
+						<div class="input-group-append">
+    					<span class="input-group-text">л</span>
+  					</div>
+					</div>
+					<div class="input-group input-group-sm input-group-sm flex-nowrap mb-3">
+  					<div class="input-group-prepend">
+    					<span class="input-group-text">Размер партии:</span>
+  					</div>
+							<input type="number" class="form-control step-1" name="batch_size" value="30" step="0.1" maxlength="5" onchange="setNewCalcParam();" disabled>
+						<div class="input-group-append">
+    					<span class="input-group-text">л</span>
+  					</div>
+					</div>
+					<div class="d-flex justify-content-end">
+						<input class="px-2" type="button" name="step_1" value="Далее" hidden>
+					</div>
+				</div>
+				<div class="col-12 col-md-6">
+      	  <div id="input-grain" hidden>
+						<span class="h5 d-block">&nbsp;</span>
+						<span class="h6 d-block">Добавте зерновую засыпь</span>
+      	    <div id="grain-items">
+      	      <input type="hidden" name="grain_TOTAL_FORMS" value="1">
+      	      <div class="input-group input-group-sm mb-1 grain align-middle">
+      	        <select class="form-control grain-color" name="grain_color_1">
+      	     	  {% for g in grains %}
+				    	  	<option value="{{ g.color }}-{{ g.category }}">{% if g.company %}{{ g.company.name }} | {% endif %}{{ g }} ({{ g.color|floatformat }} &deg;L)</option>
+      	     	  {% endfor %}
+      	      </select>
+      	        <input class="form-control grain-amount w80px" type="number" name="grain_amount_1" value="1" step="0.01" min="0" maxlength="5" required onchange="setGrains()">
+      	        <div class="input-group-append">
+      	          <span class="input-group-text">кг</span>
+      	          <span class="input-group-text grain-percentage w50px text-center">%</span>
+      	        </div>
+      	      </div>
+					  </div>
+      	    <div class="mb-2 d-flex justify-content-between">
+      	      <div>
+      	        <a class="link" onclick="javascript: addGrainItem();" title="Добавить"><i class="material-icons">add_box</i></a>
+      	        <a id="delete-grain-item" hidden class="link" onclick="javascript: deleteGrainItem();" title="Убрать"><i class="material-icons">indeterminate_check_box</i></a>
+      	      </div>
+					  </div>
+					</div>
+				</div>
+  			<div class="col-12 col-md-6 mb-3">
+					<div id="input-original" hidden>
+						<h5>Профиль исходной воды</h5>
+						<div class="form-group mb-0">
+							<span class="mr-2">Профиль воды:</span>
+							<input id="choice-water-user" type="radio" name="input_water_original" value="user" onchange="changeChoiceOriginalWater();">
+							<label for="choice-water-user" class="mr-2">Мой</label>
+							<input id="choice-water-new" type="radio" name="input_water_original" value="new" onchange="changeChoiceOriginalWater();">
+							<label for="choice-water-new">Новый</label>
+						</div>
+						<div id="select-water" class="input-group input-group-sm mb-2" hidden>
+							<select class="form-control" name="input_water_original" onchange="choiceOriginalWaterProfile();" >
+								{% for w in user.wateruserprofile_set.all %}
+								<option value="{{ w.id }}" data-water='{"ca":"{{ w.calcum }}", "hco":"{{ w.bicarbonate }}", "so":"{{ w.sulfate }}", "cl":"{{ w.chloride }}", "na":"{{ w.sodium }}", "mg":"{{ w.magnesium }}", "ph":"{{ w.ph }}"}'>{{ w.name }}</option>
+      					{% endfor %}
+      				</select>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Кальций (Ca<sup>+2</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_Ca" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Магний (Mg<sup>+2</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_Mg" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Натрий (Na<sup>+</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_Na" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Сульфат (SO<sub>4</sub><sup>-2</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_SO" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Хлорид (Cl<sup>-</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_Cl" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Карбонат (CO<sub>3</sub>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_CO" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Бикарбонат (HCO<sub>3</sub><sup>-</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_HCO" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class=" d-flex justify-content-between mb-1">
+							<div class="">
+								<small>катионы:&nbsp;<strong id="original_ca" class="green">0.0 | 0.0</strong>&nbsp;:анионы</small>
+							</div>
+							<div class="">
+								<small>Баланс ионов:&nbsp;<strong id="original_ion_balance" class="green">0.0</strong></small>
+							</div>
+						</div>
+						<div class="text-right">
+							<small id="error-ib-original" class="red" hidden>Исходный профиль воды несбалансирован</small>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap my-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">pH:</span>
+  						</div>
+  						<input type="number" class="form-control" name="original_PH" value="8" step="0.1" maxlength="5" onchange="setNewWaterProfile('O')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="">
+							<span>Щёлочность:&nbsp;<strong id="original_alc">0.0</strong></span>
+						</div>
+					</div>
+					<div class="d-flex justify-content-end">
+						<input class="px-2" type="button" name="step_2" value="Далее" hidden>
+					</div>
+  			</div>
+				<div class="col-12 col-md-6 mb-3">
+					<div id="input-target" hidden>
+						<h5>Профиль целевой воды</h5>
+						<div class="form-group mb-0">
+							<span class="mr-2">Профиль воды:</span>
+							<input id="choiсe-target-classic" type="radio" name="input_water_target" value="classic" onchange="changeChoiceTargetProfile();">
+							<label for="choiсe-target-classic" class="mr-2">Классический</label>
+							<input id="choiсe-target-recipe" type="radio" name="input_water_target" value="recipe" onchange="changeChoiceTargetProfile();">
+							<label for="choiсe-target-recipe" class="mr-2">Из рецепта</label>
+							<input id="choiсe-target-new" type="radio" name="input_water_target" value="new" onchange="changeChoiceTargetProfile();">
+							<label for="choiсe-target-new">Новый</label>
+						</div>
+						<div id="select-target-recipe" class="input-group input-group-sm mb-2" hidden>
+							<select class="form-control" name="target_recipe" onchange="choiceTargetWaterProfile();">
+								{% for r in recipes %}
+								{% if r.watertargetprofile %}
+								<option value="{{ r.id }}" data-water='{"ca":"{{ r.watertargetprofile.calcum }}", "hco":"{{ r.watertargetprofile.bicarbonate }}", "so":"{{ r.watertargetprofile.sulfate }}", "cl":"{{ r.watertargetprofile.chloride }}", "na":"{{ r.watertargetprofile.sodium }}", "mg":"{{ r.watertargetprofile.magnesium }}", "ph":"{{ r.watertargetprofile.ph }}"}'>{{ r.name }}</option>
+      					{% endif %}
+								{% endfor %}
+      				</select>
+						</div>
+						<div id="select-target-classic" class="input-group input-group-sm mb-2" hidden>
+							<select class="form-control" name="target_classic" onchange="choiceTargetWaterProfile();">
+								{% for w in waters %}
+								<option value="{{ w.id }}" data-water='{"ca":"{{ w.calcum }}", "hco":"{{ w.bicarbonate }}", "so":"{{ w.sulfate }}", "cl":"{{ w.chloride }}", "na":"{{ w.sodium }}", "mg":"{{ w.magnesium }}", "ph":"{{ w.ph }}"}'>{{ w.name }}</option>
+								{% endfor %}
+      				</select>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Кальций (Ca<sup>+2</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_Ca" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Магний (Mg<sup>+2</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_Mg" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Натрий (Na<sup>+</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_Na" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Сульфат (SO<sub>4</sub><sup>-2</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_SO" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Хлорид (Cl<sup>-</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_Cl" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Карбонат (CO<sub>3</sub>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_CO" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class="input-group input-group-sm flex-nowrap mb-1">
+  						<div class="input-group-prepend">
+    						<span class="input-group-text">Бикарбонат (HCO<sub>3</sub><sup>-</sup>):</span>
+  						</div>
+  						<input type="number" class="form-control" name="target_HCO" value="0" step="0.1" maxlength="5" onchange="setNewWaterProfile('T')">
+							<div class="input-group-append">
+    						<span class="input-group-text">мг/л (ppm)</span>
+  						</div>
+						</div>
+						<div class=" d-flex justify-content-between mb-1">
+							<div class="">
+								<small>катионы:&nbsp;<strong id="target_ca" class="green">0.0 | 0.0</strong>&nbsp;:анионы</small>
+							</div>
+							<div class="">
+								<small>Баланс ионов:&nbsp;<strong id="target_ion_balance" class="green">0.0</strong></small>
+							</div>
+						</div>
+						<div class="text-right">
+							<small id="error-ib-target" class="red" hidden>Целевой профиль воды несбалансирован</small>
+						</div>
+						<div class="">
+							<span>Щёлочность:&nbsp;<strong id="target_alc">0.0</strong></span>
+						</div>
+					</div>
+					<div class="d-flex justify-content-end">
+						<input class="px-2" type="button" name="step_3" value="Далее" hidden>
+					</div>
+  			</div>
+				<div class="col-12 mb-3">
+					<div id="input-acidification" hidden>
+						<h5>Подкисление промывочной воды</h5>
+						<div id="acidification-not-needed" class="mb-3" hidden>
+							<div class="form-inline">
+								<div>
+									<span class="green">Щёлочность исходной воды меньше 25ppm. Подкисление промывочной воды не требуется.</span>
+								</div>
+							</div>
+						</div>
+						<div class="acidification-needed mb-3" hidden>
+							<div class="form-inline">
+								<div class="input-group input-group-sm flex-nowrap my-1 mr-2">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Целевой pH промывочной воды:</span>
+  								</div>
+  								<input type="number" class="form-control w80px" name="sparge_target_PH" value="" step="0.1" onchange="calcSpargingWaterAcidification();">
+								</div>
+								<div class="input-group input-group-sm flex-nowrap my-1">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Кислота:</span>
+  								</div>
+									<select class="form-control" name="sparge_acid_type" onchange="calcSpargingWaterAcidification();">
+										<option value="lactic" selected>Молочная кислота</option>
+										<option value="phosphoric">Фосфорная кислота</option>
+										<option value="acetic">Уксусная кислота</option>
+										<option value="citric">Лимонная кислота</option>
+      						</select>
+									<input type="number" class="form-control w80px" name="sparge_acid_strength" value="80" step="1" maxlength="99" onchange="calcSpargingWaterAcidification();">
+  								<div class="input-group-append">
+    								<span class="input-group-text">%</span>
+  								</div>
+								</div>
+							</div>
+							<span class="mr-3">Финальная щёлочность:&nbsp;<strong id="sparge_final_alc" title="Уровень финальной щёлочности желательно иметь ниже 25 ppm. Настоятельно рекомендуется конечная щёлочность меньше 50 ppm. Измените значение целевой pH промывочной воды, чтобы изменить конечную щёлочность воды." style="cursor: help;">0.0</strong></span>
+							<span>Добавление кислоты:&nbsp;<strong id="sparge_acid_added">0.0</strong></span>
+						</div>
+					</div>
+					<div class="d-flex ml-1">
+						<input class="px-2" type="button" name="step_4" value="Далее" hidden>
+					</div>
+				</div>
+				<div class="col-12 mb-3">
+					<div id="table-profiles" hidden>
+						<h5>Профили воды мг/л (ppm)</h5>
+    				<table class="table-ing mb-3">
+    				  <thead>
+								<tr>
+									<th></th>
+    				      <th class="text-center">Ca<sup>+2</sup></th>
+    				      <th class="text-center">Mg<sup>+2</sup></th>
+    				      <th class="text-center" >Na<sup>+</sup></th>
+									<th class="text-center">SO<sub>4</sub><sup>-2</sup></th>
+    				      <th class="text-center">Cl<sup>-</sup></th>
+    				      <th class="text-center" >HCO<sub>3</sub><sup>-</sup></th>
+    				    </tr>
+    				  </thead>
+    				  <tbody>
+    				    <tr class="text-center">
+									<td>Исходный&nbsp;<i class="material-icons align-bottom" title="То что имеем" style="cursor: help;">help_outline</i></td>
+									<td id="orig-ca">0</td>
+									<td id="orig-mg">0</td>
+									<td id="orig-na">0</td>
+									<td id="orig-so">0</td>
+									<td id="orig-cl">0</td>
+									<td id="orig-hco">0</td>
+								</tr>
+								<tr class="text-center">
+									<td>Целевой&nbsp;<i class="material-icons align-bottom" title="То что хотим получить" style="cursor: help;">help_outline</i></td>
+									<td id="targ-ca">0</td>
+									<td id="targ-mg">0</td>
+									<td id="targ-na">0</td>
+									<td id="targ-so">0</td>
+									<td id="targ-cl">0</td>
+									<td id="targ-hco">0</td>
+								</tr>
+								<tr class="text-center">
+									<td>Разница&nbsp;<i class="material-icons align-bottom" title="Разница между исходным и целевым профилем" style="cursor: help;">help_outline</i></td>
+									<td id="diff-ca">0</td>
+									<td id="diff-mg">0</td>
+									<td id="diff-na">0</td>
+									<td id="diff-so">0</td>
+									<td id="diff-cl">0</td>
+									<td id="diff-hco">0</td>
+								</tr>
+								<tr class="text-center">
+									<td>Добавление&nbsp;<i class="material-icons align-bottom" title="Что уже добавили. Должно быть равно Разнице" style="cursor: help;">help_outline</i></td>
+									<td id="added-ca">0</td>
+									<td id="added-mg">0</td>
+									<td id="added-na">0</td>
+									<td id="added-so">0</td>
+									<td id="added-cl">0</td>
+									<td id="added-hco">0</td>
+								</tr>
+								<tr class="text-center">
+									<td><strong>Итоговый&nbsp;<i class="material-icons align-bottom" title="Что в итоге получим" style="cursor: help;">help_outline</i></strong></td>
+									<td><strong id="result-ca">0</strong></td>
+									<td><strong id="result-mg">0</strong></td>
+									<td><strong id="result-na">0</strong></td>
+									<td><strong id="result-so">0</strong></td>
+									<td><strong id="result-cl">0</strong></td>
+									<td><strong id="result-hco">0</strong></td>
+								</tr>
+								<tr class="text-center">
+									<td><strong>Рекомендуемые значения&nbsp;<i class="material-icons align-bottom" title="Проверка на допусимые значения уровня ионов" style="cursor: help;">help_outline</i></strong></td>
+									<td><i id="total-add-ca" class="material-icons align-bottom" title="" style="cursor: help;"></i></td>
+									<td><i id="total-add-mg" class="material-icons align-bottom" title="" style="cursor: help;"></i></td>
+									<td><i id="total-add-na" class="material-icons align-bottom" title="" style="cursor: help;"></i></td>
+									<td><i id="total-add-so" class="material-icons align-bottom" title="" style="cursor: help;"></i></td>
+									<td><i id="total-add-cl" class="material-icons align-bottom" title="" style="cursor: help;"></i></td>
+									<td><i id="total-add-hco" class="material-icons align-bottom green" title="Рекомендуемый уровень" style="cursor: help;">check_circle</i></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="col-12 mb-3">
+					<div id="input-additions" hidden>
+						<h5>Корректировка воды</h5>
+						<table class="table-ing mb-3" style="border: none;">
+    				  <thead>
+								<tr>
+									<th colspan="2" class="text-right mr-2" style="border: none;">Должно равняться нулю:</th>
+									<th id="diff-additions-ca" class="text-center w50px" style="border-bottom: none;"><strong></strong></th>
+									<th id="diff-additions-mg" class="text-center w50px" style="border-bottom: none;"><strong></strong></th>
+									<th id="diff-additions-na" class="text-center w50px" style="border-bottom: none;"><strong></strong></th>
+									<th id="diff-additions-so" class="text-center w50px" style="border-bottom: none;"><strong></strong></th>
+									<th id="diff-additions-cl" class="text-center w50px" style="border-bottom: none;"><strong></strong></th>
+									<th id="diff-additions-hco" class="text-center w50px" style="border-bottom: none;"><strong></strong></th>
+									<th colspan="2" class="text-center">pH затора:&nbsp;<strong class="ph red">0.0</strong></th>
+								</tr>
+								<tr class="text-center">
+									<th rowspan="2">Минералы</th>
+									<th rowspan="2" class="w150px">Кол-во, г/л</th>
+    				      <th rowspan="2" class="text-center w50px">Ca<sup>+2</sup></th>
+    				      <th rowspan="2" class="text-center w50px">Mg<sup>+2</sup></th>
+    				      <th rowspan="2" class="text-center w50px">Na<sup>+</sup></th>
+    				      <th rowspan="2" class="text-center w50px">SO<sub>4</sub><sup>-2</sup></th>
+    				      <th rowspan="2" class="text-center w50px">Cl<sup>-</sup></th>
+    				      <th rowspan="2" class="text-center w50px">HCO<sub>3</sub><sup>-</sup></th>
+									<th colspan="2">Итого, г</th>
+    				    </tr>
+								<tr>
+    				      <th class="text-center w80px">Затор</th>
+    				      <th class="text-center w80px">Промывка</th>
+								</tr>
+    				  </thead>
+    				  <tbody>
+    				    <tr id="caso" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Снижает pH" style="cursor: help;">vertical_align_bottom</i>Гипс | Кальций сернокислый | (CaSO<sub>4</sub>&nbsp;&#215;&nbsp;2H<sub>2</sub>0)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('caso');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_caso" step="0.01" value="0" onchange="setAdditions('caso');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('caso');">
+										</div>
+									</td>
+									<td><span class="additions-ca">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-so">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td><strong class="total_add_sparge">0</strong></td>
+								</tr>
+								<tr id="cacl" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Снижает pH" style="cursor: help;">vertical_align_bottom</i>Хлорид кальция | (CaCl<sub>2</sub>)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('cacl');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_cacl" step="0.01" value="0" onchange="setAdditions('cacl');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('cacl');">
+										</div>
+									</td>
+									<td><span class="additions-ca">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-cl">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td><strong class="total_add_sparge">0</strong></td>
+								</tr>
+								<tr id="mgso" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Снижает pH" style="cursor: help;">vertical_align_bottom</i>Эпсома соль | (MgSO<sub>4</sub>&nbsp;&#215;&nbsp;7H<sub>2</sub>0)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('mgso');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_mgso" step="0.01" value="0" onchange="setAdditions('mgso');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('mgso');">
+										</div>
+									</td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-mg">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-so">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td><strong class="total_add_sparge">0</strong></td>
+								</tr>
+								<tr id="mgcl" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Снижает pH" style="cursor: help;">vertical_align_bottom</i>Хлорид магния | (MgCl<sub>2</sub>&nbsp;&#215;&nbsp;6H<sub>2</sub>0)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('mgcl');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_mgcl" step="0.01" value="0" onchange="setAdditions('mgcl');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('mgcl');">
+										</div>
+									</td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-mg">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-cl">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td><strong class="total_add_sparge">0</strong></td>
+								</tr>
+								<tr id="nacl" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Не изменяет pH" style="cursor: help;">horizontal_rule</i>Поваренная соль | Хлорид натрия | (NaCl)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('nacl');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_nacl" step="0.01" value="0" onchange="setAdditions('nacl');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('nacl');">
+										</div>
+									</td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-na">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-cl">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td><strong class="total_add_sparge">0</strong></td>
+								</tr>
+								<tr id="nahco" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Повышает pH" style="cursor: help;">vertical_align_top</i>Пищевая сода | Гидрокарбонат натрия | (NaHCO<sub>3</sub>)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-"  onclick="decrement('nahco');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_nahco" step="0.01" value="0" onchange="setAdditions('nahco');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+"  onclick="increment('nahco');">
+										</div>
+									</td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-na">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-hco">0</span></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="caco" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Повышает pH" style="cursor: help;">vertical_align_top</i>Мел | Карбонат кальция | (CaCO<sub>3</sub>)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('caco');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_caco" step="0.01" value="0" onchange="setAdditions('caco');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('caco');">
+										</div>
+									</td>
+									<td><span class="additions-ca">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-hco">0</span></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="caoh" class="text-center">
+									<td class="text-left"><span class="small"><i class="material-icons align-bottom mr-2" title="Повышает pH" style="cursor: help;">vertical_align_top</i>Гашенная известь | Гидроксид кальция | (Ca(OH)<sub>2</sub>)</span></td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('caoh');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_caoh" step="0.01" value="0" onchange="setAdditions('caoh');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('caoh');">
+										</div>
+									</td>
+									<td><span class="additions-ca">0</span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-hco">0</span></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="mash-acid" class="text-center">
+									<td class="text-left">
+										<div class="d-inline-flex">
+											<span class="small"><i class="material-icons align-bottom mr-2" title="Снижает pH" style="cursor: help;">vertical_align_bottom</i></span>
+											<select class="form-control form-control-sm" name="mash_acid_type" onchange="setAdditions('mash_acid');">
+												<option value="lactic" selected>Молочная кислота</option>
+												<option value="phosphoric">Фосфорная кислота</option>
+												<option value="acetic">Уксусная кислота</option>
+												<option value="citric">Лимонная кислота</option>
+      								</select>
+										</div>
+									</td>
+									<td>
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="-" onclick="decrement('mash_acid');">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="0" name="add_mash_acid" step="0.01" value="0" onchange="setAdditions('mash_acid');">
+											<input class="form-control form-control-sm w20px px-0" type="button" value="+" onclick="increment('mash_acid');">
+										</div>
+									</td>
+									<td colspan="3">
+										<div class="d-inline-flex">
+											<input class="form-control form-control-sm w80px mx-1" type="number" min="1" max="99" name="mash_acid_strength" step="1" value="80" onchange="setAdditions('mash_acid');" title="Концентрация">
+											<strong>%</strong>
+										</div>
+									</td>
+									<td class="bg-empty-cell"></td>
+									<td class="bg-empty-cell"></td>
+									<td><span class="additions-hco3">0</span></td>
+									<td><strong class="total_add_mash">0</strong></td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+							</tbody>
+						</table>
+						<div class="d-flex justify-content-end">
+							<input class="px-2" type="button" name="step_result" value="Далее">
+						</div>
+					</div>
+				</div>
+				<div class="col-12 mb-3">
+					<div id="output-result" hidden>
+						<h5>Итоговая таблица</h5>
+						<div class="d-flex justify-content-around mb-2">
+							<div>
+								<span class="h6 mr-3">Целевой pH: <strong id="target-ph">0.00</strong></span>
+							</div>
+							<div>
+								<span class="h6 mr-3">Расчётный pH: <strong id="total-ph">0.00</strong></span>
+							</div>
+							<div>
+								<span class="h6 mr-3">Расчётный цвет в SRM: <strong id="srm">0</strong></span>
+							</div>
+						</div>
+    				<table class="table-ing-noborder mb-3" >
+    				  <thead>
+    				    <tr>
+    				      <th colspan="6" class="text-center" style="border-right: 1px solid black;">Профиль воды мг/л (ppm)</th>
+    				      <th rowspan="3" class="text-center" style="border-right: 1px solid black; border-bottom: 1px solid black;">Ионный баланс</th>
+    				      <th rowspan="3" class="text-center" style="border-right: 1px solid black; border-bottom: 1px solid black;">Общая жёсткость</th>
+    				      <th rowspan="3" class="text-center" style="border-right: 1px solid black; border-bottom: 1px solid black;">Щёлочность</th>
+    				      <th rowspan="3" class="text-center" style="border-bottom: 1px solid black;">SO<sub>4</sub><sup>-2</sup> / Cl<sup>-</sup></th>
+    				    </tr>
+								<tr>
+									<th colspan="3" class="text-center" style="border-right: 1px solid black;">Катионы (+<span id="total-cations"></span>)</th>
+									<th colspan="3" class="text-center" style="border-right: 1px solid black;">Анионы (-<span id="total-anions"></span>)</th>
+    				    </tr>
+								<tr>
+    				      <th class="text-center" style="border-bottom: 1px solid black;">Ca<sup>+2</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black;">Mg<sup>+2</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black; border-right: 1px solid black;">Na<sup>+</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black;">SO<sub>4</sub><sup>-2</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black;">Cl<sup>-</sup></th>
+    				      <th class="text-center" style="border-bottom: 1px solid black; border-right: 1px solid black;">HCO<sub>3</sub><sup>-</sup></th>
+    				    </tr>
+    				  </thead>
+    				  <tbody>
+    				    <tr class="text-center">
+									<td id="total-ca">0</td>
+									<td id="total-mg">0</td>
+									<td id="total-na" style="border-right: 1px solid black;">0</td>
+									<td id="total-so">0</td>
+									<td id="total-cl">0</td>
+									<td id="total-hco" style="border-right: 1px solid black;">0</td>
+									<td id="total-ib" style="border-right: 1px solid black;">0</td>
+									<td id="total-hn" style="border-right: 1px solid black;">0</td>
+									<td id="total-alk" style="border-right: 1px solid black;">0</td>
+									<td id="total-socl">0</td>
+								</tr>
+							</tbody>
+						</table>
+						<div>
+							<strong>Баланс хлоридов и сульфатов: </strong>
+							<span id="socl-text"></span>
+						</div>
+						<div class="mb-3">
+							<strong>Уровень щёлочности: </strong>
+							<span id="alk-text"></span>
+						</div>
+						<table class="table-ing mb-3" >
+    				  <thead>
+								<tr>
+    				      <th class="text-center" >При варке добавить</th>
+    				      <th class="text-center" >В заторную воду, г</th>
+    				      <th class="text-center" >В промывочную воду, г</th>
+    				    </tr>
+    				  </thead>
+    				  <tbody>
+    				    <tr id="total-caso" class="text-center" hidden>
+									<td class="text-left"><span class="small">Гипс | Кальций сернокислый | (CaSO<sub>4</sub>&nbsp;&#215;&nbsp;2H<sub>2</sub>0)</span></td>
+									<td class="total-mash">0</td>
+									<td class="total-sparge">0</td>
+								</tr>
+								<tr id="total-cacl" class="text-center" hidden>
+									<td class="text-left"><span class="small">Хлорид кальция | (CaCl<sub>2</sub>)</span></td>
+									<td class="total-mash">0</td>
+									<td class="total-sparge">0</td>
+								</tr>
+								<tr id="total-mgso" class="text-center" hidden>
+									<td class="text-left"><span class="small">Эпсома соль | (MgSO<sub>4</sub>&nbsp;&#215;&nbsp;7H<sub>2</sub>0)</span></td>
+									<td class="total-mash">0</td>
+									<td class="total-sparge">0</td>
+								</tr>
+								<tr id="total-mgcl" class="text-center" hidden>
+									<td class="text-left"><span class="small">Хлорид магния | (MgCl<sub>2</sub>&nbsp;&#215;&nbsp;6H<sub>2</sub>0)</span></td>
+									<td class="total-mash">0</td>
+									<td class="total-sparge">0</td>
+								</tr>
+								<tr id="total-nacl" class="text-center" hidden>
+									<td class="text-left"><span class="small">Поваренная соль | Хлорид натрия | (NaCl)</span></td>
+									<td class="total-mash">0</td>
+									<td class="total-sparge">0</td>
+								</tr>
+								<tr id="total-nahco" class="text-center" hidden>
+									<td class="text-left"><span class="small">Пищевая сода | Гидрокарбонат натрия | (NaHCO<sub>3</sub>)</span></td>
+									<td class="total-mash">0</td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="total-caco" class="text-center" hidden>
+									<td class="text-left"><span class="small">Мел | Карбонат кальция | (CaCO<sub>3</sub>)</span></td>
+									<td class="total-mash">0</td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="total-caoh" class="text-center" hidden>
+									<td class="text-left"><span class="small">Гашенная известь | Гидроксид кальция | (Ca(OH)<sub>2</sub>)</span></td>
+									<td class="total-mash">0</td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="total-acid-mash" class="text-center" hidden>
+									<td class="text-left"><span id="total-acid-type-mash" class="text-left small"></span></td>
+									<td class="total-mash">0</td>
+									<td class="bg-empty-cell"></td>
+								</tr>
+								<tr id="total-acid-sparge" class="text-center" hidden>
+									<td class="text-left"><span id="total-acid-type-sparge" class="text-left small"></span></td>
+									<td class="bg-empty-cell"></td>
+									<td class="total-sparge">0</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="col-12">
+		<div class="row">
+			<div class="col-12 mb-3">
+				<div id="save-result" hidden>
+					<h5>Сохранить результаты расчёта в рецепт</h5>
+					<span class="red mb-2">Внимание! Текущие данные Водоподготовки в рецепте будут перезапсаны</span>
+					<form id="save-in-recipe" action="{% url 'computing_water_save' %}" method="post">{% csrf_token %}
+						<input type="hidden" name="recipe_id">
+						<input type="hidden" name="add_mash_caso"	value="0">
+						<input type="hidden" name="add_sparge_caso"	value="0">
+						<input type="hidden" name="add_mash_cacl"	value="0">
+						<input type="hidden" name="add_sparge_cacl"	value="0">
+						<input type="hidden" name="add_mash_mgso"	value="0">
+						<input type="hidden" name="add_sparge_mgso"	value="0">
+						<input type="hidden" name="add_mash_mgcl"	value="0">
+						<input type="hidden" name="add_sparge_mgcl"	value="0">
+						<input type="hidden" name="add_mash_nacl"	value="0">
+						<input type="hidden" name="add_sparge_nacl"	value="0">
+						<input type="hidden" name="add_mash_nahco" value="0">
+						<input type="hidden" name="add_mash_caco" value="0">
+						<input type="hidden" name="add_mash_caoh" value="0">
+						<input type="hidden" name="recipe_mash_acid" value="0">
+						<input type="hidden" name="recipe_sparge_acid" value="0">
+						<input type="hidden" name="recipe_mash_acid_amount" value="0">
+						<input type="hidden" name="recipe_sparge_acid_amount" value="0">
+						<input type="hidden" name="original_profile_ca"	value="0">
+						<input type="hidden" name="original_profile_mg"	value="0">
+						<input type="hidden" name="original_profile_na"	value="0">
+						<input type="hidden" name="original_profile_so"	value="0">
+						<input type="hidden" name="original_profile_cl"	value="0">
+						<input type="hidden" name="original_profile_hco" value="0">
+						<input type="hidden" name="original_profile_ph"	value="0">
+						<input type="hidden" name="final_profile_ca"	value="0">
+						<input type="hidden" name="final_profile_mg"	value="0">
+						<input type="hidden" name="final_profile_na"	value="0">
+						<input type="hidden" name="final_profile_so"	value="0">
+						<input type="hidden" name="final_profile_cl"	value="0">
+						<input type="hidden" name="final_profile_hco" value="0">
+						<input type="hidden" name="final_profile_ph"	value="0">
+						<div class="">
+							<input class="btn btn-secondary btn-sm px-2" type="submit" value="Сохранить">
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+
+
+<div class="modal fade" id="modalCopyShortURL" tabindex="-1" aria-labelledby="copyShortURLModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header justify-content-center">
+        <h4>Поделиться Рецептом</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row justify-content-center">
+          <input type="hidden" name="slug_recipe" value="">
+          <input type="hidden" name="get_url" value="{% url 'get_temp_url_recipe' %}">
+          <input type="hidden" name="del_url" value="{% url 'delete_temp_url_recipe' %}">
+          <div class="col-12 mb-4">
+            <span>Короткая ссылка</span>
+            <a tabindex="0" class="info-help" data-toggle="popover" data-trigger="focus" data-placement="right" data-html="true" title="Короткая ссылка" data-content="<p>- сокращённая версия рецепта<br>- доступ без регистрации<br>- без ограничения срока действия</p>">
+              <i class="material-icons align-bottom">help_outline</i>
+            </a>
+            <div id="recipeShortLink" class="text-center">
+              <span id="short-link" class="small"></span>
+              <a class="link mx-3" title="Копировать" onclick="CopyText('#short-link')">
+                <i class="material-icons align-bottom">&#xe14d;</i>
+              </a>
+            </div>
+          </div>
+          <div class="col-12 mt-4">
+            <div class="d-flex justify-content-between">
+              <div>
+                <span>Временная ссылка</span>
+                <a tabindex="0" class="info-help" data-toggle="popover" data-trigger="focus" data-placement="right" data-html="true" title="Временная ссылка" data-content="<p>- полная версия рецепта (т.к. видит пользователь свой рецепт)<br>- доступ без регистрации<br>- срок действия ссылки 3 дня</p>">
+                  <i class="material-icons align-bottom">help_outline</i>
+                </a>
+              </div>
+              <div class="temp-link text-right mb-2" style="display: none">
+                <a class="link" title="Копировать" onclick="CopyText('#full-link')">
+                  <i class="material-icons align-bottom">&#xe14d;</i>
+                </a>
+                <a class="link ml-3" title="Удалить" onclick="DeleteTempURL();">
+                  <i class="material-icons align-bottom">delete_forever</i>
+                </a>
+              </div>
+            </div>
+            <div class="temp-link"  style="display: none">
+              <div class="text-center">
+                <span id="full-link" class="small text-break"></span>
+              </div>
+            </div>
+            <div id="get-temp-link" class="text-center" style="display: none">
+              <a class="btn btn-secondary mx-3" title="Получить ссылку" onclick="GetTempURL();">
+                <span>Получить ссылку</span>
+                <i class="material-icons align-bottom">get_app</i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function RecipeShortURL(shortURL, slug, tempURL){
+      $('#recipeShortLink span').text(window.location.host+shortURL);
+      $('input[name="slug_recipe"]').val(slug);
+      if (tempURL == 'None') {
+          $('.temp-link').css("display", "none");
+          $('#get-temp-link').css("display", "block");
+
+      }
+      else {
+          $('#get-temp-link').css("display", "none");
+          $('.temp-link').css("display", "block");
+          $('.temp-link span').text(window.location.host+tempURL);
+      }
+      $('#modalCopyShortURL').modal('show');
+	};
+  function GetTempURL() {
+      let slug = $('input[name="slug_recipe"]').val();
+      let url = $('input[name="get_url"]').val()+'?rcp='+slug;
+      $.get(url, function (data) {
+          if (data.success) {
+              $('#get-temp-link').slideUp("slow");
+              $('.temp-link span').text(window.location.host+data.url);
+              $('.temp-link').slideDown("slow");
+          }
+          else {
+              $('#alert').addClass('alert-success');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+	function DeleteTempURL() {
+      let slug = $('input[name="slug_recipe"]').val();
+      let url = $('input[name="del_url"]').val()+'?rcp='+slug;
+      $.get(url, function (data) {
+          if (data.success) {
+              $('.temp-link').slideUp("slow");
+              $('#get-temp-link').slideDown("slow");
+          }
+          else {
+              $('#alert').addClass('alert-success');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+  function CopyText(el) {
+      var selection = window.getSelection();
+      var range = document.createRange();
+      range.selectNodeContents($(el).get(0));
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand('copy');
+  };
+  $(function () {
+      $('[data-toggle="popover"]').popover()
+  })
+</script>

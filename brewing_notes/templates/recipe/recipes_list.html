@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load core brew static %}
+
+{% block page_title %}Опубликованные рецепты пива{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{% url 'recipes_public_list' %}" title="Плиточный вид рецептов">
+        <span class="small">Плиточный список</span>
+      </a>
+    </div>
+    <div>
+      <a class="link ml-2" href="{% url 'user_recipes' user.username %}" title="Мои рецепты">
+        <span class="small">Мои рецепты</span>
+      </a>
+      <a class="link ml-2" href="{% url 'user_favorites' user.username %}" title="Избранные рецепты">
+        <span class="small">Избранное</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row mb-2">
+  <div class="col px-sm-0">
+    <form>
+      <div class="d-inline-flex">
+        <div class="input-group">
+          {% if request.GET.grain %}
+          <input type="hidden" name="grain" value="{{ request.GET.grain }}">
+          {% elif request.GET.hop %}
+          <input type="hidden" name="hop" value="{{ request.GET.hop }}">
+          {% elif request.GET.yeast %}
+          <input type="hidden" name="yeast" value="{{ request.GET.yeast }}">
+          {% endif %}
+          <select class="custom-select" name="tp">
+            <option {% if not request.GET.tp %}selected{% endif %} value="">Все категории</option>
+            {% for t in type %}
+            <option {% if request.GET.tp == t.0|stringformat:"i" %}selected{% endif %} value="{{ t.0 }}">{{ t.1 }}</option>
+            {% endfor %}
+          </select>
+          <select class="custom-select" name="st">
+            <option {% if not request.GET.st %}selected{% endif %} value="">Все стили</option>
+            {% for s in object_list|qs_distinct:'style' %}
+            <option {% if request.GET.st == s.pk|stringformat:"i" %}selected{% endif %} value="{{ s.pk }}">{{ s|default_if_none:'---' }}</option>
+            {% endfor %}
+          </select>
+           <button type="submit" class="btn btn-secondary" title="Отфильтровать"><i class="material-icons align-bottom">filter_alt</i></button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+<div class="row main-body mb-2">
+  <div class="col p-0 pt-2 p-sm-3">
+    {% if request.GET.grain %}
+    <h5 class="text-center">Рецепты c зерновым ингредиентом "{{ grain }}" ({{ grain.company }})</h5>
+    {% elif request.GET.hop %}
+    <h5 class="text-center">Рецепты c хмелем "{{ hop }}" ({{ hop.company }})</h5>
+    {% elif request.GET.yeast %}
+    <h5 class="text-center">Рецепты c дрожжами {{ yeast }} ({{ yeast.short_name }})</h5>
+    {% else %}
+    <h5 class="text-center">Опубликованные рецепты</h5>
+    {% endif %}
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'matches_style' '-' %}">BJCP</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'name' '-' %}">Название</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'style' '-' %}">Стиль</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'OG' '-' %}" title="Начальная плотность">НП</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'abv' '-' %}" title="Алкоголь">ABV</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'ibu' '-' %}" title="Горечь">IBU</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'srm' '-' %}" title="Цвет">SRM</a></th>
+            <th class="d-none d-sm-table-cell text-center" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'сonformity' '-' %}" title="Cоответствие"><i class="material-icons align-bottom">fact_check</i></a></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'rating' '-' %}" title="Рейтинг"><i class="material-icons align-bottom">star_rate</i></a></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'copies' '-' %}" title="Скопировано пользователями"><i class="material-icons align-bottom">copy_all</i></a></th>
+            <th class="d-none d-md-table-cell" scope="col" title="В Избраном у пользователей"><i class="material-icons align-bottom">favorite</i></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'user' '-' %}" title="Пользователь"><i class="material-icons align-bottom">&#xe7fd;</i></a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'public_date' '-' %}" title="Опубликован"><i class="material-icons align-bottom">&#xe916;</i></a></th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for recipe in object_list %}
+          <tr>
+            <td>
+              {% if recipe.matches_style %}
+              <i class="material-icons align-bottom green" title="Рецепт соответствуют выбранному стилю">verified</i>
+              {% else %}
+              <i class="material-icons align-bottom yellow" title="Рецепт не соответствует выбранному стилю">report</i>
+              {% endif %}
+            </td>
+            <td><a class="link" href="{% url 'recipe_detail' recipe.slug %}">{{ recipe.name }}</a></td>
+            <td class="d-none d-lg-table-cell">{{ recipe.style|default_if_none:'---' }}</td>
+            <td class="d-none d-lg-table-cell" title="{{ recipe.OG|gravity_to_plato }}">{{ recipe.OG|formatted_float }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.abv }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.ibu }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.srm|default_if_none:'' }}</td>
+            <td class="d-none d-sm-table-cell">
+              {% if recipe.сonformity == 1 %}
+              <i class="material-icons align-bottom сonformity-1" title="Обычный рецепт">people</i>
+              {% elif recipe.сonformity == 2 %}
+              <i class="material-icons align-bottom сonformity-2" title="Классический рецепт">history_edu</i>
+              {% elif recipe.сonformity == 3 %}
+              <i class="material-icons align-bottom сonformity-3" title="Рецепт для новичков">child_friendly</i>
+              {% elif recipe.сonformity == 4 %}
+              <i class="material-icons align-bottom сonformity-4" title="Перенесённый из другого источника">menu_book</i>
+              {% else %}
+              <i class="material-icons align-bottom сonformity-{{ recipe.сonformity }}" title="Не определено">sentiment_neutral</i>
+              {% endif %}
+            </td>
+            <td class="d-none d-md-table-cell">{{ recipe.karma }}</td>
+            <td class="d-none d-md-table-cell">{{ recipe.views|default_if_none:0 }}</td>
+            <td class="d-none d-md-table-cell">{{ recipe.favorites.count }}</td>
+            <td class="d-none d-md-table-cell"><a class="link" href="{% url 'user_recipes' recipe.user.username %}">{{ recipe.user }}</a></td>
+            <td class="d-none d-lg-table-cell">{{ recipe.public_date|date:"d.m.Y" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

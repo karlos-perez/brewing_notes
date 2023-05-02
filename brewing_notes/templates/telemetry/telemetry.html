@@ -1,0 +1,763 @@
+{% extends 'base.html' %}
+{% load brew static %}
+
+{% block page_title %}Телеметрия{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block center %}
+{% include 'telemetry/telemetry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-between p-3">
+    <div class="dropdown">
+      <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Мои устройства
+      </button>
+      <div class="dropdown-menu bg-dark" aria-labelledby="dropdownMenuLink">
+        {% for d in user.all_device %}
+        <a class="dropdown-item" href="{% url 'device_info' d.token %}">{{ d.name }} ({{ d.get_type_display }})</a>
+        {% endfor %}
+      </div>
+    </div>
+          <div>
+        <a class="link" onclick="ShowModalClearData('{% url 'device_clear' device.token %}'); return false;" title="Очистить данные"><i class="material-icons align-middle md-24">backspace</i></a>
+      </div>
+  </div>
+  <div class="col-12 text-center">
+    <h4>{{ device.name }} ({{ device.get_type_display }})</h4>
+  </div>
+  <div class="col-12 col-md-6 mb-2">
+    <div class="ml-3">
+      <div class="small"><strong>Статус:</strong>&nbsp;{% if device.active %}Активно{% else %}Отключено{% endif %}</div>
+      <div class="small"><strong>Токен:</strong>&nbsp;{{ device.token }}</div>
+      <div class="small"><strong>Последние&nbsp;данные&nbsp;от:</strong>&nbsp;{{ device.devicedatalog_set.first.created_date|date:"d.m.Y H:i:s" }}</div>
+      <div class="small"><strong>Всего запросов:</strong>&nbsp;{{ device.devicedatalog_set.count }}</div>
+    </div>
+  </div>
+  {% if device.type == 0 %}
+  <div class="col-12 col-sm-6 col-md-3 mb-2">
+    <div class="small">
+      <i class="material-icons md-18 align-middle" title="Температура">thermostat</i>
+      Пива:&nbsp;<b>{{ device.get_last_data.beer_temp|floatformat:"1" }}</b>&deg;C
+    </div>
+    <div class="small">
+      <i class="material-icons md-18 align-middle" title="Температура">thermostat</i>
+      Устройства:&nbsp;<b>{{ device.get_last_data.aux_temp|floatformat:"1" }}</b>&deg;C
+    </div>
+    <div class="small">
+      <i class="material-icons md-18 align-middle" title="Температура">thermostat</i>
+      Холодильн.:&nbsp;<b>{{ device.get_last_data.fridge_temp|floatformat:"1" }}</b>&deg;C
+    </div>
+    <div class="small">
+      <i class="material-icons md-18 align-middle" title="Температура">thermostat</i>
+      Помещения:&nbsp;<b>{{ device.get_last_data.root_temp|floatformat:"1" }}</b>&deg;C
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3 mb-2">
+    <div class="small ml-3 ml-sm-0">
+      Плотность:&nbsp;<b>{{ device.get_last_data.gravity }}</b>
+    </div>
+    <div class="small ml-3 ml-sm-0">
+      Напряжение:&nbsp;<b>{{ device.get_last_data.volt|floatformat:"2" }}</b>В
+    </div>
+    <div class="small ml-3 ml-sm-0">
+      Угол:&nbsp;<b>{{ device.get_last_data.tilt|floatformat:"3" }}</b>&deg;
+    </div>
+    <div class="small ml-3 ml-sm-0">
+      Давление:&nbsp;<b>{{ device.get_last_data.pressure|pressure }}</b>
+    </div>
+  </div>
+  {% elif device.type == 1 %}
+  <div class="col-12 col-md-3 mb-2">
+    <div class="small">
+      <i class="material-icons md-18 align-middle" title="Температура">thermostat</i>
+      Пива:&nbsp;<b>{{ device.get_last_data.aux_temp|floatformat:"1" }}</b>&deg;C
+    </div>
+  </div>
+  <div class="col-12 col-md-3 mb-2">
+    <div class="small ml-3 ml-md-0">
+      Плотность:&nbsp;<b>{{ device.get_last_data.gravity }}</b>
+    </div>
+    <div class="small ml-3 ml-md-0">
+      Напряжение:&nbsp;<b>{{ device.get_last_data.volt|floatformat:"2" }}</b>В
+    </div>
+    <div class="small ml-3 ml-md-0">
+      Угол:&nbsp;<b>{{ device.get_last_data.tilt|floatformat:"3" }}</b>&deg;
+    </div>
+    <div class="small ml-3 ml-md-0">
+      Wi-Fi:&nbsp;<b>{{ device.get_last_data.rssi }}</b>dBm
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12 mb-2">
+    <canvas id="chartTemp" style="height: 300px; width: 100%;"></canvas>
+    <div class="text-right">
+      <a class="link" onclick="resetZoomChartTemp(); return false;" title="Сбросить масштаб"><i class="material-icons">refresh</i></a>
+    </div>
+  </div>
+  <div class="col-12 mb-2">
+    <canvas id="chartGrav" style="height: 200px; width: 100%;"></canvas>
+    <div class="text-right">
+      <a class="link" onclick="resetZoomChartGrav(); return false;" title="Сбросить масштаб"><i class="material-icons">refresh</i></a>
+    </div>
+  </div>
+  <div class="col-12{% if device.type == 1 %} col-md-6{% endif %} mb-2">
+    <canvas id="chartTilt" style="height: 200px; width: 100%;"></canvas>
+    <div class="text-right">
+      <a class="link" onclick="resetZoomChartTilt(); return false;" title="Сбросить масштаб"><i class="material-icons">refresh</i></a>
+    </div>
+  </div>
+  {% if device.type == 1 %}
+  <div class="col-12 col-md-6 mb-2">
+    <canvas id="chartRSSI" style="height: 200px; width: 100%;"></canvas>
+    <div class="text-right">
+      <a class="link" onclick="resetZoomChartRSSI(); return false;" title="Сбросить масштаб"><i class="material-icons">refresh</i></a>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12 mb-2">
+    <div class="h5">Привязать период данных к рецепту:</div>
+    <form id="save-form" method="post" action="{% url 'recipe_chart_save' device.id %}" class="">{% csrf_token %}
+      <div class="row">
+        <div class="col-12 col-sm-6 col-md-3">
+          <div class="input-group input-group-sm mr-3 mb-2">
+            <div class="input-group-prepend">
+    			    <span class="input-group-text">с</span>
+  				  </div>
+            <input class="form-control" type="time" name="from_time" required>
+            <input class="form-control" type="date" name="from_date" required>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+    			    <span class="input-group-text">по</span>
+  				  </div>
+            <input class="form-control" type="time" name="to_time" required>
+            <input class="form-control" type="date" name="to_date" required>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+    					 <span class="input-group-text">Температура</span>
+  					</div>
+            <select class="form-control" name="temp">
+              {% if device.type == 0 %}
+              <option value="beer">Пиво</option>
+              <option value="fridge">Холодильник</option>
+              {% endif %}
+              <option value="aux">Аксессуар</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12 d-inline-flex">
+          <div class="input-group input-group-sm mb-2">
+            <div class="input-group-prepend">
+    				  <span class="input-group-text">Рецепт</span>
+  					</div>
+            <select class="form-control" name="recipe">
+              {% for r in user.recipe_draft %}
+              <option value="{{ r.id }}">{{ r.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <input class="btn btn-secondary btn-sm ml-2" type="submit" value="Прикрепить к рецепту">
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="col-12 mb-2">
+    <div class="h5">Последние полученные данные:</div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 50vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th rowspan="2">Время</th>
+            <th {% if device.type == 0 %}colspan="4"{% else %}colspan="1"{% endif %}>Температура, &deg;C</th>
+            <th rowspan="2">Плотность</th>
+            {% if device.type == 0 %}
+            <th rowspan="2">Давление</th>
+            {% endif %}
+            <th rowspan="2">Угол</th>
+            <th rowspan="2">Напряжение</th>
+            {% if device.type == 1 %}
+            <th rowspan="2">Wi-Fi</th>
+            {% endif %}
+          </tr>
+          <tr>
+            {% if device.type == 0 %}
+            <th>Пиво</th>
+            <th>Холод</th>
+            <th>Помещ</th>
+            {% endif %}
+            <th>Аксессуар</th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+          {% for i in log_data %}
+          <tr>
+            <td>{{ i.created_date|date:"d.m.Y H:i:s" }}</td>
+            {% if device.type == 0 %}
+            <td>{{ i.beer_temp|floatformat }}</td>
+            <td>{{ i.fridge_temp|floatformat }}</td>
+            <td>{{ i.room_temp|floatformat }}</td>
+            {% endif %}
+            <td>{{ i.aux_temp|floatformat }}</td>
+            <td>{{ i.gravity|gravity_to_plato }}</td>
+            {% if device.type == 0 %}
+            <td>{{ i.pressure|pressure }}</td>
+            {% endif %}
+            <td>{{ i.tilt }}</td>
+            <td>{{ i.voltage }}</td>
+            {% if device.type == 1 %}
+            <td>{{ i.rssi }}</td>
+            {% endif %}
+          </tr>
+          {% endfor%}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block plugin %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js" integrity="sha256-7lWo7cjrrponRJcS6bc8isfsPDwSKoaYfGIHgSheQkk=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.1.1"></script>
+<script>
+  const ctxTemp = $('#chartTemp');
+  const ctxGrav = $('#chartGrav');
+  const ctxTilt = $('#chartTilt');
+  const ctxRSSI = $('#chartRSSI');
+  var tempChart;
+  var gravChart;
+  var tiltChart;
+  var rssiChart ;
+  function addData(data) {
+     const labels = [];
+     for (let i = 0; i < data.date.length; i++) {
+         labels.push(new Date(data.date[i]));
+     };
+     tempChart = new Chart(ctxTemp, {
+          type: 'line',
+          data: {
+              labels: labels,
+              datasets: [{% if device.type == 0 %}{
+                  label: 'Пиво',
+                  data:  data.beer,
+                  borderColor: "#dede70",
+                  backgroundColor: "#dede70",
+                  borderWidth: 1,
+                  pointRadius: 0,
+              },
+              {
+                  label: 'Холодильник',
+                  data: data.fridge,
+                  borderColor: "#9090c9",
+                  backgroundColor: "#9090c9",
+                  borderWidth: 1,
+                  pointRadius: 0,
+              },
+              {
+                  label: 'Помещение',
+                  data: data.room,
+                  borderColor: "#90c990",
+                  backgroundColor: "#90c990",
+                  borderWidth: 1,
+                  pointRadius: 0,
+              },{% endif %}
+              {
+                  label: 'Аксессуар',
+                  data: data.aux,
+                  borderColor: "#c99090",
+                  backgroundColor: "#c99090",
+                  borderWidth: 1,
+                  pointRadius: 0,
+              }],
+          },
+          options: {
+              responsive: true,
+              interaction: {
+                  mode: 'index',
+                  intersect: false,
+              },
+              stacked: false,
+              plugins: {
+                  title: {
+                      display: true,
+                      text: 'Температура (°C)',
+                      color: "#a8a2a2",
+                  },
+                  legend: {
+                      labels: {
+                          color: "#a8a2a2",
+                      },
+                  },
+                  zoom: {
+                      pan: {
+					             enabled: false,
+					             mode: 'x',
+					             threshold: 10
+                      },
+                      limits: {
+                          y: {min: -5, max: 50},
+                      },
+                      zoom: {
+                          wheel: {
+                              enabled: true,
+                          },
+                          pinch: {
+                              enabled: true,
+                          },
+                          drag: {
+                              enabled: true,
+                              backgroundColor: 'rgba(190, 190, 190, 0.2)',
+                              borderColor: 'rgba(190, 190, 190, 1)',
+                              borderWidth: 1,
+                              threshold: 100,
+                          },
+                          mode: 'x',
+                      },
+                  },
+              },
+              scales: {
+                  x: {
+                      color: "#a8a2a2",
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          display: false,
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                          source: 'auto',
+                      },
+                      type: 'time',
+                      time: {
+                          tooltipFormat: 'dd.MM.yyyy HH:mm',
+                          unit: 'day',
+                          unitStepSize: 1,
+                          displayFormats: {
+                              day: 'dd.MM.yyyy'
+                          }
+                      }
+                  },
+                  y: {
+                      type: 'linear',
+                      display: true,
+                      position: 'left',
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          color: "#6a6a6a"
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                      },
+                  },
+              },
+          },
+      });
+      gravChart = new Chart(ctxGrav, {
+          type: 'line',
+          data: {
+              labels: labels,
+              datasets: [{
+                  label: 'Плотность (1.xxx)',
+                  data:  data.grav,
+                  borderColor: "#9090c9",
+                  backgroundColor: "#9090c9",
+                  borderWidth: 1,
+                  pointRadius: 0,
+                  yAxisID: 'y',
+              },{% if device.type == 0 %}
+              {
+                  label: 'Давление (psi)',
+                  data: data.press,
+                  borderColor: "#c99090",
+                  backgroundColor: "#c99090",
+                  borderWidth: 1,
+                  pointRadius: 0,
+                  yAxisID: 'y1',
+              }{% endif %}],
+          },
+          options: {
+              responsive: true,
+              interaction: {
+                  mode: 'index',
+                  intersect: false,
+              },
+              stacked: false,
+              plugins: {
+                  title: {
+                      display: true,
+                      {% if device.type == 0 %}
+                      text: 'Плотность / Давление',
+                      {% else %}
+                      text: 'Плотность',
+                      {% endif %}
+                      color: "#a8a2a2",
+                  },
+                  legend: {
+                      labels: {
+                          color: "#a8a2a2",
+                      },
+                  },
+                  zoom: {
+                      pan: {
+					             enabled: false,
+					             mode: 'x',
+					             threshold: 10
+                      },
+                      limits: {
+                          y: {min: -5, max: 50},
+                      },
+                      zoom: {
+                          wheel: {
+                              enabled: true,
+                          },
+                          pinch: {
+                              enabled: true,
+                          },
+                          drag: {
+                              enabled: true,
+                              backgroundColor: 'rgba(190, 190, 190, 0.2)',
+                              borderColor: 'rgba(190, 190, 190, 1)',
+                              borderWidth: 1,
+                              threshold: 100,
+                          },
+                          mode: 'x',
+                      },
+                  },
+              },
+              scales: {
+                  x: {
+                      color: "#a8a2a2",
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          display: false,
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                          source: 'auto',
+                      },
+                      type: 'time',
+                      time: {
+                          tooltipFormat: 'dd.MM.yyyy HH:mm',
+                          unit: 'day',
+                          unitStepSize: 1,
+                          displayFormats: {
+                              day: 'dd.MM.yyyy'
+                          }
+                      }
+                  },
+                  y: {
+                      type: 'linear',
+                      display: true,
+                      position: 'left',
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          color: "#6a6a6a"
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                      },
+                  },{% if device.type == 0 %}
+                  y1: {
+                      type: 'linear',
+                      display: true,
+                      position: 'right',
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          color: "#6a6a6a",
+                          drawOnChartArea: false,
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                      },
+                  },{% endif %}
+              },
+          },
+      });
+      tiltChart = new Chart(ctxTilt, {
+          type: 'line',
+          data: {
+              labels: labels,
+              datasets: [{
+                  label: 'Угол (°)',
+                  data:  data.tilt,
+                  borderColor: "#9090c9",
+                  backgroundColor: "#9090c9",
+                  borderWidth: 1,
+                  pointRadius: 0,
+                  yAxisID: 'y',
+              },
+              {
+                  label: 'Напряжение (В)',
+                  data: data.volt,
+                  borderColor: "#c99090",
+                  backgroundColor: "#c99090",
+                  borderWidth: 1,
+                  pointRadius: 0,
+                  yAxisID: 'y1',
+              }],
+          },
+          options: {
+              responsive: true,
+              interaction: {
+                  mode: 'index',
+                  intersect: false,
+              },
+              stacked: false,
+              plugins: {
+                  title: {
+                      display: true,
+                      text: 'Угол / Напряжение',
+                      color: "#a8a2a2",
+                  },
+                  legend: {
+                      labels: {
+                          color: "#a8a2a2",
+                      },
+                  },
+                  zoom: {
+                      pan: {
+					             enabled: false,
+					             mode: 'x',
+					             threshold: 10
+                      },
+                      limits: {
+                          y: {min: -5, max: 50},
+                      },
+                      zoom: {
+                          wheel: {
+                              enabled: true,
+                          },
+                          pinch: {
+                              enabled: true,
+                          },
+                          drag: {
+                              enabled: true,
+                              backgroundColor: 'rgba(190, 190, 190, 0.2)',
+                              borderColor: 'rgba(190, 190, 190, 1)',
+                              borderWidth: 1,
+                              threshold: 100,
+                          },
+                          mode: 'x',
+                      },
+                  },
+              },
+              scales: {
+                  x: {
+                      color: "#a8a2a2",
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          display: false,
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                          source: 'auto',
+                      },
+                      type: 'time',
+                      time: {
+                          tooltipFormat: 'dd.MM.yyyy HH:mm',
+                          unit: 'day',
+                          unitStepSize: 1,
+                          displayFormats: {
+                              day: 'dd.MM.yyyy'
+                          }
+                      }
+                  },
+                  y: {
+                      type: 'linear',
+                      display: true,
+                      position: 'left',
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          color: "#6a6a6a"
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                      },
+                  },
+                  y1: {
+                      type: 'linear',
+                      display: true,
+                      position: 'right',
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          color: "#6a6a6a",
+                          drawOnChartArea: false,
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                      },
+                  },
+              },
+          },
+      });
+      {% if device.type == 1 %}
+      rssiChart = new Chart(ctxRSSI, {
+          type: 'line',
+          data: {
+              labels: labels,
+              datasets: [{
+                  label: 'Wi-Fi (dBm)',
+                  data:  data.rssi,
+                  borderColor: "#9090c9",
+                  backgroundColor: "#9090c9",
+                  borderWidth: 1,
+                  pointRadius: 0,
+              }],
+          },
+          options: {
+              responsive: true,
+              interaction: {
+                  mode: 'index',
+                  intersect: false,
+              },
+              stacked: false,
+              plugins: {
+                  title: {
+                      display: true,
+                      text: 'Уровень сигнала wi-fi',
+                      color: "#a8a2a2",
+                  },
+                  legend: {
+                      labels: {
+                          display: false,
+                          color: "#a8a2a2",
+                      },
+                  },
+                  zoom: {
+                      pan: {
+					             enabled: false,
+					             mode: 'x',
+					             // speed: 10,
+					             threshold: 10
+                      },
+                      limits: {
+                          y: {min: -5, max: 50},
+                      },
+                      zoom: {
+                          wheel: {
+                              enabled: true,
+                          },
+                          pinch: {
+                              enabled: true,
+                          },
+                          drag: {
+                              enabled: true,
+                              backgroundColor: 'rgba(190, 190, 190, 0.2)',
+                              borderColor: 'rgba(190, 190, 190, 1)',
+                              borderWidth: 1,
+                              threshold: 100,
+                          },
+                          mode: 'x',
+                      },
+                  },
+              },
+              scales: {
+                  x: {
+                      color: "#a8a2a2",
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          display: false,
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                          source: 'auto',
+                      },
+                      type: 'time',
+                      time: {
+                          tooltipFormat: 'dd.MM.yyyy HH:mm',
+                          unit: 'day',
+                          unitStepSize: 1,
+                          displayFormats: {
+                              day: 'dd.MM.yyyy'
+                          }
+                      }
+                  },
+                  y: {
+                      type: 'linear',
+                      display: true,
+                      position: 'left',
+                      grid: {
+                          borderColor: "#6a6a6a",
+                          color: "#6a6a6a"
+                      },
+                      ticks: {
+                          color: '#a8a2a2',
+                      },
+                  },
+              },
+          },
+      });
+      {% endif %}
+  };
+  window.onload = function () {
+      $.getJSON("{% url 'device_chart' device.id %}", addData);
+
+  };
+  function resetZoomChartTemp() {
+      tempChart.resetZoom();
+  };
+  function resetZoomChartGrav() {
+      gravChart.resetZoom();
+  };
+  function resetZoomChartTilt() {
+      tiltChart.resetZoom();
+  };
+  {% if device.type == 1 %}
+  function resetZoomChartRSSI() {
+      rssiChart.resetZoom();
+  };
+  {% endif %}
+  function ShowModalClearData(url){
+    $('#device-clear-form').attr('action', url);
+    $('#modalDeviceClear').modal('show');
+	};
+</script>
+
+{% endblock %}
+{% block modal %}
+<div class="modal fade" id="modalSaveData" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите сохранить данные?</p>
+      </div>
+      <div class="text-center">
+        <strong class="red text-center">Внимание!!!</strong>
+      </div>
+      <div class="p-3">
+        <span>При сохранении данных с устройства в рецепт, существующие данные в рецепте будут перезаписаны.</span>
+      </div>
+      <div class="modal-footer">
+        <form id="device-delete-form">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" >Сохранить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDeviceClear" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите очистить данные с устройства?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="device-clear-form">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Очистить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

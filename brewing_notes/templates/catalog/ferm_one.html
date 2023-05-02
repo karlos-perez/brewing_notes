@@ -1,0 +1,52 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}{{ ferm }}{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_editor %}
+      <a class="link" href="{% url 'ferm_edit' ferm.slug %}" title="Редактировать"><span class="small">Редактировать</span></a>
+      <a class="link ml-3" href="{% url 'ferm_add' %}" title="Добавить"><span class="small">Добавить</span></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{{ ferm.name }} ({{ ferm.company|default_if_none:'---' }})</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Категория:</i><b>{{ ferm.get_type_display }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Страна:</i><b>{{ ferm.country|default_if_none:'---' }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Экстрактивность:</i><b>{{ ferm.extractivity }} %</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Цвет (SRM):</i><b>{{ ferm.color }} &deg;L</b></span>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Описание:</h5>
+        <p>{{ ferm.description|linebreaks }}</p>
+      </div>
+      <div class="col-12 d-flex justify-content-start mt-4 mb-2">
+        <a class="btn btn-secondary" href="{% url 'ferms_list' %}">Назад к списку</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

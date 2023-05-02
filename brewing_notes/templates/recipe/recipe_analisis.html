@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static brew core %}
+
+{% block head %}
+<script type="text/javascript" src="/static/js/calcs.js"></script>
+{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2 d-print-none">
+  <div class="col-12 d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{% url 'recipes_list' %}" title="Рецептурная">
+        <span class="small">Список рецептов</span>
+      </a>
+    </div>
+    <div>
+      <a class="link" href="{% url 'user_recipes' recipe.user.username %}" title="Мои рецепты">
+        <span class="small">Мои рецепты</span>
+      </a>
+      <a class="link ml-2" href="{% url 'user_favorites' recipe.user.username %}" title="Избранное">
+        <span class="small">Избранное</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body py-3 condensed">
+  <div class="col-12 my-3">
+    <div class="text-center">
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}">
+        <h3 class="">{{ recipe.name }}</h3>
+      </a>
+    </div>
+  </div>
+  <div class="col-12 px-0 px-sm-3 ">
+    <div class="head-section px-3 px-sm-0 ">Основные параметры рецепта</div>
+    <table class="table-ing mt-1 mb-3">
+      <thead>
+        <tr>
+          <th>Название</th>
+          <th>Значение</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Плотность перед кипячением (PBG)</td>
+          <td>{{ recipe.PBG|gravity_to_plato }}</td>
+        </tr>
+        <tr>
+          <td>Начальная плотность (OG)</td>
+          <td>{{ recipe.OG|gravity_to_plato }}</td>
+        </tr>
+        <tr>
+          <td>Объём на кипячение:</td>
+          <td>{{ recipe.pre_boil_size|floatformat }}&nbsp;л</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 px-0 px-sm-3 ">
+    <div class="head-section px-3 px-sm-0 ">Сравнение параметров</div>
+    {% if recipe.status == 6 and recipe.user == request.user %}
+    <script>
+      $(document).ready(function() {
+          $('.checkbox-input').on('change', function () {
+              $('.btn').prop('disabled', !$('.checkbox-input:checked').length);
+          });
+      });
+    </script>
+    {% endif %}
+    <form method="post">{% csrf_token %}
+    <table class="table-ing mt-1 mb-3">
+      <thead>
+        <tr>
+          <th>Название</th>
+          <th>Рецепта</th>
+          <th>Расчитанные</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Конечная плотность (FG)</td>
+          <td>{{ recipe.FG|gravity_to_plato }}</td>
+          <td>{{ pbg|gravity_to_plato }}</td>
+        </tr>
+        <tr>
+          <td>Уровень алкоголя (ABV)</td>
+          <td>{{ recipe.abv }} %</td>
+          <td class="d-flex justify-content-between">
+            <span>{{ alco }}</span>
+            {% if recipe.status == 6 and recipe.user == request.user %}
+            <input class="checkbox-input" type="checkbox" name="alco_check">
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Горечь (IBU)</td>
+          <td>{{ recipe.ibu }}</td>
+          <td class="d-flex justify-content-between">
+            <span>{{ ibu }}<i class="material-icons align-bottom mx-1" title="Без Хоп Стэнда">error_outline</i></span>
+            {% if recipe.status == 6 and recipe.user == request.user %}
+            <input class="checkbox-input" type="checkbox" name="ibu_check">
+            <input type="hidden" name="ibu" value="{{ ibu }}">
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Цвет (SRM)</td>
+          <td>{{ recipe.srm }}</td>
+          <td class="d-flex justify-content-between">
+            <span>{{ color }}</span>
+            {% if recipe.status == 6 and recipe.user == request.user %}
+            <input class="checkbox-input" type="checkbox" name="srm_check">
+            <input type="hidden" name="srm" value="{{ color|formatted_float }}">
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Эффективность затирания:</td>
+          <td>{{ recipe.efficiency_mash }}&nbsp;%</td>
+          <td class="d-flex justify-content-between">
+            <span>{{ efficiency }}&nbsp;%</span>
+            {% if recipe.status == 6 and recipe.user == request.user %}
+            <input class="checkbox-input" type="checkbox" name="eff_check">
+            <input type="hidden" name="eff" value="{{ efficiency|formatted_float }}">
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Аттенюация:</td>
+          <td>{{ att }} %</td>
+          <td>{{ recipe.yeastsingredients_set.all.0.ingredient.attenuation }}</td>
+        </tr>
+      </tbody>
+    </table>
+      {% if recipe.status == 6 and recipe.user == request.user %}
+      <div class="d-flex justify-content-end">
+        <button name="save" class="btn btn-secondary btn-sm" disabled>Сохранить в рецепте</button>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+  <div class="col-12 px-0 px-sm-3 ">
+    <div class="head-section px-3 px-sm-0 ">Расчитанные дополнительные параметры рецепта</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>Название параметра</th>
+          <th>Значение</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Коэф. впитывания c учётом несливаемого остатка:</td>
+          <td>{{ absorption }}</td>
+        </tr>
+        <tr>
+          <td>Общий вес зерна:</td>
+          <td>{{ total_grain|floatformat }}&nbsp;кг</td>
+        </tr>
+        <tr>
+          <td>Общий объём воды:</td>
+          <td>{{ total_water|floatformat }}&nbsp;л</td>
+        </tr>
+        <tr>
+          <td>Гидромодуль:</td>
+          <td>1:{{ hm }}</td>
+        </tr>
+        <tr>
+          <td>Выпаривание:</td>
+          <td>{{ evaporation }}&nbsp;%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

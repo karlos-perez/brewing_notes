@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load brew %}
+
+{% block page_title %}Приёмная{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col">
+  	<nav class="">
+  	  <ol class="breadcrumb d-print-none mb-0">
+				<li class="breadcrumb-item"><a class="link" href="{% url 'main' %}"><span class="small">Главная</span></a></li>
+        <li class="breadcrumb-item"><a class="link active" href="{% url 'topic_list' %}"><span class="small">Приёмная</span></a></li>
+  	  </ol>
+  	</nav>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col-12 p-3">
+    <div class="row">
+      <div class="col">
+        <a class="link" data-toggle="collapse" href="#collapseLastPost" role="button" aria-expanded="false" aria-controls="collapseLastPost">
+          <h4 class="">Последние</h4>
+        </a>
+        <div class="collapse py-3" id="collapseLastPost">
+          {% for p in last_posts %}
+          <div class="px-3 mb-2">
+            <a class="link" href="{% url 'topic_detail' p.topic.slug %}?page=last">
+              <span class="mr-2">{{ p.created_date|date:"d.m.Y H:i" }}</span>
+              <span class="mr-2">{{ p.topic.name }}</span>
+              <span class="mr-2"><strong>{{ p.user }}:</strong></span>
+              <span class="d-inline-block align-middle mr-3 text-truncate small" style="max-width: 300px;">{{ p.description }}</span>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% for topic in object_list %}
+    {% if topic.rootnode %}
+    <div>
+      <h4>{{ topic.name }}</h4>
+    </div>
+    <div class="pub-cat">
+      {% for top in topic.get_all_children %}
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <div class="card h-auto">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center py-2">
+              <h5 class="card-title mb-0"><a class="link" href="{% url 'topic_detail' top.slug %}">{{ top.name}} {% if top.status == 2 %}<i class="material-icons align-bottom">lock</i>{% endif %}</a></h5>
+              <div class=""><span class="align-middle">{{ top.obj_active_set.count }}</span></div>
+            </div>
+            <div class="card-body">
+              <p class="card-text"><a class="link" href="{% url 'topic_detail' top.slug %}">{{ top.description }}</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load brew core %}
+
+{% block center %}
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 pb-2 text-center">
+    <h4>Мои сообщения</h4>
+    <div class="d-flex justify-content-center">
+      <a class="link{% if '/inbox' in request.path %} active{% endif %}" href="{% url 'user_messages_inbox' %}">Входящие</a>
+      <a class="link mx-3{% if '/sendbox' in request.path %} active{% endif %}" href="{% url 'user_messages_sendbox' %}">Исходящие</a>
+      <a class="link{% if '/new' in request.path %} active{% endif %}" href="{% url 'user_messages_new' %}">Написать</a>
+    </div>
+  </div>
+  <div class="col-12 pb-2">
+  {% block messages %}
+  {% endblock %}
+  </div>
+</div>
+{% endblock %}

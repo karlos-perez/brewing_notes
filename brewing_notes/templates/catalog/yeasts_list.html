@@ -1,0 +1,55 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}Дрожжи для пива{% endblock %}
+
+{% block content %}
+{% if user.is_editor %}
+<div class="row mb-2">
+  <div class="col px-sm-0 d-flex justify-content-end">
+    <a class="btn btn-secondary btn-sm" href="{% url 'yeast_add' %}" title="Добавить ингредиент">Добавить ингредиент</a>
+  </div>
+</div>
+{% endif %}
+{% include 'catalog/block_filter.html' %}
+{% include 'blocks/paginator.html' %}
+<div class="row main-body mb-2">
+  <div class="col p-0 p-sm-3">
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'type' '-' %}">Тип</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'name' '-' %}">Название</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'short_name' '-' %}">Марка</a></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'company' '-' %}">Фирма</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'country' '-' %}">Страна</a></th>
+            <th class="d-none d-sm-table-cell" scope="col" title="Рекомендуемая температура">Темп,&deg;C</th>
+            <th class="d-none d-md-table-cell" scope="col" title="Аттенюация">Аттен</th>
+            <th class="d-none d-lg-table-cell" scope="col" title="Флокуляция">Флок</th>
+            <th class="d-none d-lg-table-cell" scope="col" title="Устойчивость к алкоголю">Толер</th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'its_dry' '-' %}">Форма</a></th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for yeast in object_list %}
+          <tr>
+            <td class="d-none d-lg-table-cell">{{ yeast.get_type_display }}</td>
+            <td><a class="link" href="{% url 'yeast_one' yeast.slug %}">{{ yeast.name }}</a></td>
+            <td>{{ yeast.short_name }}</td>
+            <td class="d-none d-md-table-cell">{{ yeast.company|default_if_none:'---' }}</td>
+            <td class="d-none d-lg-table-cell">{{ yeast.country|default_if_none:'---' }}</td>
+            <td class="d-none d-sm-table-cell">{{ yeast.min_temperature }}-{{ yeast.max_temperature }}</td>
+            <td class="d-none d-md-table-cell">{{ yeast.attenuation }}</td>
+            <td class="d-none d-lg-table-cell">{{ yeast.get_flocculation_display }}</td>
+            <td class="d-none d-lg-table-cell">{{ yeast.tolerance|default_if_none:'---' }}</td>
+            <td>{% if yeast.its_dry %}<i class="material-icons align-bottom" title="Сухие">grain</i>{% else %}<i class="material-icons align-bottom" title="Жидкие">water</i>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

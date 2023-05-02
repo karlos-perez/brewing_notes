@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Ферментёр / Охладитель{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-between my-3">
+    <div>
+      <a class="link d-inline-flex" href="{% url 'docs_bnc_equipments_create' %}">
+        <i class="material-icons align-bottom">chevron_left</i>
+        <span class="d-none d-md-block">Добавление оборудования</span>
+      </a>
+    </div>
+    <div>
+      <a class="link" href="{% url 'docs_main' %}">Оглавление</a>
+    </div>
+    <div>
+      <a class="link d-inline-flex" href="{% url 'docs_bnc_kettle' %}">
+        <span class="d-none d-md-block">Заторник / Нагреватель</span>
+        <i class="material-icons align-bottom">chevron_right</i>
+      </a>
+    </div>
+  </div>
+  <div class="col-12 text-center">
+    <h3>Ферментёр / Охладитель</h3>
+  </div>
+  <div class="col-12 p-3">
+    <div class="mx-3">
+      <div class="mb-3">
+        <p>Для создания оборудования Охладитель достаточно одного <strong>BNC-модуля</strong> (управление только на охлаждение). Если нужно еще подогревать, то для подогрева необходимо подключить второй модуль.</p>
+        <p>Для примера возьмем самый распространенный вариант: управление холодильником. Создадим оборудования <strong>Охладитель</strong> и укажем только «<strong>модуль 1</strong>» и нажимаем Сохранить. Если всё верно, то появится зеленая иконка означающая, что оборудование настроено правильно и готово к работе, так же появится зелёная кнопка <strong>Запуск</strong>.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/fermenter/fermenter-1.jpg" width="600px" alt="Оборудование ферментер">
+      </div>
+      <div class="mb-3">
+        <p>Нажав появившуюся кнопку <strong>Запуск</strong> переходим на страницу созданного оборудования, теперь мы можем управлять им. На этой страницы можно увидеть текущий режим работы и параметры самого модуля (модулей), а так же в сети модуль или нет, т.е. доступен для управления или нет.</p>
+        <p>Если параметры внутри модуля не соответствуют выбранному оборудованию, то необходимо в начале сбросить модуль на параметры по умолчанию нажав кнопку <strong>Сброс</strong>.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/fermenter/fermenter-2.jpg" width="800px" alt="Управление ферментёром">
+      </div>
+      <div class="mb-3">
+        <p>Далее устанавливаем Целевую температуру охлаждения и гистерезис и нажимаем <strong>Старт</strong>. На этом всё, <strong>BNC-модуль</strong> автоматически будет поддерживать температуру в холодильнике с учётом особенности работы компрессора холодильника и веб-страницу управления модулем можно закрывать.</p>
+        <p>В данном режиме работы <strong>BNC-модуля</strong> приходящие данные сохраняются на сутки на сервере и при следующей загрузке веб-страницы на графике загружаются в начале данные полученные ранее от <strong>BNC-модуля</strong>, а затем добавляются текущие.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

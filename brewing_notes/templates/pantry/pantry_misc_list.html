@@ -1,0 +1,193 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}Кладовая. Добавки{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center my-2">
+    <h4>Добавки. Кладовая</h4>
+  </div>
+  <div class="col-12 mb-2">
+    <div class="d-flex justify-content-between mb-2">
+      <div>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddMisc" title="Добавить ингредиент">Добавить ингредиент</a>
+      </div>
+    </div>
+    <div class="table-div w-100">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Добавка</th>
+            <th class="w100px">Приход</th>
+            <th class="w100px">Остаток</th>
+            <th class="w80px" title="за единицу">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell w50px"></th>
+          </tr>
+        </thead>
+        <tbody id="misc-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for m in object_list %}
+          <tr id="reserve-misc-{{ m.id }}"{% if f.spent %} style="color: #656666;"{% endif %}>
+            <td>
+              <a class="link" href="{% url 'pantry_misc_one' m.pk %}"{% if m.spent %} style="color: #656666"{% endif %}>{{ m.misc.name }}</a>
+            </td>
+            <td>{{ m.parish|floatformat:"-2" }}&nbsp;{{ m.get_measure_display }}</td>
+            <td>{{ m.balance|floatformat:"-2" }}&nbsp;{{ m.get_measure_display }}</td>
+            <td title="за {{ m.get_measure_display }}">{{ m.cost_per_unit|floatformat:"-2" }}</td>
+            <td class="d-none d-md-table-cell">{{ m.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_misc_delete' m.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="misc-empty" hidden>
+            <td class="misc-name"></td>
+            <td class="misc-parish"></td>
+            <td class="misc-balance"></td>
+            <td class="misc-cost" title="за единицу"></td>
+            <td class="misc-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="misc-cr-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  function AddMisc() {
+      let form = $('#form-add-misc');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.misc-empty').clone().appendTo('#misc-list');
+              m.attr('hidden', false);
+              m.removeClass('misc-empty');
+              m.attr('id', 'reserve-misc-'+data.id);
+              m.find('.misc-name').text(data.misc);
+              m.find('.misc-parish').text(data.parish);
+              m.find('.misc-balance').text(data.parish);
+              m.find('.misc-cost').text(data.cost);
+              m.find('.misc-cr-date').text(data.crDate);
+              m.find('.misc-ex-date').text(data.exDate);
+              m.find('.misc-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddMisc').modal('hide');
+  };
+  function ShowModalDelete(url){
+      $('#form-delete').attr('action', url);
+      $('#modalDelete').modal('show');
+	};
+  function Delete(){
+      let form = $('#form-delete');
+      $('#modalDelete').modal('hide');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              $('#reserve-'+data.id).fadeOut('slow');
+          }
+          else {
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAddMisc" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления ингредиента</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-misc"  action="{% url 'pantry_parish_misc_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Сбраживаемое:</label>
+              <select class="form-control form-control-sm" name="misc">
+                {% for m in misc %}
+                <option value="{{ m.id }}">{{ m.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="misc_parish" value="1" step="0.01" min="1" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Мера:</label>
+                <select class="form-control form-control-sm" name="misc_measure">
+                  {% for m in measure %}
+                  <option value="{{ m.0 }}">{{ m.1 }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Стоимость за ед.:</label>
+                <input class="form-control form-control-sm" type="number" name="misc_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="misc_cr_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="misc_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="misc_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddMisc(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="form-delete">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="Delete(); return false;">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

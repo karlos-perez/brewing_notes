@@ -1,0 +1,81 @@
+{% extends 'index.html' %}
+{% load static brew qr_code %}
+
+{% block page_title %}Список ингредиентов для рецепта {{ recipe.name }}{% endblock %}
+
+{% block base %}
+
+<div class="row main-body mb-2 d-print-none">
+  <div class="col-12 d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}" title="{{ recipe.name }}">
+        <span class="small">Назад к рецепту</span>
+      </a>
+    </div>
+    <div>
+      <a class="link print-button" href="" title="Распечатать">
+        <i class="material-icons">&#xe8ad;</i></a>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row d-none d-print-block">
+  <div class="col d-flex justify-content-end">
+    <img class="img" src="{% static 'img/logo_print.png' %}" height="40" alt="logo">
+  </div>
+</div>
+
+<div class="row main-body mb-2">
+  <div class="col p-0 pt-2 p-sm-3">
+    <h5 class="text-center">Список ингредиентов для рецепта</h5>
+    <h5 class="text-center mb-3"><a class="link" href="{% url 'recipe_detail' recipe.slug %}">{{ recipe.name }}</a></h5>
+    <div class="mb-2">
+      <span class="ml-3 ml-sm-0">Размер партии: <strong>{{ recipe.batch_size|floatformat }} л</strong></span>
+    </div>
+    <table class="table-print mb-2">
+      <thead>
+        <tr>
+          <th class="d-none d-md-table-cell d-print-table-cell">Категория</th>
+          <th>Наименование</th>
+          <th>Кол-во</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i, j in ingredients.items %}
+        <tr>
+          <td class="d-none d-md-table-cell d-print-table-cell">{{ j.type }}</td>
+          <td><a class="link" href="{{ j.url }}">{{ j.name }}</a></td>
+          <td>{{ j.amount|floatformat }}&nbsp;{{ j.measure }}</td>
+        </tr>
+      {% endfor %}
+      {% if recipe.priming.priming_method == 0 or recipe.priming.priming_method == 3 %}
+        <tr>
+          <td class="d-none d-md-table-cell d-print-table-cell">Для карбонизации</td>
+          <td>{{ recipe.priming.get_priming_method_display }}</td>
+          <td>{{ recipe.priming.amount|floatformat }} {{ recipe.priming.get_measure_display }}</td>
+        </tr>
+      {% endif%}
+      </tbody>
+    </table>
+    <div class="d-flex justify-content-between mb-2">
+      <div>
+        <span class="">Составил рецепт: <a class="link" href="{% url 'user_recipes' recipe.user %}"><b>{{ recipe.user }}</b></a></span>
+      </div>
+      <div class="d-none d-print-block">
+        <span class="text-right">{{ recipe.get_full_short_link }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row d-none d-print-block">
+  <div class="col d-flex justify-content-end">
+    {% qr_from_text recipe.get_full_short_link size="S" %}
+  </div>
+</div>
+<script>
+  $('.print-button').on('click', function() {
+      window.print();
+      return false;
+  });
+</script>
+{% endblock %}

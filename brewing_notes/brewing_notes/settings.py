@@ -10,64 +10,85 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+from dotenv import load_dotenv
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'm4kikflnwg-o0orol395u#$a7=+=9)&rcysxf!998qf#j#ro#^'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ['brewingnotes.ru', 'www.brewingnotes.ru', 'logs.brewingnotes.ru']
 
 SITE_ID = 1
 
 # Application definition
 
 INSTALLED_APPS = [
+    'grappelli.dashboard',
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.sitemaps',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'nnmware.core',
-    # 'nnmware.apps.address',
-    # 'nnmware.apps.publication',
-    # 'nnmware.apps.topic',
+    'wkhtmltopdf',
+    'qr_code',
+    'yaturbo',
+    'nnmware.core',
+    'catalog',
     'brew',
+    'publications',
+    'logdata',
+    'pantry',
+    'docs',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'brew.middleware.VisitorHitMiddleware',
 ]
+
+CSRF_FAILURE_VIEW = 'brew.views.csrf_failure'
 
 ROOT_URLCONF = 'brewing_notes.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "templates"),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -76,6 +97,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'brewing_notes.wsgi.application'
 
+INTERNAL_IPS = ['127.0.0.1']
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -85,11 +107,23 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'brewingnotes',
         'USER': 'brewer',
-        'PASSWORD': 'brewer',
+        'PASSWORD': os.environ.get("DJANGO_DATABASE_PASSWORD"),
         'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'PORT': os.environ.get("DJANGO_DATABASE_PORT"),
     }
 }
+
+# Caches
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+CACHE_TTL_LOG = 600
 
 
 # Password validation
@@ -110,26 +144,206 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+#  Session close
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 60 * 60 * 3  # 3 hour
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'ru'
-
-TIME_ZONE = 'UTC'
-
+LANGUAGE_CODE = 'ru-ru'
+TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
+    os.path.join(BASE_DIR, 'nnmware/locale'),
+)
+
+# Celery
+REDIS_URL = "redis://127.0.0.1:6379/0"
+BROKER_URL = REDIS_URL
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_IGNORE_RESULT = True
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+
+# Telegram Bot
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+TELEGRAM_BOT_NAME = os.environ.get("TELEGRAM_BOT_NAME")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR.parent, 'www/static/')
 STATIC_URL = '/static/'
-MEDIA_ROOT = '/sites/brewing_notes/www/media/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'www/media/')
 MEDIA_URL = '/media/'
 
+# Grappelli admin
+GRAPPELLI_ADMIN_TITLE = 'Brewing Notes'
+GRAPPELLI_INDEX_DASHBOARD = 'brewing_notes.dashboard.BrewDashboard'
+
+
+ADMIN_SYSTEM_PREFIX = os.environ.get("ADMIN_SYSTEM_PREFIX")
 AUTH_USER_MODEL = 'brew.BrewUser'
+DEFAULT_USER_ON_DELETE = 'NoName'
+
+THUMBNAIL_QUALITY = 100
+AVATAR_UPLOAD_DIR = '/media/avatars/'
+DEFAULT_AVATAR = os.path.join(MEDIA_URL, 'noavatar.png')
+DEFAULT_IMG = os.path.join(MEDIA_URL, 'nothumbnail.png')
+DEFAULT_LOGO = os.path.join(MEDIA_URL, 'nologo.png')
+
+MAX_UPLOAD_IMAGE_SIZE = 4 * 1024 * 1024
+IMAGE_UPLOAD_FORMAT = ['jpeg', 'jpg', 'png']
+IMG_MAX_PER_OBJECT = 5
+IMG_MAX_PER_USER = 1
+
+LIMIT_USERS_WATER_PROFILE = 3
+
+LOGIN_REDIRECT_URL = '/'
+
+CAPTCHA_ENABLED = False
+
+# Date formats
+DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y.%m.%d',)
+DATETIME_INPUT_FORMATS = ('%Y.%m.%d %H:%M:%S', '%Y.%m.%d %H:%M')
+
+# E-mail settings
+DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL")
+SERVER_EMAIL = os.environ.get("DJANGO_SERVER_EMAIL")
+EMAIL_USE_TLS = True
+EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST")
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD")
+
+# MQTT connect server
+MQTT_HOST = os.environ.get("MQTT_HOST")
+MQTT_PORT = 1883
+MQTT_LOGIN = os.environ.get("MQTT_LOGIN")
+MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD")
+
+# Confirmation time user
+EMAIL_CONFIRMATION_DAYS = 1
+
+# Expiration date of the full recipe link
+EXPIRATION_DATE_RECIPE_LINK = 3
+
+# Time limit requests device
+TROTTLING_LOG = 90 * 10  # 15 minuts
+TROTTLING_OFFSET = 10  # 2 seconds
+
+TROTTLING_LOG_MODULE = 120  # 60 seconds
+
+# Chart to Image for send bot
+CHART_LIMIT_DAYS = 1
+CHART_CACHE_MINUTES = 60 * 20
+WATERMARK_FOR_CHART = os.path.join(STATIC_ROOT, 'img/chart_watermark.png')
+WATERMARK = os.path.join(STATIC_ROOT, 'img/logo.png')
+
+
+# Create PDF
+WKHTMLTOPDF_CMD_OPTIONS = {'encoding': 'utf8',
+                           'quiet': True,
+                           'enable-local-file-access': True}
+
+# Google catcha
+GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get("GOOGLE_RECAPTCHA_SECRET_KEY")
+GOOGLE_RECAPTCHA_SITE_KEY = os.environ.get("GOOGLE_RECAPTCHA_SITE_KEY")
+
+# E-mail admin for send error log
+ADMINS = [('Admin', os.environ.get("ADMIN_EMAIL")),]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+        'file_formatter': {
+            'format': '%(asctime)-6s %(name)s:%(lineno)-8d %(levelname)-6s %(message)s',
+            'datefmt': "%Y-%m-%d %H:%M:%S"
+        }
+
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
+        }
+    },
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'file_formatter',
+        },
+        'production_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR.parent, 'deploy/logs/production_debug.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 7,
+            'formatter': 'file_formatter',
+            'filters': ['require_debug_false'],
+        },
+        'debug_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR.parent, 'deploy/logs/main_debug.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 7,
+            'formatter': 'file_formatter',
+            'filters': ['require_debug_true'],
+        },
+        'null': {
+            "class": 'logging.NullHandler',
+        }
+    },
+    'loggers': {
+        'django.security.DisallowedHost': {
+            'handlers': ['null'],
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['mail_admins', 'console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'django': {
+            'handlers': ['null', ],
+        },
+        'py.warnings': {
+            'handlers': ['null', ],
+        },
+        '': {
+            'handlers': ['console', 'production_file', 'debug_file'],
+            'level': "DEBUG",
+        },
+    }
+}

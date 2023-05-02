@@ -1,0 +1,44 @@
+{% load core %}
+
+{% if is_paginated %}
+  {% paginator as paginator %}
+<div class="row justify-content-end mb-2">
+  <div class="col px-sm-0">
+    <nav class=" " aria-label="Pagination">
+      <ul class="pagination mb-0 justify-content-end">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="btn btn-secondary btn-sm" href="?page={{ page_obj.previous_page_number }}{{ paginator.getvars }}">&laquo;</a>
+        </li>
+        {% endif %}
+        {% if not paginator.in_leading_range %}
+        {% for page in paginator.pages_outside_trailing_range %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="?page={{ page }}{{ paginator.getvars }}">{{ page }}</a></li>
+        {% endfor %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="#">&hellip;</a></li>
+        {% endif %}
+        {% for page in paginator.page_numbers %}
+        {% if page %}
+        {% ifequal page page_obj.number %}
+        <li class="page-item page-current"><a class="btn btn-secondary btn-sm" href="#">{{ page }}</a></li>
+        {% else %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="?page={{ page }}{{ paginator.getvars }}">{{ page }}</a></li>
+        {% endifequal %}
+        {% else %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="#">&hellip;</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if not paginator.in_trailing_range %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="#">&hellip;</a></li>
+        {% for page in paginator.pages_outside_leading_range reversed %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="?page={{ page }}{{ paginator.getvars }}">{{ page }}</a></li>
+        {% endfor %}
+        {% endif %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="btn btn-secondary btn-sm" href="?page={{ page_obj.next_page_number }}{{ paginator.getvars }}">&raquo;</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+{% endif %}

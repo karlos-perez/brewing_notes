@@ -1,0 +1,758 @@
+{% extends 'admn/admn_base.html' %}
+{% load static brew core %}
+
+{% block head %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+</style>
+<link rel="stylesheet" href="{% static 'plugins/fancybox/jquery.fancybox.css' %}"/>
+<script src="{% static 'plugins/fancybox/jquery.fancybox.pack.js' %}"></script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.gallery').fancybox({
+            openEffect: 'fade',
+            closeEffect: 'fade',
+            autoScale: true,
+        });
+    });
+    function PublishRefusing(url, name) {
+      $('.name-recipe').text(name);
+      $('#refusing-form').attr('action', url);
+      $('#modalRefusing').modal('show');
+	  };
+  {% if recipe.recipedatalog %}
+  window.onload = function () {
+      var dataPointsTemp = [];
+      var dataPointsGrav = [];
+      var chart = new CanvasJS.Chart("chartContainer", {
+          animationEnabled: true,
+      	  zoomEnabled: true,
+          backgroundColor: null,
+          toolTip: {
+		          shared: true,
+              backgroundColor: "#a8a2a2",
+              borderColor: "#a8a2a2",
+	        },
+          legend: {
+              fontColor: "#a8a2a2",
+              itemclick: toogleDataSeries,
+          },
+          axisX:{
+              labelFontColor: "#a8a2a2",
+              valueFormatString: "DD.MM.YY HH:mm",
+          },
+          axisY: {
+	          	title: "Температура",
+	          	titleFontColor: "#a8a2a2",
+	          	labelFontColor: "#a8a2a2",
+              suffix : " C",
+	        },
+	        axisY2: {
+	          	title: "Плотность",
+	          	titleFontColor: "#a8a2a2",
+	          	labelFontColor: "#a8a2a2",
+	        },
+          data: [{
+	    	      type: "spline",
+	    	      name: "Температура",
+	    	      showInLegend: true,
+	    	      xValueFormatString: "YYYY.MM.DD HH:mm",
+	    	      yValueFormatString: "##.##C",
+	    	      dataPoints: dataPointsTemp,
+	        },
+          {
+	          	type: "spline",
+	          	name: "Плотность",
+	          	axisYType: "secondary",
+	          	showInLegend: true,
+	          	xValueFormatString: "YYYY.MM.DD HH:mm",
+	          	yValueFormatString: "1.###",
+	          	dataPoints: dataPointsGrav,
+          }],
+      });
+      chart.render();
+      function toogleDataSeries(e){
+        	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+        		  e.dataSeries.visible = false;
+        	} else{
+        		  e.dataSeries.visible = true;
+        	}
+        	chart.render();
+      }
+      function addData(data) {
+	        for (var i = 0; i < data.length; i++) {
+	            let dt = new Date(data[i].date);
+		          dataPointsTemp.push({
+			            x: dt,
+			            y: data[i].temp,
+		          });
+		          dataPointsGrav.push({
+			            x: dt,
+			            y: data[i].grav,
+		          });
+	        }
+	        chart.render();
+      }
+      $.getJSON("{% url 'get_recipe_chart' recipe.slug %}", addData);
+  }
+  {% endif %}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2 py-3 condensed">
+  <div class="col-12 col-sm-9 mb-3">
+    <div class="d-flex justify-content-between">
+      <div>
+        <a class="link" href="{% url 'recipes_list' %}?tp={{ recipe.type }}&st=">
+          <span class="h5">{{ recipe.get_type_display }}</span>
+        </a>
+      </div>
+      <div>
+        <small>Автор:</small>&nbsp;
+        <a class="link" href="{% url 'user_recipes' recipe.user %}">
+          <span class="h5">{{ recipe.user }}</span>
+        </a>
+      </div>
+    </div>
+    <div>
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}">
+        <h3 class="">{% if recipe.brew_number and recipe.user == user %}#{{ recipe.brew_number }}&nbsp;{% endif %}{{ recipe.name }}</h3>
+      </a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center border-line">
+      <div class="param">OG&nbsp;<span class="{% if recipe.style.OG_min <= recipe.OG and recipe.OG <= recipe.style.OG_max %}green{% else %}red{% endif %}">{{ recipe.OG|formatted_float }}</span></div>
+      <div class="param">FG&nbsp;<span class="{% if recipe.style.FG_min <= recipe.FG and recipe.FG <= recipe.style.FG_max %}green{% else %}red{% endif %}">{{ recipe.FG|formatted_float }}</div>
+      <div class="param">ABV&nbsp;<span class="{% if recipe.style.ABV_min <= recipe.abv and recipe.abv <= recipe.style.ABV_max %}green{% else %}red{% endif %}">{{ recipe.abv|floatformat }}%</div>
+      <div class="param">IBU&nbsp;<span class="{% if recipe.style.IBUs_min <= recipe.ibu and recipe.ibu <= recipe.style.IBUs_max %}green{% else %}red{% endif %}">{{ recipe.ibu }}</div>
+      <div class="param">SRM&nbsp;<span class="{% if recipe.style.SRM_min <= recipe.srm and recipe.srm <= recipe.style.SRM_max %}green{% else %}red{% endif %}">{{ recipe.srm|floatformat }}</div>
+    </div>
+    <div class="my-1">
+      <a class="link" href="{% url 'style_one' recipe.style.slug %}">
+        <span>BJCP 2015: {{ recipe.style|default_if_none:'---' }}</span>
+      </a>
+      {% if recipe.status == 3 and recipe.matches_style %}
+        <i class="material-icons align-bottom green" title="Рецепт соответствуют выбранному стилю">verified</i>
+      {% elif recipe.matches_style %}
+        <i class="material-icons align-bottom green" title="Параметры рецепта соответствуют выбранному стилю">verified</i>
+      {% else %}
+        <i class="material-icons align-bottom yellow" title="Рецепт не соответствуют выбранному стилю">report</i>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12 col-sm-3 d-flex justify-content-center align-items-center mb-3">
+    <div class="">
+    {% if recipe.img %}
+      <a class="gallery" rel="pics" href="{{ recipe.img.url|watermark }}">
+        <img class="img-thumbnail" src='{{ recipe.get_avatar|thumbnail:"width=150, height=150" }}'>
+      </a>
+    {% else %}
+      <img class="img-thumbnail" src='{{ recipe.get_avatar|thumbnail:"width=150, height=150" }}' style="background-color: {{ srm_color }};">
+    {% endif %}
+    </div>
+  </div>
+  <div class="col-12 d-flex justify-content-center mb-3 d-print-none">
+    {% for pic in recipe.images %}
+    <a class="gallery mx-1" rel="pics" href="{{ pic.img.url }}">
+      <img class="img-thumbnail" src="{{ pic.img.url|thumbnail:"height=70" }}" />
+    </a>
+    {% endfor %}
+  </div>
+  <div class="col-12 d-flex justify-content-center d-print-none">
+    <span class="small ml-1 mr-sm-2">Статус:&nbsp;<strong class="mr-2">{{ recipe.get_status_display }}</strong>&nbsp;{% if recipe.status == 3 %}<strong>{{ recipe.public_date|date:"d.m.Y" }}</strong>{% else %}Создан:&nbsp;<strong>{{ recipe.created_date|date:"d.m.Y" }}</strong>{% endif %}</span>
+  </div>
+  {% if recipe.status == 3 %}
+  <div class="col-12 d-flex justify-content-center">
+    <span class="small mx-1 mx-sm-2">Рейтинг:&nbsp;<strong><span id="karma-{{ recipe.pk }}">{{ recipe.karma }}</span></strong></span>
+    <span class="small mx-1 mx-sm-2">В&nbsp;Избраном:&nbsp;<strong>{{ recipe.favorites.count }}</strong></span>
+    <span class="small ml-1 ml-sm-2">Скопирован:&nbsp;<strong>{{ recipe.views|default_if_none:0 }}</strong></span>
+  </div>
+  {% endif %}
+  <div class="col-12 col-sm-6 px-0 px-sm-3 my-2">
+    <div class="head-section px-3 px-sm-0 ">Основные параметры:</div>
+    <table class="table-ing my-1">
+      <thead>
+        <tr>
+          <th>Параметры стиля</th>
+          <th>Мин</th>
+          <th>Рецепт</th>
+          <th>Макс</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Начальная плотность</td>
+          <td><span>{{ recipe.style.OG_min|formatted_float }}</span></td>
+          <td><strong>{{ recipe.OG|gravity_to_plato }}</strong></td>
+          <td><span>{{ recipe.style.OG_max|formatted_float }}</span></td>
+        </tr>
+        <tr>
+          <td>Конечная плотность</td>
+          <td><span>{{ recipe.style.FG_min|formatted_float }}</span></td>
+          <td><strong>{{ recipe.FG|gravity_to_plato }}</strong></td>
+          <td><span>{{ recipe.style.FG_max|formatted_float }}</span></td>
+        </tr>
+        <tr>
+          <td>Алкоголь</td>
+          <td><span>{{ recipe.style.ABV_min }}</span></td>
+          <td><strong>{{ recipe.abv }}&nbsp;%</strong></td>
+          <td><span>{{ recipe.style.ABV_max }}</span></td>
+        </tr>
+        <tr>
+          <td>Горечь (IBU)</td>
+          <td><span>{{ recipe.style.IBUs_min }}</span></td>
+          <td><strong>{{ recipe.ibu }}</strong></td>
+          <td><span>{{ recipe.style.IBUs_max }}</span></td>
+        </tr>
+        <tr>
+          <td>Цвет (SRM)</td>
+          <td><span>{{ recipe.style.SRM_min }}</span></td>
+          <td><strong>{{ recipe.srm }}</strong></td>
+          <td><span>{{ recipe.style.SRM_max }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <table class="table-ing">
+      <tbody>
+        <tr>
+          <td>Размер партии (после кипячения):</td>
+          <td><strong>{{ recipe.batch_size|floatformat }}&nbsp;л</strong></td>
+        </tr>
+        <tr>
+          <td>Время кипячения:</td>
+          <td><strong>{{ recipe.boil_time }}&nbsp;мин</strong></td>
+        </tr>
+        <tr>
+          <td>Вода на затор:</td>
+          <td><strong>{{ recipe.mash_water|floatformat }}&nbsp;л</strong></td>
+        </tr>
+        <tr>
+          <td>Вода на промывку:</i></b></td>
+          <td><strong>{{ recipe.sparge_water|floatformat }}&nbsp;л</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 col-md-6 px-0 px-sm-3 my-2">
+    <div class="head-section px-3 px-sm-0">Дополнительные параметры:</div>
+    <table class="table-ing my-1">
+      <tbody>
+        <tr>
+          <td>Плотность перед кипячением:</td>
+          <td><strong>{{ recipe.PBG|gravity_to_plato }}</strong></td>
+        </tr>
+        <tr>
+          <td>Объем на кипячение:</td>
+          <td><strong>{{ recipe.pre_boil_size|floatformat }}&nbsp;л</strong></td>
+        </tr>
+        <tr>
+          <td>Осадок после кипячения:</td>
+          <td><strong>{{ recipe.sediment_after_boil|floatformat }}&nbsp;л</strong></td>
+        </tr>
+        <tr>
+          <td>Объём стартера:</td>
+          <td><strong>{{ recipe.starter_volume|floatformat }}&nbsp;л</strong></td>
+        </tr>
+        <tr>
+          <td>Объём на розлив:</td>
+          <td><strong>{{ recipe.bottling_size|floatformat }}&nbsp;л</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <table class="table-ing">
+      <tbody>
+        <tr>
+          <td>Эфф. затирания:</td>
+          <td><strong>{{ recipe.efficiency_mash|floatformat }}&nbsp;%</strong></td>
+        </tr>
+        <tr>
+          <td>Аттенюация:</td>
+          <td><strong>{{ att|floatformat }}&nbsp;%</strong></td>
+        </tr>
+        <tr>
+          <td>Общий объём воды:</td>
+          <td><strong>{{ water_sum|floatformat }}&nbsp;л</strong></td>
+        </tr>
+        <tr>
+          <td>Общий вес зерна:</td>
+          <td><strong>{{ grain_sum|floatformat }}&nbsp;кг</strong></td>
+        </tr>
+        <tr>
+          <td>Общий вес хмеля:</td>
+          <td><strong>{{ hop_sum|floatformat }}&nbsp;г</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0 ">Описание</div>
+  </div>
+  <div class="col-12">
+    {% if recipe.description %}
+    <p>{{ recipe.description|linebreaks }}</p>
+    {% else %}
+    <div class="m-3"></div>
+    {% endif %}
+  </div>
+  <div class="col-12 px-0 px-sm-3">
+    <div class="head-section px-3 px-sm-0">Водоподготовка</div>
+  </div>
+  <div class="col-12 col-md-6 px-0 px-sm-3">
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>Добавки</th>
+          <th>В заторную воду, г</th>
+          <th>В промывочную воду, г</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recipe.wateringredient_set.all %}
+        {% for w in recipe.wateringredient_set.all %}
+        <tr>
+          <td>{{ w.get_additive_display }}{% if w.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+          <td>{{ w.amount_mash|floatformat }}</td>
+          <td>{{ w.amount_sparge|floatformat }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td>---</td>
+          <td>---</td>
+          <td>---</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0">
+      {% for w in recipe.wateringredient_set.all %}
+      {% if w.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ w.note }}</small>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-12 col-md-6 px-0 px-sm-3">
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>Профиль воды</th>
+          <th class="w50px">Ca<sup>+2</sup></th>
+          <th class="w50px">Mg<sup>+2</sup></th>
+          <th class="w50px">Na<sup>+</sup></th>
+          <th class="w50px">SO<sub>4</sub><sup>-2</sup></th>
+          <th class="w50px">Cl<sup>-</sup></th>
+          <th class="w50px">HCO<sub>3</sub><sup>-</sup></th>
+          <th class="w50px">PH</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Исходный{% if recipe.wateroriginalprofile.note %}*{% endif %}</td>
+          <td>{{ recipe.wateroriginalprofile.calcum|default_if_none:'0' }}</td>
+          <td>{{ recipe.wateroriginalprofile.magnesium|default_if_none:'0' }}</td>
+          <td>{{ recipe.wateroriginalprofile.sodium|default_if_none:'0' }}</td>
+          <td>{{ recipe.wateroriginalprofile.sulfate|default_if_none:'0' }}</td>
+          <td>{{ recipe.wateroriginalprofile.chloride|default_if_none:'0' }}</td>
+          <td>{{ recipe.wateroriginalprofile.bicarbonate|default_if_none:'0' }}</td>
+          <td>{{ recipe.wateroriginalprofile.ph|default_if_none:'0' }}</td>
+        </tr>
+        <tr>
+          <td>Целевой{% if recipe.watertargetprofile.note %}*{% endif %}</td>
+          <td>{{ recipe.watertargetprofile.calcum|default_if_none:'0' }}</td>
+          <td>{{ recipe.watertargetprofile.magnesium|default_if_none:'0' }}</td>
+          <td>{{ recipe.watertargetprofile.sodium|default_if_none:'0' }}</td>
+          <td>{{ recipe.watertargetprofile.sulfate|default_if_none:'0' }}</td>
+          <td>{{ recipe.watertargetprofile.chloride|default_if_none:'0' }}</td>
+          <td>{{ recipe.watertargetprofile.bicarbonate|default_if_none:'0' }}</td>
+          <td>{{ recipe.watertargetprofile.ph|default_if_none:'0' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0">
+      {% if recipe.wateroriginalprofile.note %}
+      <div class="mb-2">
+        <small class=""><strong>*Исходный:</strong>&nbsp;{{ recipe.wateroriginalprofile.note }}</small>
+      </div>
+      {% endif %}
+      {% if recipe.watertargetprofile.note %}
+      <div class="mb-2">
+        <small class="mb-2"><strong>*Целевой:</strong>&nbsp;{{ recipe.watertargetprofile.note }}</small>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12 px-0 px-sm-3 ">
+    <div class="head-section px-3 px-sm-0 ">Затирание</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>Внесение</th>
+          <th class="d-none d-lg-table-cell">Категория</th>
+          <th>Наименование</th>
+          <th>Кол-во</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in mash %}
+        <tr>
+          <td>{{ i.get_use_display }}</td>
+          <td class="d-none d-lg-table-cell">{{ i.ingredient.get_type_display }}</td>
+          <td><a class="link" href="{% url 'malt_one' i.ingredient.slug %}" title="{{ i.ingredient.company }}">{{ i.ingredient }}</a>{% if i.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+          <td><strong>{{ i.amount }}&nbsp;{% if i.measure %}{{ i.get_measure_display }}{% else %}кг{% endif %}</strong>&nbsp;{% if i in recipe.grainingredients_set.all %}({{ i.amount|proportion:grain_sum }}%){% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0 mb-2">
+    {% for i in mash %}
+    {% if i.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ i.note }}</small>
+    {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0 ">Шаги затирания:</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>Пауза</th>
+          <th>Температура</th>
+          <th>Длительность</th>
+          <th class="d-none d-sm-table-cell">Нагрев</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for m in recipe.mashguidelines_set.all %}
+        <tr>
+          <td>{{ m.get_type_rest_display }}{% if m.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+          <td>{{ m.step_temp }} &deg;C</td>
+          <td>{{ m.step_time }} мин</td>
+          <td class="d-none d-sm-table-cell">{{ m.get_type_mash_display }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0 mb-2">
+    {% for m in recipe.mashguidelines_set.all %}
+    {% if m.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ m.note }}</small>
+    {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+  {% if boil %}
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0">Варка:</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th class="d-none d-md-table-cell">Категория</th>
+          <th class="d-none d-lg-table-cell">Тип</th>
+          <th>Наименование</th>
+          <th>Кол-во</th>
+          <th>Время</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in boil %}
+        <tr>
+          <td class="d-none d-md-table-cell">{{ i.ingredient|verbose_name|default_if_none:'---' }}</td>
+          <td class="d-none d-lg-table-cell">{{ i.ingredient.get_type_display }}</td>
+          <td>{% if i.alfa %}<a class="link" href="{% url 'hop_one' i.ingredient.slug %}">{{ i.ingredient }}&nbsp;({{ i.alfa }}%)</a>{% else %}{{ i.ingredient|default_if_none:'---' }}{% endif %}{% if i.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+          <td>{{ i.amount|floatformat }}&nbsp;{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %}</td>
+          <td>{{ i.time }}&nbsp;мин</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0 mb-2">
+    {% for i in boil %}
+    {% if i.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ i.note }}</small>
+    {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% if chilling %}
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0 ">Охлаждение:</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th class="d-none d-md-table-cell">Категория</th>
+          <th class="d-none d-lg-table-cell">Тип</th>
+          <th>Наименование</th>
+          <th>Кол-во</th>
+          <th>Т.&deg;C</th>
+          <th>Время</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in chilling %}
+        <tr>
+          <td class="d-none d-md-table-cell">{{ i.ingredient|verbose_name|default_if_none:'---' }}</td>
+          <td class="d-none d-lg-table-cell">{{ i.ingredient.get_type_display }}</td>
+          <td>{% if i.alfa %}<a class="link" href="{% url 'hop_one' i.ingredient.slug %}">{{ i.ingredient }}&nbsp;({{ i.alfa }}%)</a>{% else %}{{ i.ingredient|default_if_none:'---' }}{% endif%}{% if i.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+          <td>{{ i.amount|floatformat }}&nbsp;г</td>
+          <td>{{ i.temp|default_if_none:'---'  }}</td>
+          <td>{{ i.time }}&nbsp;мин</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0 mb-2">
+    {% for i in chilling %}
+    {% if i.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ i.note }}</small>
+    {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0">Сбраживание:</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th class="d-none d-md-table-cell">Категория</th>
+          <th class="d-none d-lg-table-cell">Тип</th>
+          <th>Наименование</th>
+          <th>Количество</th>
+          <th>Длит.</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in recipe.yeastsingredients_set.all %}
+        <tr>
+          <td class="d-none d-md-table-cell">{{ i.ingredient|verbose_name }}&nbsp;{% if i.ingredient.its_dry %}<i class="material-icons" style="vertical-align: bottom;" title="Сухие">grain</i>{% else %}<i class="material-icons" style="vertical-align: bottom;" title="Жидкие">water</i>{% endif %}</td>
+          <td class="d-none d-lg-table-cell">{{ i.ingredient.get_type_display }}</td>
+          <td><a class="link" href="{% url 'yeast_one' i.ingredient.slug %}">{{ i.ingredient }} ({{ i.ingredient.short_name }}){% if i.note %}&nbsp;<sup>{{ forloop.counter }}y</sup>{% endif %}</a></td>
+          <td {% if recalc != 1 %}class="red"{% endif %}>{{ i.amount|floatformat }} {{ i.get_measure_display }}</td>
+          <td>---</td>
+        </tr>
+      {% endfor %}
+      {% if dry_hop %}
+        {% for i in dry_hop %}
+        <tr>
+          <td class="d-none d-md-table-cell">{{ i.ingredient|verbose_name|default_if_none:'---' }}</td>
+          <td class="d-none d-lg-table-cell">{{ i.ingredient.get_type_display }}</td>
+          <td>{% if i.alfa %}<a class="link" href="{% url 'hop_one' i.ingredient.slug %}">{{ i.ingredient }} ({{ i.alfa }}%)</a>{% else %}{{ i.ingredient|default_if_none:'---' }}{% endif %}{% if i.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+          <td>{{ i.amount|floatformat }}&nbsp;г</td>
+          <td>{{ i.time }} дн</td>
+        </tr>
+      {% endfor %}
+      {% endif %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0">
+    {% for i in recipe.yeastsingredients_set.all %}
+    {% if i.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}y</strong>.&nbsp;{{ i.note }}</small>
+    {% endif %}
+    {% endfor %}
+    </div>
+    <div class="px-3 px-sm-0">
+    {% for i in dry_hop %}
+    {% if i.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ i.note }}</small>
+    {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0">Карбонизация:</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>Метод</th>
+          <th>Количество</th>
+          {% if recipe.priming.temp %}<th>Температура партии</th>{% endif %}
+          {% if recipe.priming.CO2_level %}<th>Уровень CO<sub>2</sub></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ recipe.priming.get_priming_method_display }}{% if recipe.priming.note %}&nbsp;<sup>*</sup>{% endif %}</td>
+          <td {% if recalc != 1 %}class="red"{% endif %}>{{ recipe.priming.amount|floatformat }} {{ recipe.priming.get_measure_display }}</td>
+          {% if recipe.priming.temp %}<td>{{ recipe.priming.temp }}&nbsp;&deg;C</td>{% endif %}
+          {% if recipe.priming.CO2_level %}<td>{{ recipe.priming.CO2_level }}</td>{% endif %}
+        </tr>
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0">
+    {% if recipe.priming.note %}
+      <small class=""><strong>*</strong>&nbsp;{{ recipe.priming.note }}</small>
+    {% endif %}
+    </div>
+  </div>
+  {% if recipe.fermentationguidelines_set.all %}
+  <div class="col-12 {% if recipe.recipedatalog %}col-sm-6 {% endif %}px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0">Рекомендации по ферментации:</div>
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>&deg;C</th>
+          <th>Дни</th>
+          <th>Этап</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in recipe.fermentationguidelines_set.all %}
+        <tr>
+          <td>{{ i.order }}</td>
+          <td>{{ i.temp }}</td>
+          <td>{{ i.duration }}</td>
+          <td>{{ i.get_stage_display }}{% if i.note %}<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="px-3 px-sm-0 mb-2">
+    {% for i in recipe.fermentationguidelines_set.all %}
+      {% if i.note %}
+      <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ i.note }}</small>
+      {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% if recipe.recipedatalog %}
+  <div class="col-12 {% if recipe.fermentationguidelines_set.all %}col-sm-6 {% endif %}px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0">График брожения:</div>
+    <div id="chartContainer" style="height: 270px; width: 100%;"></div>
+  </div>
+  {% endif %}
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0">Дневник рецепта:{% if not recipe.show_log %}&nbsp;<span class="badge badge-secondary">Скрыт пользователем</span>{% endif %}</div>
+    {% if recipe.show_log %}
+    <table class="table-ing mt-1">
+      <thead>
+        <tr>
+          <th class="w-auto">Дата</th>
+          <th class="w-auto">Событие</th>
+          <th>Примечание</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in recipe.brewinglog_set.all %}
+        <tr>
+          <td class="w-auto">{{ i.date|date:"d.m.Y" }}</td>
+          <td class="w-auto">{{ i.get_event_display }}</td>
+          <td><small>{{ i.note }}</small></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="head-section px-3 px-sm-0 ">Заметки к рецепту:{% if not recipe.show_note %}&nbsp;<span class="badge badge-secondary">Скрыт пользователем</span>{% endif %}</div>
+  </div>
+  <div class="col-12">
+    {% if recipe.show_note %}
+    {{ recipe.note|linebreaks }}
+    {% endif %}
+  </div>
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="">
+      <div class="px-3 px-sm-0 mt-2">
+        <span class=""><strong>Источник:&nbsp;</strong>{{ recipe.url_source|default_if_none:'---' }}</span>
+      </div>
+      <div class="px-3 px-sm-0 mt-2">
+        <span class=""><strong>Обсуждение:&nbsp;</strong>{{ recipe.url_discussion|default_if_none:'---' }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 px-0 px-sm-3 mt-2">
+    <div class="border-line-top"></div>
+  </div>
+  <div class="col-12 mt-3">
+    <h5>Параметры SEO <small class="red">(Обязательно перепроверить)</small></h5>
+  </div>
+  <div class="col-12 mb-2">
+    <form class="" method="post">{% csrf_token %}
+      <div class="form-group">
+        <label for="seo-title-input">Название <small>(Максимум 250 символов)</small></label>
+        <input id="seo-title-input" class="form-control" type="text" name="seo_title" value="{% if recipe.seo_title %}{{ recipe.seo_title }}{% else %}{{ recipe.name }} | {{ recipe.style.name }}{% endif %}" maxlength="250">
+      </div>
+      <div class="form-group">
+        <label for="seo-description-input">Описание <small>(Максимум 250 символов)</small></label>
+        <input id="seo-description-input" class="form-control" type="text" name="seo_description" value="{% if recipe.seo_description %}{{ recipe.seo_description }}{% else %}{{ recipe.description|truncatechars:200 }} Параметры: НП: {{ recipe.OG|gravity_to_plato }} ABV: {{ recipe.abv }}%{% endif %}" maxlength="250">
+      </div>
+      <div class="form-group">
+        <label for="seo-keywords-input">Ключевые слова <small>(Максимум 250 символов)</small></label>
+        <input id="seo-keywords-input" class="form-control" type="text" name="seo_keywords" value="{% if recipe.seo_keywords %}{{ recipe.seo_keywords }}{% else %}Рецепт пива {{ recipe.style.name }}, {{ recipe.style.name }} рецепт, {{ recipe.style.name }}, {{ recipe.get_type_display }}, рецепт пива для новичков, домашнее пивоварение, {{ recipe.name }}{% endif %}" maxlength="250">
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-6 col-sm-3 mb-2">
+          <label for="{{ form.matches_style.id_for_label }}">BJCP</label>
+          <select class="form-control" name="match_style">
+            <option {% if not matches_style %}selected{% endif %} value="false">Не в стиле</option>
+            <option {% if matches_style %}selected{% endif %} value="true">В стиле</option>
+          </select>
+        </div>
+        <div class="col-6 col-sm-3 mb-2">
+          <label for="{{ form.сonformity.id_for_label }}">Соответствие</label>
+          {{ form.сonformity }}
+        </div>
+        {% if recipe.status != 5 %}
+        <div class="col-6 col-sm-3 mb-2">
+          <label for="{{ form.сonformity.id_for_label }}">Статус</label>
+          <select class="form-control" name="status">
+            {% for st in stat %}
+            <option {% if object.status == st.0 %}selected{% endif %} value="{{ st.0 }}">{{ st.1 }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-sm-3 mb-2 d-flex align-items-end justify-content-end justify-content-sm-start">
+          <button type="submit" class="btn btn-secondary">Сохранить</button>
+        </div>
+        {% else %}
+        <div class="col-6 col-sm-3 mb-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-secondary">Опубликовать</button>
+        </div>
+        {% endif %}
+        {% if recipe.status == 5 %}
+        <div class="col-6 col-sm-3 mb-2 d-flex align-items-end justify-content-end">
+          <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#modalRefusing">Отказать</button>
+        </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block modal %}
+{% if recipe.status == 5 %}
+<div class="modal fade" id="modalRefusing" tabindex="-1" aria-labelledby="refusingModalLabel" aria-hidden="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Отказ в публикациии {{ recipe.name }}</h5>
+        <a class="btn-link" href="" data-dismiss="modal" aria-label="Close"><i class="material-icons">&#xe5cd;</i></a>
+      </div>
+      <div class="modal-body">
+        <form id="refusing-form" action="{% url 'admn_recipe_refusion' recipe.slug %}" method="post">{% csrf_token %}
+          <div class="form-group">
+            <label>Причина отказа</label>
+            <textarea class="form-control" name="message" required rows="10"></textarea>
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-dark">Отказать</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+

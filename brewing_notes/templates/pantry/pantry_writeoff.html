@@ -1,0 +1,749 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}Списание. Кладовая{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-3">
+  <div class="col-12 text-center my-2">
+    <h4>Списание</h4>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href=""><h5 class="px-3">Солод</h5></a>
+      </div>
+      <div>
+        {% if malts %}
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddMalt" title="Списать солод">Списать солод</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Солод</th>
+            <th class="w80px" title="Килограммы">Вес, кг</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="malts-list">
+          {% for m in maltswriteoff %}
+          <tr id="consumption-malt-{{ m.id }}">
+            <td>{{ m.recipe.name }}</td>
+            <td>
+              <a class="link" href="{% url 'pantry_malt_one' m.malt_reserve.id %}">{{ m.malt_reserve.malt.name }}{% if m.malt_reserve.malt.company %} ({{ m.malt_reserve.malt.company.name }}){% endif %}</a></td>
+            <td title="Килограммы">{{ m.amount|floatformat:"-2" }}</td>
+            <td title="Стоимость">{{ m.cost|floatformat:"-2" }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell w50px text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_consumption_malt_delete' m.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="malt-empty" hidden>
+            <td class="malt-recipe"></td>
+            <td class="malt-name"></td>
+            <td class="malt-amount" title="Килограмм"></td>
+            <td class="malt-cost" title="Стоимость"></td>
+            <td class="malt-date d-none d-sm-table-cell" title="Дата"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href=""><h5 class="px-3">Сбраживаемый ингредиент</h5></a>
+      </div>
+      <div>
+        {% if malts %}
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddFermentable" title="Списать солод">Списать солод</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Ингредиент</th>
+            <th class="w80px" title="Количество">Кол-во</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="fermentables-list">
+          {% for f in fermentablewriteoff %}
+          <tr id="consumption-fermentable-{{ f.id }}">
+            <td>{{ f.recipe.name }}</td>
+            <td>
+              <a class="link" href="{% url 'pantry_fermentable_one' f.fermentable_reserve.id %}">{{ f.fermentable_reserve.fermentable.name }}{% if f.fermentable_reserve.fermentable.company %} ({{ f.fermentable_reserve.fermentable.company.name }}){% endif %}</a></td>
+            <td title="Килограммы">{{ f.amount|floatformat:"-2" }}</td>
+            <td title="Стоимость">{{ f.cost|floatformat:"-2" }}</td>
+            <td class="d-none d-sm-table-cell">{{ f.date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell w50px text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_consumption_fermentable_delete' f.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="fermentable-empty" hidden>
+            <td class="fermentable-recipe"></td>
+            <td class="fermentable-name"></td>
+            <td class="fermentable-amount" title="Килограмм"></td>
+            <td class="fermentable-cost" title="Стоимость"></td>
+            <td class="fermentable-date d-none d-sm-table-cell" title="Дата"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href=""><h5 class="px-3">Хмель</h5></a>
+      </div>
+      <div>
+        {% if hops %}
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddHop" title="Добавить солод">Списать хмель</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Хмель</th>
+            <th class="w80px" title="Граммы">Вес, г</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="hops-list">
+          {% for h in hopswriteoff %}
+          <tr id="consumption-hop-{{ h.id }}">
+            <td>{{ h.recipe.name }}</td>
+            <td>
+              <a class="link" href="{% url 'pantry_hop_one' h.hop_reserve.id %}">{{ h.hop_reserve.hop.name }}{% if h.hop_reserve.hop.company %} ({{ h.hop_reserve.hop.company.name }}){% endif %}</a></td>
+            <td title="Граммы">{{ h.amount|floatformat:"-2" }}</td>
+            <td title="Стоимость">{{ h.cost|floatformat:"-2" }}</td>
+            <td class="d-none d-sm-table-cell">{{ h.date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell w50px text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_consumption_hop_delete' h.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="hop-empty" hidden>
+            <td class="hop-recipe"></td>
+            <td class="hop-name"></td>
+            <td class="hop-amount" title="Граммы"></td>
+            <td class="hop-cost" title="Стоимость"></td>
+            <td class="hop-date d-none d-sm-table-cell" title="Дата"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-2">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href=""><h5 class="px-3">Дрожжи</h5></a>
+      </div>
+      <div>
+        {% if yeasts %}
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddYeast" title="Списать солод">Списать дрожжи</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Дрожжи</th>
+            <th class="w80px">Кол-во</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="yeasts-list">
+          {% for y in yeastswriteoff %}
+          <tr id="consumption-yeast-{{ y.id }}">
+            <td>{{ y.recipe.name }}</td>
+            <td>
+              <a class="link" href="{% url 'pantry_yeast_one' y.yeast_reserve.id %}">{% if y.yeast_reserve.yeast.short_name %}{{ y.yeast_reserve.yeast.short_name }} | {% endif %}{{ y.yeast_reserve.yeast.name }}</a></td>
+            <td title="Количество">{{ y.amount|floatformat:"-2" }}&nbsp;{{ y.get_measure_display }}</td>
+            <td title="Стоимость">{{ y.cost|floatformat:"-2" }}</td>
+            <td class="d-none d-sm-table-cell">{{ y.date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell w50px text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_consumption_yeast_delete' y.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="yeast-empty" hidden>
+            <td class="yeast-recipe"></td>
+            <td class="yeast-name"></td>
+            <td class="yeast-amount"></td>
+            <td class="yeast-cost" title="Стоимость"></td>
+            <td class="yeast-date d-none d-sm-table-cell" title="Дата"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href=""><h5 class="px-3">Добавки</h5></a>
+      </div>
+      <div>
+        {% if misc %}
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddMisc" title="Списать солод">Списать добавку</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Ингредиент</th>
+            <th class="w80px" title="Количество">Кол-во</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="misc-list">
+          {% for m in miscwriteoff %}
+          <tr id="consumption-misc-{{ m.id }}">
+            <td>{{ m.recipe.name }}</td>
+            <td>
+              <a class="link" href="{% url 'pantry_misc_one' m.misc_reserve.id %}">{{ m.misc_reserve.misc.name }}{% if m.misc_reserve.misc.company %} ({{ m.misc_reserve.misc.company.name }}){% endif %}</a></td>
+            <td title="Килограммы">{{ m.amount|floatformat:"-2" }}</td>
+            <td title="Стоимость">{{ m.cost|floatformat:"-2" }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell w50px text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_consumption_misc_delete' m.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="misc-empty" hidden>
+            <td class="misc-recipe"></td>
+            <td class="misc-name"></td>
+            <td class="misc-amount" title="Килограмм"></td>
+            <td class="misc-cost" title="Стоимость"></td>
+            <td class="misc-date d-none d-sm-table-cell" title="Дата"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  function AddMalt() {
+      let form = $('#form-add-malt');
+      let balance = Number($('select[name=malts_reserve] option:selected').attr('data-balance').replace(',', '.'));
+      let amount = Number($('input[name="malt_amount"]').val().replace(',', '.'));
+      let newBalance = balance - amount;
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.malt-empty').clone().appendTo('#malts-list');
+              m.attr('hidden', false);
+              m.removeClass('malt-empty');
+              m.attr('id', 'consumption-malt-'+data.mcID);
+              m.find('.malt-name').text(data.malt);
+              m.find('.malt-recipe').text(data.recipe);
+              m.find('.malt-amount').text(data.amount);
+              m.find('.malt-cost').text(String(data.cost).replace('.', ','));
+              m.find('.malt-date').text(data.date);
+              $('input[name="malt_amount"]').attr('max', newBalance);
+              $('input[name="malt_balance"]').val(newBalance);
+              $('select[name=malts_reserve] option:selected').attr('data-balance', newBalance);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddMalt').modal('hide');
+  };
+  function AddFermenteble() {
+      let form = $('#form-add-fermentable');
+      let balance = Number($('select[name=fermentable_reserve] option:selected').attr('data-balance').replace(',', '.'));
+      let amount = Number($('input[name="fermentable_amount"]').val().replace(',', '.'));
+      let newBalance = balance - amount;
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.fermentable-empty').clone().appendTo('#fermentables-list');
+              m.attr('hidden', false);
+              m.removeClass('fermentable-empty');
+              m.attr('id', 'consumption-fermentable-'+data.fcID);
+              m.find('.fermentable-name').text(data.fermentable);
+              m.find('.fermentable-recipe').text(data.recipe);
+              m.find('.fermentable-amount').text(data.amount);
+              m.find('.fermentable-cost').text(String(data.cost).replace('.', ','));
+              m.find('.fermentable-date').text(data.date);
+              $('input[name="fermentable_amount"]').attr('max', newBalance);
+              $('input[name="fermentable_balance"]').val(newBalance);
+              $('select[name=fermentable_reserve] option:selected').attr('data-balance', newBalance);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddFermentable').modal('hide');
+  };
+  function AddHop() {
+      let form = $('#form-add-hop');
+      let balance = Number($('select[name=hops_reserve] option:selected').attr('data-balance').replace(',', '.'));
+      let amount = Number($('input[name="hop_amount"]').val().replace(',', '.'));
+      let newBalance = balance - amount;
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.hop-empty').clone().appendTo('#hops-list');
+              m.attr('hidden', false);
+              m.removeClass('hop-empty');
+              m.attr('id', 'consumption-hop-'+data.hcID);
+              m.find('.hop-name').text(data.hop);
+              m.find('.hop-recipe').text(data.recipe);
+              m.find('.hop-amount').text(data.amount);
+              m.find('.hop-cost').text(String(data.cost).replace('.', ','));
+              m.find('.hop-date').text(data.date);
+              $('input[name="hop_amount"]').attr('max', newBalance);
+              $('input[name="hop_balance"]').val(newBalance);
+              $('select[name=hops_reserve] option:selected').attr('data-balance', newBalance);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddHop').modal('hide');
+  };
+  function AddYeast() {
+      let form = $('#form-add-yeast');
+      let balance = Number($('select[name=yeasts_reserve] option:selected').attr('data-balance').replace(',', '.'));
+      let amount = Number($('input[name="yeast_amount"]').val().replace(',', '.'));
+      let newBalance = balance - amount;
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.yeast-empty').clone().appendTo('#yeasts-list');
+              m.attr('hidden', false);
+              m.removeClass('yeast-empty');
+              m.attr('id', 'consumption-yeast-'+data.ycID);
+              m.find('.yeast-name').text(data.yeast);
+              m.find('.yeast-recipe').text(data.recipe);
+              m.find('.yeast-amount').text(data.amount);
+              m.find('.yeast-cost').text(String(data.cost).replace('.', ','));
+              m.find('.yeast-date').text(data.date);
+              $('input[name="yeast_amount"]').attr('max', newBalance);
+              $('input[name="yeast_balance"]').val(newBalance);
+              $('select[name=yeasts_reserve] option:selected').attr('data-balance', newBalance);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddYeast').modal('hide');
+  };
+  function AddMisc() {
+      let form = $('#form-add-misc');
+      let balance = Number($('select[name=misc_reserve] option:selected').attr('data-balance').replace(',', '.'));
+      let amount = Number($('input[name="misc_amount"]').val().replace(',', '.'));
+      let newBalance = balance - amount;
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.misc-empty').clone().appendTo('#misc-list');
+              m.attr('hidden', false);
+              m.removeClass('misc-empty');
+              m.attr('id', 'consumption-misc-'+data.mcID);
+              m.find('.misc-name').text(data.misc);
+              m.find('.misc-recipe').text(data.recipe);
+              m.find('.misc-amount').text(data.amount);
+              m.find('.misc-cost').text(String(data.cost).replace('.', ','));
+              m.find('.misc-date').text(data.date);
+              $('input[name="misc_amount"]').attr('max', newBalance);
+              $('input[name="misc_balance"]').val(newBalance);
+              $('select[name=misc_reserve] option:selected').attr('data-balance', newBalance);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddMisc').modal('hide');
+  };
+  function ShowModalDelete(url){
+      $('#form-delete').attr('action', url);
+      $('#modalDelete').modal('show');
+	};
+  function Delete(){
+      let form = $('#form-delete');
+      $('#modalDelete').modal('hide');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              $('#consumption-'+data.id).fadeOut('slow');
+          }
+          else {
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+  $(document).ready(function () {
+      $('select[name="malts_reserve"]').change(function() {
+          let balance = $(this).find(":checked").attr('data-balance');
+          $('input[name="malt_balance"]').val(balance);
+          $('input[name="malt_amount"]').attr('max', balance);
+      });
+      $('select[name="fermentable_reserve"]').change(function() {
+          let balance = $(this).find(":checked").attr('data-balance');
+          $('input[name="fermentable_balance"]').val(balance);
+          $('input[name="fermentable_amount"]').attr('max', balance);
+      });
+      $('select[name="hops_reserve"]').change(function() {
+          let balance = $(this).find(":checked").attr('data-balance');
+          $('input[name="hop_balance"]').val(balance);
+          $('input[name="hop_amount"]').attr('max', balance);
+      });
+      $('select[name="yeasts_reserve"]').change(function() {
+          let balance = $(this).find(":checked").attr('data-balance');
+          $('input[name="yeast_balance"]').val(balance);
+          $('input[name="yeast_amount"]').attr('max', balance);
+      });
+      $('select[name="misc_reserve"]').change(function() {
+          let balance = $(this).find(":checked").attr('data-balance');
+          $('input[name="misc_balance"]').val(balance);
+          $('input[name="misc_amount"]').attr('max', balance);
+      });
+  });
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAddMalt" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления расхода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-malt" action="{% url 'pantry_consumption_malt_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label class="small">Рецепт:</label>
+              <select class="form-control form-control-sm" name="recipe">
+                <option value="">----</option>
+                {% for r in recipes %}
+                <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label class="small">Солод (остатки):</label>
+                <select class="form-control form-control-sm" name="malts_reserve">
+                  {% for m in malts %}
+                  <option value="{{ m.id }}" data-balance="{{ m.balance }}"{% if forloop.first %} selected{% endif %}>{% if m.malt.company %}{{ m.malt.company.name }} | {% endif %}{{ m.malt.name }} ({{ m.balance }}кг)</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col w100px">
+                <label class="small">Остаток, кг:</label>
+                <input class="form-control form-control-sm" type="number" disabled name="malt_balance" value="{{ malts.first.balance }}" step="0.01" min="0" max="999.99" required>
+              </div>
+              <div class="col w100px">
+                <label class="small">Вес, кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_amount" value="1" step="0.01" min="0" max="999.99" required>
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Дата:</label>
+              <input type="text" name="malt_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Примечание:</label>
+              <textarea class="form-control form-control-sm" name="malt_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddMalt(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddFermentable" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления расхода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-fermentable" action="{% url 'pantry_consumption_fermentable_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label class="small">Рецепт:</label>
+              <select class="form-control form-control-sm" name="recipe">
+                <option value="">----</option>
+                {% for r in recipes %}
+                <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label class="small">Сбраживаемое (остатки):</label>
+                <select class="form-control form-control-sm" name="fermentable_reserve">
+                  {% for f in fermentables %}
+                  <option value="{{ f.id }}" data-balance="{{ f.balance }}"{% if forloop.first %} selected{% endif %}>{{ f.fermentable.name }} ({{ f.balance }}{{ f.get_measure_display }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col w100px">
+                <label class="small">Остаток:</label>
+                <input class="form-control form-control-sm" type="text" disabled name="fermentable_balance" value="{{ fermentables.first.balance }}{{ fermentables.first.get_measure_display }}" step="1" required>
+              </div>
+              <div class="col w100px">
+                <label class="small">Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="fermentable_amount" value="1" step="1" min="1" required>
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Дата:</label>
+              <input type="text" name="fermentable_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Примечание:</label>
+              <textarea class="form-control form-control-sm" name="fermentable_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddFermenteble(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddHop" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления расхода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-hop" action="{% url 'pantry_consumption_hop_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label class="small">Рецепт:</label>
+              <select class="form-control form-control-sm" name="recipe">
+                <option value="">----</option>
+                {% for r in recipes %}
+                <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label class="small">Хмель (остатки):</label>
+                <select class="form-control form-control-sm" name="hops_reserve">
+                  {% for h in hops %}
+                  <option value="{{ h.id }}" data-balance="{{ h.balance }}"{% if forloop.first %} selected{% endif %}>{% if h.hop.company %}{{ h.hop.company.name }} | {% endif %}{{ h.hop.name }} ({{ h.balance }}г)</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col w100px">
+                <label class="small">Остаток, г:</label>
+                <input class="form-control form-control-sm" type="number" disabled name="hop_balance" value="{{ hops.first.balance }}" step="1" required>
+              </div>
+              <div class="col w100px">
+                <label class="small">Вес, г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_amount" value="1" step="1" min="1" required>
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Дата:</label>
+              <input type="text" name="hop_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Примечание:</label>
+              <textarea class="form-control form-control-sm" name="hop_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddHop(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddYeast" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления расхода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-yeast" action="{% url 'pantry_consumption_yeast_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label class="small">Рецепт:</label>
+              <select class="form-control form-control-sm" name="recipe">
+                <option value="">----</option>
+                {% for r in recipes %}
+                <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label class="small">Дрожжи (остатки):</label>
+                <select class="form-control form-control-sm" name="yeasts_reserve">
+                  {% for y in yeasts %}
+                  <option value="{{ y.id }}" data-balance="{{ y.balance }}"{% if forloop.first %} selected{% endif %}>{% if y.yeast.short_name %}{{ y.yeast.short_name }} | {% endif %}{{ y.yeast.name }} ({{ y.balance }}{{ y.get_measure_display }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col w100px">
+                <label class="small">Остаток:</label>
+                <input class="form-control form-control-sm" type="text" disabled name="yeast_balance" value="{{ yeasts.first.balance }}{{ yeasts.first.get_measure_display }}" step="1" required>
+              </div>
+              <div class="col w100px">
+                <label class="small">Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="yeast_amount" value="1" step="1" min="1" required>
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Дата:</label>
+              <input type="text" name="yeast_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Примечание:</label>
+              <textarea class="form-control form-control-sm" name="yeast_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddYeast(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddMisc" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления расхода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-misc" action="{% url 'pantry_consumption_misc_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label class="small">Рецепт:</label>
+              <select class="form-control form-control-sm" name="recipe">
+                <option value="">----</option>
+                {% for r in recipes %}
+                <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label class="small">Добавки (остатки):</label>
+                <select class="form-control form-control-sm" name="misc_reserve">
+                  {% for m in misc %}
+                  <option value="{{ m.id }}" data-balance="{{ m.balance }}"{% if forloop.first %} selected{% endif %}>{{ m.misc.name }} ({{ m.balance }}{{ m.get_measure_display }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col w100px">
+                <label class="small">Остаток:</label>
+                <input class="form-control form-control-sm" type="text" disabled name="misc_balance" value="{{ misc.first.balance }}{{ misc.first.get_measure_display }}" step="1" required>
+              </div>
+              <div class="col w100px">
+                <label class="small">Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="misc_amount" value="1" step="1" min="1" required>
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Дата:</label>
+              <input type="text" name="misc_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+            </div>
+            <div class="form-group mb-2">
+              <label class="small">Примечание:</label>
+              <textarea class="form-control form-control-sm" name="misc_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddMisc(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="form-delete">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="Delete(); return false;">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

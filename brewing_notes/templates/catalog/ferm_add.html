@@ -1,0 +1,92 @@
+{% extends 'catalog/base_catalog.html' %}
+
+{% block page_title %}Добавление сбраживаемого ингредиента{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-start py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{% if '/edit/' in request.path %}Редактирование{% else %}Добавление{% endif %} сбраживаемого ингредиента</h4>
+      </div>
+    </div>
+    {% if form.non_field_errors %}
+    <div class="row my-2">
+      {% for error in form.non_field_errors %}
+      <div class="col-12 text-center">
+        <div class="alert alert-danger">
+          <strong>{{ error }}</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <form id="form-add" class="w-100" method="post">{% csrf_token %}
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.name.id_for_label }}">Название</label>
+          {{ form.name }}
+          {% if form.name.errors %}{{ form.name.errors }}{% else %}<span class="helptext">{{ form.name.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12 col-md-4">
+          <label for="{{ form.type.id_for_label }}">Категория</label>
+          {{ form.type }}
+          {% if form.type.errors %}{{ form.type.errors }}{% else %}<span class="helptext">{{ form.type.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-4">
+          <label for="{{ form.company.id_for_label }}">Компания</label>
+          {{ form.company }}
+          {% if form.company.errors %}{{ form.company.errors }}{% else %}<span class="helptext">{{ form.company.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-4">
+          <label for="{{ form.country.id_for_label }}">Страна</label>
+          {{ form.country }}
+          {% if form.country.errors %}{{ form.country.errors }}{% else %}<span class="helptext">{{ form.country.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-6">
+          <label for="{{ form.extractivity.id_for_label }}">Экстрактивность, %</label>
+          {{ form.extractivity }}
+          {% if form.extractivity.errors %}{{ form.extractivity.errors }}{% else %}<span class="helptext">{{ form.extractivity.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6">
+          <label for="{{ form.color.id_for_label }}">Цвет, &deg;L</label>
+          {{ form.color }}
+          {% if form.color.errors %}{{ form.color.errors }}{% else %}<span class="helptext">{{ form.color.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.url_source.id_for_label }}">Источник</label>
+          {{ form.url_source }}
+          {% if form.url_source.errors %}{{ form.url_source.errors }}{% else %}<span class="helptext">{{ form.url_source.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.description.id_for_label }}">Описание</label>
+          {{ form.description }}
+          {% if form.description.errors %}{{ form.description.errors }}{% else %}<span class="helptext">{{ form.description.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12 d-flex justify-content-end">
+          <button form="form-add" type="submit" class="btn btn-secondary ml-auto">{% if '/edit/' in request.path %}Сохранить{% else %}Добавить в справочник{% endif %}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

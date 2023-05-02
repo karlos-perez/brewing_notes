@@ -1,0 +1,206 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}Кладовая{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center my-2">
+    <h4>Солод. Кладовая</h4>
+  </div>
+  <div class="col-12 col-sm-6">
+    <div>
+      <small>Базовый солод:&nbsp;</small>
+      <small><strong>{{ base_malts|default_if_none:"0,0" }}</strong>&nbsp;кг</small>
+    </div>
+    <div>
+      <small>Специальный солод:&nbsp;</small>
+      <small><strong>{{ crystal_malts|default_if_none:"0,0" }}</strong>&nbsp;кг</small>
+    </div>
+    <div>
+      <small>Жжёный солод:&nbsp;</small>
+      <small><strong>{{ roast_malts|default_if_none:"0,0" }}</strong>&nbsp;кг</small>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6">
+    <div>
+      <small>Кислый солод:&nbsp;</small>
+      <small><strong>{{ acid_malts|default_if_none:"0,0" }}</strong>&nbsp;кг</small>
+    </div>
+    <div>
+      <small>Пшеничный солод:&nbsp;</small>
+      <small><strong>{{ wheat_malts|default_if_none:"0,0" }}</strong>&nbsp;кг</small>
+    </div>
+    <div>
+      <small>Несоложенное зерно:&nbsp;</small>
+      <small><strong>{{ unmalted|default_if_none:"0,0" }}</strong>&nbsp;кг</small>
+    </div>
+  </div>
+  <div class="col-12 mb-2">
+    <div class="d-flex justify-content-between mb-2">
+      <div></div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddMalt" title="Добавить солод">Добавить солод</a>
+      </div>
+    </div>
+    <div class="table-div w-100">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Солод</th>
+            <th class="w80px" title="килограммы">Приход</th>
+            <th class="w80px" title="килограммы">Остаток</th>
+            <th class="w80px" title="за килограмм">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="malts-list">
+          {% for m in object_list %}
+          <tr id="reserve-malt-{{ m.id }}" {% if m.spent %} style="color: #656666"{% endif %}>
+            <td>
+              <a class="link" href="{% url 'pantry_malt_one' m.id %}"{% if m.spent %} style="color: #656666"{% endif %}>{{ m.malt }}{% if m.malt.company %} | {{ m.malt.company.name }}{% endif %}</a>
+            </td>
+            <td title="килограммы">{{ m.parish }}</td>
+            <td title="килограммы">{{ m.balance }}</td>
+            <td title="за килограмм">{{ m.cost_per_unit }}</td>
+            <td class="d-none d-md-table-cell">{{ m.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_malt_delete' m.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="malt-empty" hidden>
+            <td class="malt-name"></td>
+            <td class="malt-parish" title="килограммы"></td>
+            <td class="malt-balance" title="килограммы"></td>
+            <td class="malt-cost" title="за килограмм"></td>
+            <td class="malt-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="malt-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  function AddMalt() {
+      let form = $('#form-add-malt');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.malt-empty').clone().appendTo('#malts-list');
+              m.attr('hidden', false);
+              m.removeClass('malt-empty');
+              m.attr('id', 'reserve-malt-'+data.id);
+              m.find('.malt-name').text(data.malt);
+              m.find('.malt-parish').text(data.parish);
+              m.find('.malt-balance').text(data.balance);
+              m.find('.malt-cost').text(data.cost);
+              m.find('.malt-date').text(data.date);
+              m.find('.malt-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddMalt').modal('hide');
+  };
+  function ShowModalDelete(url){
+      $('#form-delete').attr('action', url);
+      $('#modalDelete').modal('show');
+	};
+  function Delete(){
+      let form = $('#form-delete');
+      $('#modalDelete').modal('hide');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              $('#reserve-'+data.id).fadeOut('slow');
+          }
+          else {
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAddMalt" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-malt"  action="{% url 'pantry_parish_malt_add' user.pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Солод:</label>
+              <select class="form-control form-control-sm" name="malts">
+                {% for m in malts %}
+                <option value="{{ m.id }}">{% if m.company %}{{ m.company.name }} | {% endif %}{{ m.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Вес, кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_parish" value="1" step="0.01" min="0" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Стоимость за кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="malt_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="malt_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="malt_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddMalt(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="form-delete">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="Delete(); return false;">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}Стили пива по BJCP{% endblock %}
+
+{% block content %}
+{% if user.is_editor %}
+<div class="row mb-2">
+  <div class="col px-sm-0 d-flex justify-content-end">
+    <a class="btn btn-secondary btn-sm" href="{% url 'style_add' %}" title="Добавить ингредиент">Добавить стиль</a>
+  </div>
+</div>
+{% endif %}
+<div class="row mb-2">
+  <div class="col px-sm-0 d-flex justify-content-start">
+    <form class="" method="get" action="">
+      <div class="d-inline-flex">
+        <div class="input-group input-group-sm">
+          <select class="custom-select" name="type">
+            <option {% if not request.GET.filter %}selected{% endif %} value="">Категории</option>
+            {% for tp in type %}
+            <option {% if request.GET.type == tp.0|stringformat:"i" %}selected{% endif %} value="{{ tp.0 }}">{{ tp.1 }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-secondary btn-sm"><i class="material-icons align-bottom md-18">filter_alt</i></button>
+        </div>
+      </div>
+      <div class="d-inline-flex">
+        <div class="input-group input-group-sm">
+          <select class="custom-select" name="bjcp">
+            {% for b in bjcp %}
+            <option {% if request.GET.bjcp == b.0|stringformat:"i" %}selected{% endif %} value="{{ b.0 }}">{{ b.1 }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-secondary btn-sm"><i class="material-icons align-bottom md-18">filter_alt</i></button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+<div class="row main-body mb-2">
+  <div class="col p-0 p-sm-3">
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'index' '-' %}">Код</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'name' '-' %}">Название</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'category' '-' %}">Категория</a></th>
+            <th class="d-none d-sm-table-cell" scope="col">НП</th>
+            <th class="d-none d-sm-table-cell" scope="col">КП</th>
+            <th class="d-none d-md-table-cell" scope="col">АЛК</th>
+            <th class="d-none d-md-table-cell" scope="col">IBU</th>
+            <th class="d-none d-lg-table-cell" scope="col">SRM</th>
+            <th class="d-none d-lg-table-cell" scope="col">CO2</th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for style in object_list %}
+          <tr>
+            <td><a class="link" href="{% url 'style_one' style.slug %}">{{ style.index }}</a></td>
+            <td><a class="link" href="{% url 'style_one' style.slug %}">{{ style.name }}</a></td>
+            <td class="d-none d-lg-table-cell">{{ style.category.index }}.&nbsp;{{ style.category.name }}</td>
+            <td class="d-none d-sm-table-cell">{{ style.OG_min|formatted_float }} &#8211; {{ style.OG_max|formatted_float }}</td>
+            <td class="d-none d-sm-table-cell">{{ style.FG_min|formatted_float }} &#8211; {{ style.FG_max|formatted_float }}</td>
+            <td class="d-none d-md-table-cell">{{ style.ABV_min }} &#8211; {{ style.ABV_max }}</td>
+            <td class="d-none d-md-table-cell">{{ style.IBUs_min }} &#8211; {{ style.IBUs_max }}</td>
+            <td class="d-none d-lg-table-cell">{{ style.SRM_min }} &#8211; {{ style.SRM_max }}</td>
+            <td class="d-none d-lg-table-cell">{{ style.CO2_min }} &#8211; {{ style.CO2_max }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

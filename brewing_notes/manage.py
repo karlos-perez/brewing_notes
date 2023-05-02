@@ -6,7 +6,7 @@ import sys
 
 ADD_PATH = ['/sites/brewing_notes/', ]
 for item in ADD_PATH:
-    sys.path.insert (0, item)
+    sys.path.insert(0, item)
     
 
 def main():

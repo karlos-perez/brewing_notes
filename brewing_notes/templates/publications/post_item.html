@@ -1,0 +1,57 @@
+{% load core static %}
+
+<div id="post-{{ post.pk }}" class="row post-item mb-2">
+  <div class="col">
+    <div class="card w-100 h-100">
+      <div class="card-header py-2">
+        <div class="media flex-wrap w-100 align-items-center d-flex justify-content-between">
+          <a href=""><img src="{{ post.user.get_avatar|thumbnail:"height=50" }}" class="img-thumbnail" alt="{{ post.user.username }}"></a>
+          <div class="media-body ml-3">
+            <a class="link" href="">{{ post.user.username }}</a>
+            <div class="small">{{ post.user.get_status_display }}</div>
+          </div>
+          <div class="small ml-3 text-right">
+            <div><strong>{{ post.created_date|date:"d.m.Y H:i" }}</strong></div>
+            <div>
+              {% if post.user == request.user and forloop.last or user.is_moderator %}
+              {% if topic.status != 2 or user.is_admin %}
+              <div class="dropdown dropleft">
+                <a class="link" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="material-icons">&#xe5d2;</i></a>
+                <div class="dropdown-menu bg-dark" aria-labelledby="dropdownMenuLink">
+                  {% if post.user == request.user %}
+                  <a class="dropdown-item" onclick="AjaxImageUpload('{% get_content_attach_url post %}',$('#image-info-{{ post.pk }}'), this, {{ post.pk }}); return false;" href=""><i class="material-icons align-bottom mr-2">add_a_photo</i><small>Прикрепить изображение</small></a>
+                  {% endif %}
+                  <a class="dropdown-item" href="" onclick="ShowModalPostEdit({{ post.pk }}); return false;"><i class="material-icons align-bottom mr-2">&#xe3c9;</i><small>Редактировать</small></a>
+                  <a class="dropdown-item" href="" onclick="ShowModalPostDelete('{% url 'post_delete' post.pk %}'); return false;"><i class="material-icons align-bottom mr-2">&#xe872;</i><small>Удалить</small></a>
+                </div>
+              </div>
+              {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body py-2">
+        <div id="post-text-{{ post.pk }}" class="card-text">{{ post.description|linebreaks }}</div>
+      </div>
+      <div class="card-footer py-1">
+        <div id="images-{{ post.pk }}" class="row">
+        {% if forloop.last %}
+          {% for pic in post.images %}
+          {% include 'blocks/image_item.html' %}
+          {% endfor %}
+        {% else %}
+        {% for pic in post.images %}
+          <div class="m-2">
+            <a class="fancybox" href="{{ pic.img.url }}">
+              <img id="image-place" class="img-thumbnail" src='{{ pic.img.url|thumbnail:"height=70" }}' alt="" style="background-color: #fff">
+            </a>
+          </div>
+        {% endfor %}
+        {% endif %}
+        </div>
+        <small id="image-info-{{ post.pk }}"></small>
+      </div>
+    </div>
+  </div>
+</div>

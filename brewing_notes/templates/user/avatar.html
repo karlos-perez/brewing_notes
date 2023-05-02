@@ -1,0 +1,18 @@
+{% load core static %}
+
+<div class="avatar d-inline-flex">
+  <div>
+    <div>
+      <img id="avatar-place" class="img-thumbnail" src='{{ object.get_avatar|thumbnail:"width=150, height=150" }}' alt="{{ user.get_name }}">
+    </div>
+    <div class="text-center">
+      <small id="image_counter" class="">jpeg | png < 4Мб</small>
+    </div>
+  </div>
+  <div>
+    <div id="avatar-uploader" class="link" onclick="AjaxImageUpload('{% url 'avatar_set' %}',$('#image_counter'), this); return false;" title="Установить аватар"><i class="material-icons">&#xe923;</i></div>
+    {% if object.img %}
+    <div id="avatar-delete" class="link" onclick="AvatarDelete('{% url 'avatar_delete' %}'); return false;" title="Удалить аватар"><i class="material-icons">&#xe92b;</i></div>
+    {% endif %}
+  </div>
+</div>

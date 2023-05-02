@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Создание BNC-модуля{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-between my-3">
+    <div>
+      <a class="link d-inline-flex" href="{% url 'docs_bnc_module' %}">
+        <i class="material-icons align-bottom">chevron_left</i>
+        <span class="d-none d-md-block">BNC модули</span>
+      </a>
+    </div>
+    <div>
+      <a class="link" href="{% url 'docs_main' %}">Оглавление</a>
+    </div>
+    <div>
+      <a class="link d-inline-flex" href="{% url 'docs_bnc_equipments' %}">
+        <span class="d-none d-md-block">Виды оборудования</span>
+        <i class="material-icons align-bottom">chevron_right</i>
+      </a>
+    </div>
+  </div>
+  <div class="col-12 text-center">
+    <h3>Создание BNC-модуля и настройка</h3>
+  </div>
+  <div class="col-12 p-3">
+    <div class="mx-3">
+      <div class="mb-3">
+        <p>Чтобы создать свой BNC-модуль нам потребуется:</p>
+        <ul>
+          <li>Sonoff TH16 с датчиком температуры DS18B20 (далее просто <strong>Sonoff</strong>)</li>
+          <li>Преобразователь USB to TTL (FT232RL)</li>
+          <li>Однорядные штыревые разъемы</li>
+          <li>Разноцветные провода мама-мама</li>
+        </ul>
+      </div>
+      <h5>Шаг 1. Подготовка Sonoff к прошивке</h5>
+      <div class="mb-3">
+        <p>Разбираем Wi-Fi реле <strong>Sonoff</strong> для чего аккуратно на защелках открываем корпус и отверткой откручиваем плату.</p>
+      </div>
+      <div class="d-flex justify-content-center">
+        <img src="/media/docs/BNCmodule/createBNC/1.jpg" width="500px" alt="Разобраный Sonoff TH16">
+      </div>
+      <div class="mb-3">
+        <p>Нас интересуют четыре отмеченных на фото контакта, а именно: VCC, E-RX, E-TX и GND. Далее припаиваем к этим контактам штыревые разъемы.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/2.jpg" width="500px" alt="Разобраный Sonoff TH16">
+      </div>
+      <div class="mb-3">
+        <p>Берем провода и соединяем <strong>Sonoff</strong> с преобразователем. Начинаем подключать от преобразователя к плате Sonoff. VCC к VCC, TX к RX, RX к TX, GND к GND. И обязательно на преобразователе устанавливаем перемычку в положение 3,3V.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img class="mr-1" src="/media/docs/BNCmodule/createBNC/3.jpg" height="500px" alt="Разобраный Sonoff TH16">
+        <img src="/media/docs/BNCmodule/createBNC/4.jpg" height="500px" alt="Разобраный Sonoff TH16">
+      </div>
+      <div class="mb-3">
+        <p>Далее подключаем USB кабель в преобразователь и мы готовы к прошивке.</p>
+      </div>
+      <h5><a name="step2">Шаг 2. Получение файла прошивки</a></h5>
+      <div class="mb-3">
+        <p>Заходим в «<strong>Профиль пользователя</strong>» на сайте. В разделе «<strong>BNC-модули</strong>» нажимаем  на <i class="material-icons align-bottom ml-2">add</i> (Добавить модуль).</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/5.jpg" width="500px" alt="Добавление модуля" style="border: solid 1px;">
+      </div>
+      <div class="mb-3">
+        <p>Появляется окошко в котором вводим имя модуля и нажимаем «<strong>Добавить</strong>»</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/6.jpg" width="400px" alt="Добавление модуля">
+      </div>
+      <div class="mb-3">
+        <p>После этого на сервере создается модуль и присваивается ему токен, который на в будущем понадобится для настройки BNC-модуля.
+          Так же на этой страницы появляется файл с последней актуальной прошивкой для <strong>Sonoff</strong>.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/7.jpg" width="800px" alt="Добавление модуля" style="border: solid 1px;">
+      </div>
+      <div class="mb-3">
+        <p>Скачиваем этот файл и разархивируем. Далее можно прошивать свой <strong>Sonoff</strong>.</p>
+      </div>
+      <h5>Шаг 3. Прошивка Sonoff</h5>
+      <div class="mb-3">
+        <p>Прошивать можно несколькими способами. Остановимся на самом простом под Windows.
+           Для этого нам понадобится программа «<strong>NodeMCU-Flasher</strong>». Её можно скачать по этой
+           <a class="link" href="https://github.com/nodemcu/nodemcu-flasher/tree/master/Win64/Release">ссылке</a>
+        </p>
+        <p>Далее нужно найти номер COM порта к которому подключится <strong>Sonoff</strong>, чтобы указать программе <strong>NodeMCU-Flasher</strong>.
+          Для этого зажимаем белую кнопку на <strong>Sonoff</strong> и не отпуская подключаем при помощи USB шнурка <strong>Sonoff</strong> в USB порт компьютера.
+          На компьютере открываем «<strong>Диспетчер устройств</strong>» и в разделе «<strong>Порты COM и LPT</strong>» должно появится устройство с номером COM порта.
+          Запоминаем этот номер (данный номер COM порта у Вас может быть другой).</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/8.jpg" width="400px" alt="Диспетчер устройств">
+      </div>
+      <div class="mb-3">
+        <p>Открываем программу <strong>NodeMCU-Flasher</strong>, которую скачали ранее и переходим во вкладку «<strong>Advanced</strong>» и устанавливаем:</p>
+        <ul>
+          <li><strong>Baudrate</strong> — 115000</li>
+          <li><strong>Flash size</strong> — 1MByte</li>
+          <li><strong>Flash speed</strong> — 40MHz</li>
+          <li><strong>SPI Mode</strong> — DOUT</li>
+        </ul>
+        <p>Следующая вкладка «<strong>Config</strong>». Вам надо выбрать файл прошивки который разархивировали раньше</p>
+        <p>И последнее переходим во вкладку «<strong>Operation</strong>», выбираем свой COM порт и нажимаем кнопку <strong>Flash</strong></p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img class="mr-1" src="/media/docs/BNCmodule/createBNC/9.jpg" height="200px" alt="Advanced">
+        <img src="/media/docs/BNCmodule/createBNC/10.jpg" height="200px" alt="Operation">
+      </div>
+      <h5>Шаг 4. Подключение Sonoff к нагрузке</h5>
+      <div class="mb-3">
+        <p>После удачной прошивки, отключаем <strong>Sonoff</strong> от комьютера, отключаем от него все провода и собираем его назад в корпус.</p>
+        <p>Далее подключаем нагрузку по этой схеме</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/11.jpg" width="500px" alt="Диспетчер устройств">
+      </div>
+      <div class="mb-3">
+        <p>Где серая линия это нейтраль (обычно синий провод многожильного кабеля), красная это фаза (коричневый провод многожильного кабеля), зеленый — земля (желто-зеленый провод многожильного кабеля).</p>
+        <p>Можно включать в розетку и переходить к первоначальной настройке.</p>
+      </div>
+      <h5>Шаг 5. Настройка подключения Sonoff</h5>
+      <div class="mb-3">
+        <p>Включаем <strong>Sonoff</strong> в розетку, после загрузки нажимаем и удерживаем кнопку на <strong>Sonoff</strong> около 5  сек. <strong>Sonoff</strong> переходит в режим настройки и активирует собственную Wi-Fi сеть с именем  BNC-moduleXXXXXX, где XXXXXX это любые цифры.
+          При помощи компьютера (ноутбука, планшета, телефона) имеющего модуль Wi-Fi подключаемся к этой точке. В браузере в адресе сайта вбиваем ip-адрес: <strong>192.168.4.1</strong> и попадаем на страницу настройки модуля.</p>
+        <p>Заходим в раздел «<strong>Configure WiFi</strong>» в вбиваем данные для подключения модуля к домашней сети Wi-Fi (SSID и Password), а так же токен модуля полученный в <a class="link" href="#step2"><strong>Шаге 2</strong></a></p>
+        <p>Нажимаем «<strong>Save</strong>» и перезагружаем модуль.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img class="mr-1" src="/media/docs/BNCmodule/createBNC/12.jpg" height="400px" alt="Settings Save">
+        <img src="/media/docs/BNCmodule/createBNC/13.jpg" height="400px" alt="Settings Save">
+      </div>
+      <div class="mb-3">
+        <p>После его перезагрузки можно посмотреть информацию и состояние модуля на локальной его страничке, для этого в браузере вбиваем его локальный IP адрес (тот который ему выдал роутер после соединения к домашней сети).</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/14.jpg" height="400px" alt="BNC-module">
+      </div>
+      <div class="mb-3">
+        <p>Для проверки доступности модуля по управлению на сайте.
+          Заходим на сайте BrewingNotes в раздел «<strong>Телеметрия</strong>» - «<strong>BNC-модули</strong>».
+          На этой странице указаны все созданные и подключенные BNC-модули Вашего аккаунта и их текущие состояния.</p>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <img src="/media/docs/BNCmodule/createBNC/15.jpg" width="800px" alt="BNC-module">
+      </div>
+      <h5>Шаг 6. <strong><i>Только для пользователей использующих браузер Firefox от Mozilla</i></strong></h5>
+      <div class="mb-4">
+        <p>Для правильной работы через браузер Firefox необходимо внести небольшую настройку в его конфигурацию, заходим на страницу настроек, для этого:</p>
+        <ol>
+          <li>В адресной строке пишем:  <strong>about:config</strong></li>
+          <li>Соглашаемся и принимаем условия быть аккуратными</li>
+          <li>При помощи поиска ищем параметр:  <strong>network.http.spdy.websockets</strong></li>
+          <li>Устанавливаем его значение в «<strong>false</strong>»</li>
+          <li>Перезагружаем браузер</li>
+        </ol>
+      </div>
+      <span class="h5"><strong>На этом создание и настройка BNC-модуля закончена. Таким образом можно подключить до четырех Sonoff к своему профилю пользователя.</strong></span>
+    </div>
+  </div>
+</div>
+{% endblock %}

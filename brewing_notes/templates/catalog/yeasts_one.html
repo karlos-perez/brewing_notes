@@ -1,0 +1,82 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}{{ yeast.name }} / {{ yeast.short_name }} ({{ yeast.company }}){% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_editor %}
+      <a class="link" href="{% url 'yeast_edit' yeast.slug %}" title="Редактировать"><span class="small">Редактировать</span></a>
+      <a class="link ml-3" href="{% url 'yeast_add' %}" title="Добавить"><span class="small">Добавить</span></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col-12 text-center">
+        <h4>{{ yeast.name }}</h4>
+      </div>
+      <div class="col-12 text-center">
+        <h4>{{ yeast.short_name }}</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Компания:</i><b>{{ yeast.company|default_if_none:'---' }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Страна:</i><b>{{ yeast.country|default_if_none:'---' }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Категория:</i><b>{{ yeast.get_type_display }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Форма:</i><b>{% if yeast.its_dry %}Сухие{% else %}Жидкие{% endif %}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Температура:</i><b>{{ yeast.min_temperature }}-{{ yeast.max_temperature }}&deg;C</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Аттенюация:</i><b>{{ yeast.attenuation }}%</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Флокуляция:</i><b>{{ yeast.get_flocculation_display }} %</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Толерантность:</i><b>{{ yeast.tolerance|default_if_none:'---' }} %</b></span>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Описание:</h5>
+        <p>{{ yeast.description|linebreaks }}</p>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Применение в стилях:</h5>
+      </div>
+      {% for row in yeast.styles.all|columns:3 %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        {% for item in row %}
+        <div>
+          <a class="link" href="{% url 'style_one' item.slug %}">
+            <small>{{ item.index }}. {{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <div class="col-12 d-flex justify-content-between mt-4 mb-2">
+        <a class="btn btn-secondary mr-2" href="{% url 'yeasts_list' %}">Назад к списку</a>
+        <a class="btn btn-secondary ml-2" href="{% url 'recipes_list' %}?yeast={{ yeast.pk }}">Показать рецепты с ингредиентом</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

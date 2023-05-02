@@ -1,0 +1,25 @@
+{% load brew %}
+
+<div class="row mb-2">
+  <div class="col px-sm-0">
+    <form>
+      <div class="d-inline-flex">
+        <div class="input-group">
+          <select class="custom-select" name="type">
+            <option {% if not request.GET.filter %}selected{% endif %} value="">Категории</option>
+            {% for tp in type %}
+            <option {% if request.GET.type == tp.0|stringformat:"i" %}selected{% endif %} value="{{ tp.0 }}">{{ tp.1 }}</option>
+            {% endfor %}
+          </select>
+          <select class="custom-select" name="company">
+            <option {% if not request.GET.st %}selected{% endif %} value="">Компании</option>
+            {% for c in all|qs_distinct:'company' %}
+            <option {% if c.pk is not None and request.GET.company == c.pk|stringformat:"i" or request.GET.company == 'empty' %}selected{% endif %} value="{% if c.pk %}{{ c.pk }}{% else %}empty{% endif %}">{{ c|default_if_none:'---' }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-secondary"><i class="material-icons align-bottom">filter_alt</i></button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,97 @@
+{% load brew %}
+
+<div class="tickercontainer">
+  <div class="mask">
+    {% with user.device_on_dashboard as d %}
+    <ul id="ticker01" class="newsticker">
+      <li>
+        <small class="">{{ d.get_type_display }}</small>
+        <a href="{% url 'device_info' d.token %}" class="link">
+          <small class="mx-1">{{ d.name }}</small>
+        </a>
+      </li>
+      <li>
+        <small class="ml-3">Последние данные:</small>
+        {% if d.get_last_data.time %}
+        <small class="">{{ d.get_last_data.time|date:"d.m.Y H:i" }}</small>
+        {% else %}
+        <small class="">---</small>
+        {% endif %}
+      </li>
+      {% if d.type == 0 %}
+      {% if d.get_last_data.beer_temp %}
+      <li>
+        <i class="material-icons md-18 align-middle blue ml-3" title="Температура">thermostat</i>
+        <small>Пива:&nbsp;<b>{{ d.get_last_data.beer_temp|floatformat:"1" }}</b>&deg;C</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.aux_temp %}
+      <li>
+        <i class="material-icons md-18 align-middle blue ml-3" title="Температура">thermostat</i>
+         <small>Устройства:&nbsp;<b>{{ d.get_last_data.aux_temp|floatformat:"1" }}</b>&deg;C</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.fridge_temp %}
+      <li>
+        <i class="material-icons md-18 align-middle blue ml-3" title="Температура">thermostat</i>
+        <small>Холодильн.:&nbsp;<b>{{ d.get_last_data.fridge_temp|floatformat:"1" }}</b>&deg;C</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.root_temp %}
+      <li>
+        <i class="material-icons md-18 align-middle blue ml-3" title="Температура">thermostat</i>
+        <small>Помещения:&nbsp;<b>{{ d.get_last_data.root_temp|floatformat:"1" }}</b>&deg;C</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.gravity %}
+      <li>
+        <small class="ml-3">Плотность:&nbsp;<b>{{ d.get_last_data.gravity|gravity_to_plato }}</b></small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.volt %}
+      <li>
+        <small class="ml-3">Напряжение:&nbsp;<b>{{ d.get_last_data.volt|floatformat:"2" }}</b>В</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.tilt %}
+      <li>
+        <small class="ml-3">Угол:&nbsp;<b>{{ d.get_last_data.tilt|floatformat:"2" }}</b>&deg;</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.pressure %}
+      <li>
+        <small class="ml-3">Давление:&nbsp;<b>{{ d.get_last_data.pressure|floatformat:"2" }}</b>psi</small>
+      </li>
+      {% endif %}
+      {% elif d.type == 1 %}
+      {% if d.get_last_data.aux_temp %}
+      <li>
+        <i class="material-icons md-18 align-middle blue ml-3">thermostat</i>
+        <small>Пива:&nbsp;<b>{{ d.get_last_data.aux_temp|floatformat:"1" }}</b>&deg;C</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.gravity %}
+      <li>
+        <small class="ml-3">Плотность:&nbsp;<b>{{ d.get_last_data.gravity|gravity_to_plato }}</b></small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.volt %}
+      <li>
+        <small class="ml-3">Напряжение:&nbsp;<b>{{ d.get_last_data.volt|floatformat:"2" }}</b>В</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.tilt %}
+      <li>
+        <small class="ml-3">Угол:&nbsp;<b>{{ d.get_last_data.tilt|floatformat:"2" }}</b>&deg;</small>
+      </li>
+      {% endif %}
+      {% if d.get_last_data.rssi %}
+      <li>
+        <small class="ml-3">Wi-Fi:&nbsp;<b>{{ d.get_last_data.rssi }}</b>dBm</small>
+      </li>
+      {% endif %}
+      {% endif %}
+    </ul>
+    {% endwith %}
+  </div>
+</div>

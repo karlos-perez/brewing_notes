@@ -1,0 +1,42 @@
+{% extends 'user/user_messages_base.html' %}
+{% load brew core %}
+
+{% block messages %}
+<div class="row">
+  <div class="col">
+    <small>Всего исходящих сообщений: </small>
+    <small id="total-message">{{ total }}</small>
+  </div>
+  <div class="col"></div>
+  <div class="col">
+    <div class="paginations">
+    {% include 'blocks/paginator.html' %}
+    </div>
+  </div>
+</div>
+{% for m in object_list %}
+<div id="message-{{ m.pk }}">
+  <div class="row p-3">
+    <div class="px-0">
+      <i id="icon-message-{{ m.pk }}" class="align-bottom material-icons">{% if not m.read_at %}mark_email_unread{% else %}mark_email_read{% endif %}</i>
+    </div>
+    <div class="px-3">
+      <img class="img-thumbnail" src="{{ m.recipient.get_avatar|thumbnail:"width=45,height=45" }}" class="mr-3" alt="">
+    </div>
+    <div class="mr-auto px-0">
+      <a class="link" href="{% url 'user_recipes' m.recipient.username %}"><span class="d-flex mt-0">{{ m.recipient }}</span></a>
+      <a data-toggle="collapse" href="#collapseMessage-{{ m.pk }}" role="button" aria-expanded="false" aria-controls="collapseMessage-{{ m.pk }}" class="d-flex link"><small class="{% if not m.read_at %} font-weight-bold{% endif %}">{{ m.subject }}</small></a>
+    </div>
+    <div class="text-right">
+      <small class="">{{ m.sent_at|date:"d.m.Y H:i" }}</small>
+      <a class="link align-top" href="" onclick="DeleteMessage({{ m.pk }}, '{% url 'delete_message' m.pk  %}'); return false;" title="Удалить"><i class="material-icons">&#xe872;</i></a>
+    </div>
+  </div>
+  <div class="collapse mt-3 px-4" id="collapseMessage-{{ m.pk }}">
+    <div class="row">
+      <p>{{ m.body|linebreaks }}</p>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

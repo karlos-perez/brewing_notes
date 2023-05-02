@@ -1,0 +1,12 @@
+{% load core %}
+
+<div id="image-{{ pic.pk }}" class="d-inline-flex m-2">
+  <div class="">
+    <a class="fancybox" href="{{ pic.img.url }}">
+      <img id="image-place" class="img-thumbnail" src='{{ pic.img.url|thumbnail:"height=70" }}' alt="" style="background-color: #fff">
+    </a>
+  </div>
+  <div class="mr-2">
+    <div id="image-delete" class="link" onclick="ImageDelete('{% url 'image_delete' %}', {{ pic.pk }}); return false;" title="Удалить"><i class="material-icons">&#xe92b;</i></div>
+  </div>
+</div>

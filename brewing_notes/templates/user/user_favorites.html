@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load core brew static %}
+
+{% block page_title %}Избранные рецепты{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-end py-2">
+    <div>
+      {% if request.user.ability_to_add %}
+      <a class="link" href="{% url 'recipe_add' %}" title="Добавить рецепт">
+        <span class="small">Создать</span>
+      </a>
+      {% endif %}
+      <a class="link ml-2" href="{% url 'user_recipes' user.username %}" title="Мои рецепты">
+        <span class="small">Мои рецепты</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col p-0 pt-2 p-sm-3">
+    <h5 class="text-center">Избранные рецепты</h5>
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'type' '-' %}">Тип</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'name' '-' %}">Название</a></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'style' '-' %}">Стиль</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'OG' '-' %}" title="Начальная плотность">НП</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'abv' '-' %}" title="Алкоголь">ABV</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'ibu' '-' %}" title="Горечь">IBU</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'srm' '-' %}" title="Цвет, &deg;L">SRM</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'created_date' '-' %}" title="Добавлен"><i class="material-icons align-bottom">&#xe916;</i></a></th>
+            <th class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'сonformity' '-' %}" title="Cоответствие"><i class="material-icons align-bottom">&#xe25d;</i></a></th>
+            <th class="d-none d-sm-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'user' '-' %}">user</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"></th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for recipe in object_list %}
+          <tr>
+            <td>{{ recipe.get_type_display }}</td>
+            <td><a class="link" href="{% url 'recipe_detail' recipe.slug %}">{{ recipe.name }}</a></td>
+            <td class="d-none d-md-table-cell">{{ recipe.style|default_if_none:'---' }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.OG|gravity_to_plato }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.abv }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.ibu }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.srm|default_if_none:'' }}</td>
+            <td class="d-none d-lg-table-cell">{{ recipe.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell">{{ recipe.get_сonformity_display }}</td>
+            <td class="d-none d-sm-table-cell">{{ recipe.user }}</td>
+            <td class="d-none d-lg-table-cell">
+              <a class="link" href="" onclick="FavoriteSet('{% url 'favorite_recipe' %}', {{ recipe.pk }}); return false;" title="Убрать из Избранных"><i id="favorite-{{ recipe.pk }}" class="material-icons align-bottom">favorite</i></a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить: "<span id="name-recipe"></span>"?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="delete-form" action="">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalCopyShortURL" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <script>
+  	function CopyText(el) {
+      var selection = window.getSelection();
+      var range = document.createRange();
+      range.selectNodeContents($(el).get(0));
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand('copy');
+    }
+  </script>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header justify-content-center">
+        <h4>Прямая сслыка на рецепт</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row justify-content-center">
+          <div id="shortLink" class="mx-3">
+            <p id="recipeShortLink"></p>
+          </div>
+          <a class="link mx-3" title="Копировать" onclick="CopyText('#recipeShortLink')"><i class="material-icons">&#xe14d;</i></a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

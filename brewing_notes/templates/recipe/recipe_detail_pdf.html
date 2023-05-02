@@ -1,0 +1,404 @@
+{% load static brew core %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="{% static 'css/style_pdf.css' %}" rel="stylesheet">
+  </head>
+<body>
+  <div class="container">
+    <div class="content-center py-3">
+      <div class="center-header mb-2">
+        <div class="row">
+          <table class="table-sett" style="padding-left: 15px;">
+            <tr>
+              <td style="width: 33%;">
+                {% if recipe.user.obj_pic %}
+                <img src="{{ recipe.user.get_logo }}" class="img" height="100" alt="logo">
+                {% endif %}
+              </td>
+              <td style="width: 33%; vertical-align: bottom;"><h2 class="text-center h2">Рецепт пива<br>от пользователя {{ recipe.user }}</h2></td>
+              <td class="text-right px-4" style="width: 33%; vertical-align: top;"><img src="{% static 'img/logo_print.png' %}" class="img" height="40" alt="logo"></td>
+            </tr>
+          </table>
+        </div>
+        <div class="row" style="padding-left: 15px;">
+          <h2 class="text-center my-2">{{ recipe.name }}</h2>
+        </div>
+      </div>
+      <div class="center-body px-4">
+        <table class="table-sett">
+            <tr>
+              <td><span><strong class="mr-2"><i>Автор:</i></strong>{{ recipe.user }}</span></td>
+              <td><span><b class="mr-2"><i>Стиль:</i></b>{{ recipe.style }}</span></td>
+            </tr>
+            <tr>
+              <td><span><b class="mr-2"><i>Дата добавления:</i></b>{{ recipe.created_date|date:"d.m.Y" }}</span></td>
+              <td><span><b class="mr-2"><i>Тип:</i></b>{{ recipe.style.get_type_display }}</span></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span><b class="mr-2"><i>Соответствие:</i></b>{{ recipe.get_сonformity_display }}</span></td>
+            </tr>
+        </table>
+          <div class="row mt-4">
+              <h5>Основные параметры:</h5>
+          </div>
+          <table class="table-sett">
+            <tr>
+              <td><span><b class="mr-2"><i>Начальная плотность (OG):</i></b>{{ recipe.OG|gravity_to_plato }}</span></td>
+              <td><span><b class="mr-2"><i>Размер партии:</i></b>{{ recipe.batch_size|recount:recalc|floatformat }}&nbsp;л</span></td>
+              <td><span><b class="mr-2"><i>Объем на кипячение,&nbsp;л:</i></b>{% if user == recipe.user or user.is_pro %}{{ recipe.pre_boil_size|recount:recalc|floatformat }}{% else %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</span></td>
+            </tr>
+            <tr>
+              <td><span><b class="mr-2"><i>Конечная плотность (FG):</i></b>{{ recipe.FG|gravity_to_plato }}</span></td>
+              <td><span><b class="mr-2"><i>Вода на затор:</i></b>{{ recipe.mash_water|recount:recalc|floatformat }}&nbsp;л</span></td>
+              <td><span><b class="mr-2"><i>Объем на брожение,&nbsp;л:</i></b>{% if user == recipe.user or user.is_pro %}{{ recipe.fermentation_size|recount:recalc|floatformat }}{% else %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</span></td>
+            </tr>
+            <tr>
+              <td><span><b class="mr-2"><i>Уровень алкоголя (ABV):</i></b>{{ recipe.abv|floatformat }}&nbsp;%</span></td>
+              <td><span><b class="mr-2"><i>Вода на промывку:</i></b>{{ recipe.sparge_water|recount:recalc|floatformat }}&nbsp;л</span></td>
+              <td><span><b class="mr-2"><i>Длительность брожения,&nbsp;д:</i></b>{% if user == recipe.user or user.is_pro %}{{ recipe.fermentation_duration|floatformat }}{% else %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</span></td>
+            </tr>
+            <tr>
+              <td><span><b class="mr-2"><i>Горечь (IBU):</i></b> {{ recipe.ibu }}</span></td>
+              <td><span><b class="mr-2"><i>Время кипячения:</i></b>{{ recipe.boil_time }}&nbsp;мин</span></td>
+              <td><span><b class="mr-2"><i>Температура брожения,&nbsp;&deg;C:</i></b>{% if user == recipe.user or user.is_pro %}{{ recipe.fermentation_temp|floatformat }}{% else %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</span></td>
+            </tr>
+            <tr>
+              <td><span class="mr-2"><b class="mr-2"><i>Цвет (SRM):</i></b>{{ recipe.srm|floatformat }}</span></td>
+              <td><span class="mr-2"><b class="mr-2"><i>Общий вес зерна:</i></b>{{ grain_sum|recount:recalc|floatformat }}&nbsp;кг</span></td>
+              <td><span><b class="mr-2"><i>Длительность созревания,&nbsp;д:</i></b>{% if user == recipe.user or user.is_pro %}{{ recipe.maturation|floatformat }}{% else %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</span></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td></td>
+              <td><span><b class="mr-2"><i>Эффективность затирания,&nbsp;%:</i></b>{% if user == recipe.user or user.is_pro %}{{ recipe.efficiency_mash|floatformat }}{% else %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</span></td>
+            </tr>
+          </table>
+          {% if recipe.description %}
+          <div class="row mt-4">
+            <h5>Описание:</h5>
+          </div>
+          <div class="row">
+            <div class="col">
+              <p>{{ recipe.description|linebreaks }}</p>
+            </div>
+          </div>
+          {% endif %}
+          <div class="row mt-4">
+              <h5>Затирание:</h5>
+          </div>
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th><b>№</b></th>
+                  <th><b>Категория</b></th>
+                  <th><b>Наименование</b></th>
+                  <th><b>Кол</b>-во</th>
+                  <th><b>Внесение</b></th>
+                  <th><b>Заметка</b></th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for i in mash %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ i.ingredient.get_type_display }}</td>
+                  <td>{{ i.ingredient }}</td>
+                  <td>{{ i.amount|recount:recalc|floatformat }} {% if i.measure %}{{ i.get_measure_display }}{% else %}кг{% endif %}</td>
+                  <td>{{ i.get_use_display }}</td>
+                  <td><small>{{ i.note }}</small></td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="row mt-4">
+              <h5>Шаги затирания:</h5>
+          </div>
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>№</th>
+                  <th>Пауза</th>
+                  <th>Темп.</th>
+                  <th>Длит.</th>
+                  <th>Нагрев</th>
+                  <th>Заметка</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for m in recipe.mashguidelines_set.all %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ m.get_type_rest_display }}</td>
+                  <td>{{ m.step_temp }} &deg;C</td>
+                  <td>{{ m.step_time }} мин</td>
+                  <td>{{ m.get_type_mash_display }}</td>
+                  <td><small>{{ m.note }}</small></td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="row mt-4">
+            <h5>Варка:</h5>
+          </div>
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>№</th>
+                  <th>Категория</th>
+                  <th>Тип</th>
+                  <th>Наименование</th>
+                  <th>Кол-во</th>
+                  <th>Время</th>
+                  <th>Заметка</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for i in boil %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ i.ingredient|verbose_name }}</td>
+                  <td>{{ i.ingredient.get_type_display }}</td>
+                  <td>{% if i.alfa %}{{ i.ingredient }} ({{ i.alfa }}%){% else %}{{ i.ingredient }}{% endif%}</td>
+                  <td>{{ i.amount|recount:recalc|floatformat }} {% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %}</td>
+                  <td>{{ i.time }} мин</td>
+                  <td><small>{{ ш.note }}</small></td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if chilling %}
+          <div class="row mt-4">
+            <h5>Охладжение:</h5>
+          </div>
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>№</th>
+                  <th>Категория</th>
+                  <th>Тип</th>
+                  <th>Наименование</th>
+                  <th>Кол-во</th>
+                  <th>Темп.</th>
+                  <th>Время</th>
+                  <th>Заметка</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for i in chilling %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ i.ingredient|verbose_name }}</td>
+                  <td>{{ i.ingredient.get_type_display }}</td>
+                  <td>{% if i.alfa %}{{ i.ingredient }} ({{ i.alfa }}%){% else %}{{ i.ingredient }}{% endif%}</td>
+                  <td>{{ i.amount|recount:recalc|floatformat }} г</td>
+                  <td>{{ i.temp }} &deg;C</td>
+                  <td>{{ i.time }} мин</td>
+                  <td><small>{{ i.note }}</small></td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+          <div class="row mt-4">
+            <h5 {% if recalc != 1 %}class="red"{% endif %}>Сбраживание:{% if recalc != 1 %}*{% endif %}</h5>
+          </div>
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>Категория</th>
+                  <th>Тип</th>
+                  <th>Наименование</th>
+                  <th>Кол-во</th>
+                  {% if dry_hop %}
+                  <th>Длит.</th>
+                  {% else %}
+                  <th>Форма</th>
+                  {% endif %}
+                  <th>Заметка</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for i in recipe.yeastsingredients_set.all %}
+                <tr>
+                  <td>{{ i.ingredient|verbose_name }}</td>
+                  <td>{{ i.ingredient.get_type_display }}</td>
+                  <td>{{ i.ingredient }} ({{ i.ingredient.short_name }})</td>
+                  <td {% if recalc != 1 %}class="red"{% endif %}>{{ i.amount|recount:recalc|floatformat }} {{ i.get_measure_display }}</td>
+                  <td>{% if i.ingredient.its_dry %}Сухие{% else %}Жидкие{% endif %}</td>
+                  <td><small>{{ i.note }}</small></td>
+                </tr>
+              {% endfor %}
+              {% if dry_hop %}
+                {% for i in dry_hop %}
+                <tr>
+                  <td>{{ i.ingredient|verbose_name }}</td>
+                  <td>{{ i.ingredient.get_type_display }}</td>
+                  <td>{% if i.alfa %}{{ i.ingredient }} ({{ i.alfa }}%){% else %}{{ i.ingredient }}{% endif%}</td>
+                  <td>{{ i.amount|recount:recalc|floatformat }} {{ i.get_measure_display }}</td>
+                  <td>{{ i.time }} дн</td>
+                  <td><small>{{ i.note }}</small></td>
+                </tr>
+              {% endfor %}
+              {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <div class="row mt-4">
+            <h5 {% if recalc != 1 %}class="red"{% endif %}>Карбонизация:{% if recalc != 1 %}*{% endif %}</h5>
+          </div>
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>Метод</th>
+                  <th>Кол-во</th>
+                  {% if recipe.priming.temp %}<th>Темп. &deg;C</th>{% endif %}
+                  {% if recipe.priming.CO2_level %}<th>Уровень CO</th>{% endif %}
+                  <th>Заметка</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ recipe.priming.get_priming_method_display }}</td>
+                  <td {% if recalc != 1 %}class="red"{% endif %}>{{ recipe.priming.amount|floatformat }} {{ recipe.priming.get_measure_display }}</td>
+                  {% if recipe.priming.temp %}<td>{{ recipe.priming.temp }}</td>{% endif %}
+                  {% if recipe.priming.CO2_level %}<td>{{ recipe.priming.CO2_level }}</td>{% endif %}
+                  <td><small>{{ recipe.priming.note }}</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {% if recipe.wateringredient %}
+          <div class="row mt-4">
+            <h5>Подготовка воды, мг/л (ppm):{% if user != recipe.user and not user.is_pro %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</h5>
+          </div>
+          {% if user.is_pro or user == recipe.user %}
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>Ca<sup>+2</sup></th>
+                  <th>HCO<sub>3</sub><sup>-</sup></th>
+                  <th>HSO<sub>4</sub><sup>-2</sup></th>
+                  <th>Cl<sup>-</sup></th>
+                  <th>Na<sup>+</sup></th>
+                  <th>Mg<sup>+2</sup></th>
+                  <th>PH</th>
+                  <th>Примечание</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ recipe.wateringredient.calcum }}</td>
+                  <td>{{ recipe.wateringredient.bicarbonate }}</td>
+                  <td>{{ recipe.wateringredient.sulfate }}</td>
+                  <td>{{ recipe.wateringredient.chloride }}</td>
+                  <td>{{ recipe.wateringredient.sodium }}</td>
+                  <td>{{ recipe.wateringredient.magnesium }}</td>
+                  <td>{{ recipe.wateringredient.ph }}</td>
+                  <td><small>{{ recipe.wateringredient.note }}</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% if recipe.fermentationguidelines_set.all %}
+          <div class="row mt-4">
+            <h5>Рекомендации по ферментации:{% if user != recipe.user and not user.is_pro %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</h5>
+          </div>
+          {% if user.is_pro or user == recipe.user %}
+          <div class="row">
+            <table class="table-ing">
+              <thead>
+                <tr>
+                  <th>№</th>
+                  <th>Темп.</th>
+                  <th>Длит., дней</th>
+                  <th>Этап</th>
+                  <th>Примечание</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in recipe.fermentationguidelines_set.all %}
+                <tr>
+                  <td>{{ i.order }}</td>
+                  <td>{{ i.temp }}</td>
+                  <td>{{ i.duration }}</td>
+                  <td>{{ i.get_stage_display }}</td>
+                  <td><small>{{ i.note }}</small></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% if recipe.show_log or user == recipe.user %}
+            {% if recipe.brewinglog_set.all %}
+            <div class="row mt-4">
+              <h5>Дневник рецепта:{% if user != recipe.user and not user.is_pro %}&nbsp;<span class="badge">Только для PRO</span>{% endif %}</h5>
+            </div>
+            {% if user.is_pro or user == recipe.user %}
+            <div class="row">
+              <table class="table-ing">
+                <thead>
+                  <tr>
+                    <th>Событие</th>
+                    <th>Дата</th>
+                    <th>Запись</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for i in recipe.brewinglog_set.all %}
+                  <tr>
+                    <td>{{ i.get_event_display }}</td>
+                    <td>{{ i.date }}</td>
+                    <td><small>{{ i.note }}</small></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+            {% endif %}
+          {% endif %}
+          {% if recipe.show_note or user == recipe.user %}
+          {% if recipe.note %}
+          <div class="row mt-4">
+            <h5>Заметки по рецепту:</h5>
+          </div>
+          <div class="row">
+            <div class="col">
+              <p>{{ recipe.note|linebreaks }}</p>
+            </div>
+          </div>
+          {% endif %}
+          {% endif %}
+        {% if recal != 1 %}
+        <div class="row mt-4 py-3">
+          <small class="">* Раздел Карбонизация не пересчитывался. Данные этого раздела необходимо рассчитывать и вносить вручную в зависимости от личных предпочтений. Данные по разделу "Сбраживание" тоже необходимо откорректировать в зависимости от нормы задачи дрожжей.</small>
+        </div>
+        {% endif %}
+            <div class="py-3">
+              <small class="">Источник: {{ recipe.get_full_short_link }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>

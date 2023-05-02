@@ -1,0 +1,734 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}Остатки. Кладовая{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-3">
+  <div class="col-12 text-center my-2">
+    <h4>Остатки</h4>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href="{% url 'pantry_malts_list' pantry.user.username %}"><h5 class="px-3">Солод</h5></a>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddMalt" title="Добавить солод">Добавить солод</a>
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 50vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Солод</th>
+            <th class="w80px" title="килограммы">Приход</th>
+            <th class="w80px" title="килограммы">Остаток</th>
+            <th class="w80px" title="за килограмм">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell w50px"></th>
+          </tr>
+        </thead>
+        <tbody id="malts-list">
+          {% for m in maltsreserve %}
+          <tr id="reserve-malt-{{ m.id }}">
+            <td>
+              <a class="link" href="{% url 'pantry_malt_one' m.pk %}">{{ m.malt }}{% if m.malt.company %} | {{ m.malt.company.name }}{% endif %}</a>
+            </td>
+            <td title="килограммы">{{ m.parish|floatformat:"-2" }}</td>
+            <td title="килограммы">{{ m.balance|floatformat:"-2" }}</td>
+            <td title="за килограмм">{{ m.cost_per_unit|floatformat:"-2" }}</td>
+            <td class="d-none d-md-table-cell">{{ m.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_malt_delete' m.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="malt-empty" hidden>
+            <td class="malt-name"></td>
+            <td class="malt-parish" title="килограммы"></td>
+            <td class="malt-balance" title="килограммы"></td>
+            <td class="malt-cost" title="за килограмм"></td>
+            <td class="malt-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="malt-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+          </div>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href="{% url 'pantry_fermentables_list' pantry.user.username %}"><h5 class="px-3">Сбраживаемое</h5></a>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddFermentable" title="Добавить сбраживаемый ингредиент">Добавить сбраживаемое</a>
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Сбраживаемое</th>
+            <th class="w100px">Приход</th>
+            <th class="w100px">Остаток</th>
+            <th class="w80px" title="за единицу">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell w50px"></th>
+          </tr>
+        </thead>
+        <tbody id="fermentable-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for f in fermentablereserve %}
+          <tr id="reserve-fermentable-{{ f.id }}">
+            <td>
+              <a class="link" href="{% url 'pantry_fermentable_one' f.pk %}">{{ f.fermentable.name }}</a>
+            </td>
+            <td>{{ f.parish|floatformat:"-2" }}&nbsp;{{ f.get_measure_display }}</td>
+            <td>{{ f.balance|floatformat:"-2" }}&nbsp;{{ f.get_measure_display }}</td>
+            <td title="за {{ f.get_measure_display }}">{{ f.cost_per_unit|floatformat:"-2" }}</td>
+            <td class="d-none d-md-table-cell">{{ f.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ f.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_fermentable_delete' f.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="fermentable-empty" hidden>
+            <td class="fermentable-name"></td>
+            <td class="fermentable-parish"></td>
+            <td class="fermentable-balance"></td>
+            <td class="fermentable-cost" title="за единицу"></td>
+            <td class="fermentable-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="fermentable-cr-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href="{% url 'pantry_hops_list' pantry.user.username %}"><h5 class="px-3">Хмель</h5></a>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddHop" title="Добавить солод">Добавить хмель</a>
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Хмель</th>
+            <th class="w80px" title="альфа кислота">Альфа, %</th>
+            <th class="w80px" title="граммы">Приход</th>
+            <th class="w80px" title="граммы">Остаток</th>
+            <th class="w80px" title="за грамм">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell w50px"></th>
+          </tr>
+        </thead>
+        <tbody id="hops-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for h in hopsreserve %}
+          <tr id="reserve-hop-{{ h.id }}">
+            <td>
+              <a class="link" href="{% url 'pantry_hop_one' h.pk %}">{{ h.hop }}{% if h.hop.company %} | {{ h.hop.company.name }}{% endif %}</a>
+            </td>
+            <td title="альфа кислота">{{ h.alfa }}</td>
+            <td title="граммы">{{ h.parish|floatformat:"-2" }}</td>
+            <td title="граммы">{{ h.balance|floatformat:"-2" }}</td>
+            <td title="за грамм">{{ h.cost_per_unit|floatformat:"-2" }}</td>
+            <td class="d-none d-md-table-cell">{{ h.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ h.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_hop_delete' h.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="hop-empty" hidden>
+            <td class="hop-name"></td>
+            <td class="hop-alfa" title="альфа кислота"></td>
+            <td class="hop-parish" title="граммы"></td>
+            <td class="hop-balance" title="граммы"></td>
+            <td class="hop-cost" title="за грамм"></td>
+            <td class="hop-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="hop-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href="{% url 'pantry_yeasts_list' pantry.user.username %}"><h5 class="px-3">Дрожжи</h5></a>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddYeast" title="Добавить солод">Добавить дрожжи</a>
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Дрожжи</th>
+            <th class="w100px">Приход</th>
+            <th class="w100px">Остаток</th>
+            <th class="w80px" title="за единицу">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell w80px" title="Срок годности">Срок</th>
+            <th class="d-none d-sm-table-cell w50px"></th>
+          </tr>
+        </thead>
+        <tbody id="yeasts-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for y in yeastsreserve %}
+          <tr id="reserve-yeast-{{ y.id }}">
+            <td>
+              <a class="link" href="{% url 'pantry_yeast_one' y.pk %}">{% if y.yeast.short_name %}{{ y.yeast.short_name }} | {% endif %}{{ y.yeast.name }}</a>
+            </td>
+            <td>{{ y.parish|floatformat:"-2" }}&nbsp;{{ y.get_measure_display }}</td>
+            <td>{{ y.balance|floatformat:"-2" }}&nbsp;{{ y.get_measure_display }}</td>
+            <td title="за {{ y.get_measure_display }}">{{ y.cost_per_unit|floatformat:"-2" }}</td>
+            <td class="d-none d-md-table-cell">{{ y.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ y.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-sm-table-cell">{{ y.expiration_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_yeast_delete' y.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="yeast-empty" hidden>
+            <td class="yeast-name"></td>
+            <td class="yeast-parish"></td>
+            <td class="yeast-balance"></td>
+            <td class="yeast-cost" title="за единицу"></td>
+            <td class="yeast-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="yeast-cr-date d-none d-sm-table-cell"></td>
+            <td class="yeast-ex-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-between mb-1">
+      <div>
+        <a class="link" href="{% url 'pantry_misc_list' pantry.user.username %}"><h5 class="px-3">Дробавки</h5></a>
+      </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalAddMisc" title="Добавить добавку">Добавить ингредиент</a>
+      </div>
+    </div>
+    <div class="table-div w-100 overflow-auto" style="max-height: 100vh;">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Добавки</th>
+            <th class="w100px">Приход</th>
+            <th class="w100px">Остаток</th>
+            <th class="w80px" title="за единицу">Стоимость</th>
+            <th class="d-none d-md-table-cell w150px">Магазин</th>
+            <th class="d-none d-sm-table-cell w80px">Дата</th>
+            <th class="d-none d-sm-table-cell w50px"></th>
+          </tr>
+        </thead>
+        <tbody id="misc-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for m in miscreserve %}
+          <tr id="reserve-misc-{{ m.id }}">
+            <td>
+              <a class="link" href="{% url 'pantry_misc_one' m.pk %}">{{ m.misc.name }}</a>
+            </td>
+            <td>{{ m.parish|floatformat:"-2" }}&nbsp;{{ m.get_measure_display }}</td>
+            <td>{{ m.balance|floatformat:"-2" }}&nbsp;{{ m.get_measure_display }}</td>
+            <td title="за {{ m.get_measure_display }}">{{ m.cost_per_unit|floatformat:"-2" }}</td>
+            <td class="d-none d-md-table-cell">{{ m.supplier|truncatechars:18 }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.created_date|date:"d.m.Y" }}</td>
+            <td class="d-none d-md-table-cell text-right">
+              <div>
+                <i class="link material-icons align-middle md-18" onclick="ShowModalDelete('{% url 'pantry_parish_misc_delete' m.id %}'); return false;" title="Удалить">delete_forever</i>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="misc-empty" hidden>
+            <td class="misc-name"></td>
+            <td class="misc-parish"></td>
+            <td class="misc-balance"></td>
+            <td class="misc-cost" title="за единицу"></td>
+            <td class="misc-supplier d-none d-md-table-cell text-truncate" style="max-width: 150px;"></td>
+            <td class="misc-cr-date d-none d-sm-table-cell"></td>
+            <td class="d-none d-md-table-cell text-right"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  function AddMalt() {
+      let form = $('#form-add-malt');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.malt-empty').clone().appendTo('#malts-list');
+              m.attr('hidden', false);
+              m.removeClass('malt-empty');
+              m.attr('id', 'reserve-malt-'+data.id);
+              m.find('.malt-name').text(data.malt);
+              m.find('.malt-parish').text(data.parish);
+              m.find('.malt-balance').text(data.parish);
+              m.find('.malt-cost').text(data.cost);
+              m.find('.malt-date').text(data.date);
+              m.find('.malt-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddMalt').modal('hide');
+  };
+  function AddFermentable() {
+      let form = $('#form-add-fermentable');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.fermentable-empty').clone().appendTo('#fermentable-list');
+              m.attr('hidden', false);
+              m.removeClass('fermentable-empty');
+              m.attr('id', 'reserve-fermentable-'+data.id);
+              m.find('.fermentable-name').text(data.fermentable);
+              m.find('.fermentable-parish').text(data.parish);
+              m.find('.fermentable-balance').text(data.parish);
+              m.find('.fermentable-cost').text(data.cost);
+              m.find('.fermentable-cr-date').text(data.crDate);
+              m.find('.fermentable-ex-date').text(data.exDate);
+              m.find('.fermentable-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddFermentable').modal('hide');
+  };
+  function AddHop() {
+      let form = $('#form-add-hop');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.hop-empty').clone().appendTo('#hops-list');
+              m.attr('hidden', false);
+              m.removeClass('hop-empty');
+              m.attr('id', 'reserve-hop-'+data.id);
+              m.find('.hop-name').text(data.hop);
+              m.find('.hop-alfa').text(data.alfa);
+              m.find('.hop-parish').text(data.parish);
+              m.find('.hop-balance').text(data.parish);
+              m.find('.hop-cost').text(data.cost);
+              m.find('.hop-date').text(data.date);
+              m.find('.hop-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddHop').modal('hide');
+  };
+  function AddYeast() {
+      let form = $('#form-add-yeast');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.yeast-empty').clone().appendTo('#yeasts-list');
+              m.attr('hidden', false);
+              m.removeClass('yeast-empty');
+              m.attr('id', 'reserve-yeast-'+data.id);
+              m.find('.yeast-name').text(data.yeast);
+              m.find('.yeast-parish').text(data.parish);
+              m.find('.yeast-balance').text(data.parish);
+              m.find('.yeast-cost').text(data.cost);
+              m.find('.yeast-cr-date').text(data.crDate);
+              m.find('.yeast-ex-date').text(data.exDate);
+              m.find('.yeast-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddYeast').modal('hide');
+  };
+  function AddMisc() {
+      let form = $('#form-add-misc');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              let m = $('.misc-empty').clone().appendTo('#misc-list');
+              m.attr('hidden', false);
+              m.removeClass('misc-empty');
+              m.attr('id', 'reserve-misc-'+data.id);
+              m.find('.misc-name').text(data.misc);
+              m.find('.misc-parish').text(data.parish);
+              m.find('.misc-balance').text(data.parish);
+              m.find('.misc-cost').text(data.cost);
+              m.find('.misc-cr-date').text(data.crDate);
+              m.find('.misc-ex-date').text(data.exDate);
+              m.find('.misc-supplier').text(data.supplier);
+          }
+          else {
+            $('#alert').addClass('alert-danger');
+            $('#alert-msg').text(data.error);
+            $('#alert').css("display", "block");
+          }
+      });
+      $('#modalAddMisc').modal('hide');
+  };
+  function ShowModalDelete(url){
+      $('#form-delete').attr('action', url);
+      $('#modalDelete').modal('show');
+	};
+  function Delete(){
+      let form = $('#form-delete');
+      $('#modalDelete').modal('hide');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              $('#reserve-'+data.id).fadeOut('slow');
+          }
+          else {
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  };
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAddMalt" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления солода</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-malt"  action="{% url 'pantry_parish_malt_add' pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Солод:</label>
+              <select class="form-control form-control-sm" name="malts">
+                {% for m in malts %}
+                <option value="{{ m.id }}">{% if m.company %}{{ m.company.name }} | {% endif %}{{ m.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Вес, кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_parish" value="1" step="0.01" min="0" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Стоимость за кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_cost_per_unit" value="0" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="malt_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="malt_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="malt_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddMalt(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddFermentable" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления сбраживаемого ингредиента</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-fermentable"  action="{% url 'pantry_parish_fermentable_add' pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Сбраживаемое:</label>
+              <select class="form-control form-control-sm" name="fermentable">
+                {% for f in fermentable %}
+                <option value="{{ f.id }}">{{ f.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="fermentable_parish" value="1" step="0.01" min="1" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Мера:</label>
+                <select class="form-control form-control-sm" name="fermentable_measure">
+                  {% for m in measure %}
+                  <option value="{{ m.0 }}">{{ m.1 }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Стоимость за ед.:</label>
+                <input class="form-control form-control-sm" type="number" name="fermentable_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="fermentable_cr_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="fermentable_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="fermentable_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddFermentable(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddHop" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления хмеля</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-hop"  action="{% url 'pantry_parish_hop_add' pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Хмель:</label>
+              <select class="form-control form-control-sm" name="hops">
+                {% for h in hops %}
+                <option value="{{ h.id }}">{% if h.company %}{{ h.company.name }} | {% endif %}{{ h.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Альфа, %:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_alfa" value="1" step="0.1" min="1" max="99.9" required>
+              </div>
+              <div class="col">
+                <label>Вес, г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_parish" value="1" step="1" min="0" required>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Стоимость за г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="hop_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="hop_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="hop_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddHop(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddYeast" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления дрожжей</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-yeast"  action="{% url 'pantry_parish_yeast_add' pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Дрожжи:</label>
+              <select class="form-control form-control-sm" name="yeasts">
+                {% for y in yeasts %}
+                <option value="{{ y.id }}">{% if y.short_name %}{{ y.short_name }} | {% endif %}{{ y.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="yeast_parish" value="1" step="0.01" min="1" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Мера:</label>
+                <select class="form-control form-control-sm" name="yeast_measure">
+                  {% for m in measure %}
+                  <option value="{{ m.0 }}">{{ m.1 }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col">
+                <label>Стоимость за ед.:</label>
+                <input class="form-control form-control-sm" type="number" name="yeast_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="yeast_cr_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+              <div class="col">
+                <label>Срок годности:</label>
+                <input type="text" name="yeast_ex_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="yeast_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="yeast_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddYeast(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddMisc" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавления добавки</h5>
+      </div>
+      <div class="modal-body">
+        <div class="">
+          <form id="form-add-misc"  action="{% url 'pantry_parish_misc_add' pantry.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Добавка:</label>
+              <select class="form-control form-control-sm" name="misc">
+                {% for m in misc %}
+                <option value="{{ m.id }}">{{ m.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Кол-во:</label>
+                <input class="form-control form-control-sm" type="number" name="misc_parish" value="1" step="0.01" min="1" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Мера:</label>
+                <select class="form-control form-control-sm" name="misc_measure">
+                  {% for m in measure %}
+                  <option value="{{ m.0 }}">{{ m.1 }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Стоимость за ед.:</label>
+                <input class="form-control form-control-sm" type="number" name="misc_cost_per_unit" value="1" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="misc_cr_date" class="form-control form-control-sm" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="misc_supplier">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="misc_note" rows="5"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm" onclick="AddMisc(); return false;">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="form-delete">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="Delete(); return false;">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

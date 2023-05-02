@@ -1,0 +1,536 @@
+{% load static brew core %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="{% static 'css/style_pdf.css' %}" rel="stylesheet">
+  </head>
+  <body>
+    <div class="center-header">
+      <div class="row mb-2">
+        <table class="table-sett" style="padding-left: 15px;">
+          <tr>
+            <td style="width: 33%;">
+              {% if recipe.user.obj_pic %}
+              <img src="{{ recipe.user.get_logo }}" class="img" height="100" alt="logo">
+              {% endif %}
+            </td>
+            <td class="text-center" style="width: 33%; vertical-align: bottom;">
+              <span class="name">#{{ recipe.uid }}</span>
+              <h2 class="head-font">Карта варки пива</h2>
+              <span class="name">от _____._____.20_______г.</span>
+            </td>
+            <td class="text-right px-4" style="width: 33%; vertical-align: top;"><img src="{% static 'img/logo_print.png' %}" class="img" height="40" alt="logo"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="center-body mt-3" style="page-break-after: always;">
+      <div style="height: 0.5rem;"></div>
+      <div class="row ml-3 mb-2">
+        <div class="col">
+          <span class="ml-2 section-name">Рецепт:</span>
+          <span class="section-name"><strong>{% if recipe.brew_number %}№{{ recipe.brew_number }}&nbsp;{% endif %}{{ recipe.name }}</strong></span>
+        </div>
+      </div>
+      <div class="row ml-3 mb-2">
+        <div class="col">
+          <span class="ml-2 section-name">Стиль:</span>
+          <span class="">{{ recipe.style|default_if_none:'---' }}</span>
+        </div>
+      </div>
+      <div class="row mb-2">
+        <div class="col">
+          <span class="section-name mb-2">Параметры рецепта</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-6">
+          <table class="table-ing-nb">
+            <thead>
+              <th>По стилю</th>
+              <th>Мин</th>
+              <th>Расчётный</th>
+              <th>Реальный</th>
+              <th>Макс</th>
+            </thead>
+            <tbody>
+              <tr>
+                <td>НП</td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.OG_min|gravity_to_plato }}{% endif %}</span></td>
+                <td><span>{% if recipe %}{{ recipe.OG|gravity_to_plato }}{% endif %}</span></td>
+                <td></td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.OG_max|gravity_to_plato }}{% endif %}</span></td>
+              </tr>
+              <tr>
+                <td>КП</td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.FG_min|gravity_to_plato }}{% endif %}</span></td>
+                <td><span>{% if recipe %}{{ recipe.FG|gravity_to_plato }}{% endif %}</span></td>
+                <td></td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.FG_max|gravity_to_plato }}{% endif %}</span></td>
+              </tr>
+              <tr>
+                <td>Алкоголь, %</td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.ABV_min }}{% endif %}</span></td>
+                <td><span>{% if recipe %}{{ recipe.abv }}{% endif %}</span></td>
+                <td></td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.ABV_max }}{% endif %}</span></td>
+              </tr>
+              <tr>
+                <td>Горечь (IBU)</td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.IBUs_min }}{% endif %}</span></td>
+                <td><span>{% if recipe %}{{ recipe.ibu }}{% endif %}</span></td>
+                <td></td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.IBUs_max }}{% endif %}</span></td>
+              </tr>
+              <tr>
+                <td>Цвет (SRM)</td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.SRM_min }}{% endif %}</span></td>
+                <td><span>{% if recipe %}{{ recipe.srm }}{% endif %}</span></td>
+                <td></td>
+                <td><span>{% if recipe and recipe.style %}{{ recipe.style.SRM_max }}{% endif %}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-6">
+          <div class="mr-4 pr-4">
+            <table class="table-ing-nb">
+              <tbody>
+                <tr>
+                  <td>Вода на затирание</td>
+                  <td><span>{{ recipe.mash_water|floatformat }}&nbsp;л</span></td>
+                </tr>
+                <tr>
+                  <td>Вода на промывку</td>
+                  <td><span>{{ recipe.sparge_water|floatformat }}&nbsp;л</span></td>
+                </tr>
+                <tr>
+                <tr>
+                  <td>Общий объём воды:</td>
+                  <td><span>{{ water_sum|floatformat }}&nbsp;л</span></td>
+                </tr>
+                <tr>
+                  <td>Общий вес зерна:</td>
+                  <td><span>{{ grain_sum|floatformat }}&nbsp;кг</span></td>
+                </tr>
+                <tr>
+                  <td>Общий вес хмеля:</td>
+                  <td><span>{{ hop_sum|floatformat }}&nbsp;г</span></td>
+                </tr>
+                <tr>
+                  <td>Время кипечения:</td>
+                  <td><strong>{{ recipe.boil_time }}&nbsp;мин</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="height: 0.5rem;"></div>
+      <div class="row">
+        <div class="col-6" style="width: 50%;">
+          <div>
+            <span class="section-name m-2">Ингредиенты на затираение</span>
+          </div>
+          <div class="">
+            <table class="table-ing-nb mt-1" style="table-layout: fixed;">
+              <tbody>
+                {% for i in mash %}
+                <tr>
+                  <td style="width: 25%;"><strong>{{ i.amount|floatformat }}</strong>{% if i.measure %}{{ i.get_measure_display }}{% else %}кг{% endif %}{% if i in recipe.grainingredients_set.all %}&nbsp;({{ i.amount|proportion:grain_sum }}%){% endif %}{% if i.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+                  <td><div class="td-nowrap">{{ i.ingredient}}</div></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-2">
+            {% for n in mash %}
+            {% if n.note %}
+            <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ n.note }}</small>
+            {% endif %}
+            {% endfor %}
+          </div>
+          <div>
+            <span class="section-name m-2">Ингредиенты на варку</span>
+          </div>
+          <div class="">
+            <table class="table-ing-nb mt-1" style="table-layout: fixed;">
+              <tbody>
+                {% for i in boil %}
+                <tr>
+                  <td style="width: 25%;"><strong>{{ i.time}}мин - {{ i.amount|floatformat }}{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %}&nbsp;{% if i.note %}<sup>{{ forloop.counter }}</sup>{% endif %}</strong></td>
+                  <td><div class="td-nowrap">{% if i.alfa %}&alpha;&nbsp;{{ i.alfa }}% {% endif %}{{ i.ingredient }}</div></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-2">
+            {% for n in boil %}
+            {% if n.note %}
+            <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ n.note }}</small>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% if chilling %}
+          <div>
+            <span class="section-name m-2">Охлаждение</span>
+          </div>
+          <div class="">
+            <table class="table-ing-nb mt-1" style="table-layout: fixed;">
+              <tbody>
+                {% for i in chilling %}
+                <tr>
+                  <td style="width: 30%;"><strong>{{ i.temp }}&deg;C - {{ i.time}}мин&nbsp; - {{ i.amount|floatformat }}{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %}&nbsp;{% if i.note %}<sup>{{ forloop.counter }}</sup>{% endif %}</strong></td>
+                  <td><div class="td-nowrap">{% if i.alfa %}&alpha;&nbsp;{{ i.alfa }}% {% endif %}{{ i.ingredient }}</div></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-2">
+            {% for n in chilling %}
+            {% if n.note %}
+            <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ n.note }}</small>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div>
+            <span class="section-name m-2">Дрожжи</span>
+          </div>
+          <div class="">
+            <table class="table-ing-nb mt-1" style="table-layout: fixed;">
+              <tbody>
+                {% for i in recipe.yeastsingredients_set.all %}
+                <tr>
+                  <td style="width: 25%;"><strong>{{ i.amount|floatformat }}{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %}&nbsp;{% if i.note %}<sup>{{ forloop.counter }}</sup>{% endif %}</strong></td>
+                  <td><div class="td-nowrap">{{ i.ingredient.short_name }} ({{ i.ingredient }})</div></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-2">
+            {% for n in recipe.yeastsingredients_set.all %}
+            {% if n.note %}
+            <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ n.note }}</small>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% if dry_hop %}
+          <div>
+            <span class="section-name m-2">Сухое охмеление</span>
+          </div>
+          <div class="">
+            <table class="table-ing-nb mt-1" style="table-layout: fixed;">
+              <tbody>
+                {% for i in dry_hop %}
+                <tr>
+                  <td style="width: 20%;"><strong>{{ i.time }}д - {{ i.amount|floatformat }}{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %}&nbsp;{% if i.note %}<sup>{{ forloop.counter }}</sup>{% endif %}</strong></td>
+                  <td><div class="td-nowrap">{% if i.alfa %}&alpha;&nbsp;{{ i.alfa }}% {% endif %}{{ i.ingredient }}</div></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-2">
+            {% for n in dry_hop %}
+            {% if n.note %}
+            <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ n.note }}</small>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="col-6" style="width: 50%;">
+          {% if recipe.wateringredient_set.all %}
+          <div>
+            <span class="section-name m-2">Водоподготовка</span>
+          </div>
+          <div class="mr-4 pr-4">
+            <table class="table-ing-nb mt-1">
+              <thead>
+                <tr>
+                  <th>Профиль</th>
+                  <th class="">Ca<sup>+2</sup></th>
+                  <th class="">Mg<sup>+2</sup></th>
+                  <th class="">Na<sup>+</sup></th>
+                  <th class="">SO<sub>4</sub><sup>-2</sup></th>
+                  <th class="">Cl<sup>-</sup></th>
+                  <th class="">HCO<sub>3</sub><sup>-</sup></th>
+                  <th class="">pH</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Исходный{% if recipe.wateroriginalprofile.note %}<sup>1</sup>{% endif %}</td>
+                  <td>{{ recipe.wateroriginalprofile.calcum|default_if_none:'0' }}</td>
+                  <td>{{ recipe.wateroriginalprofile.magnesium|default_if_none:'0' }}</td>
+                  <td>{{ recipe.wateroriginalprofile.sodium|default_if_none:'0' }}</td>
+                  <td>{{ recipe.wateroriginalprofile.sulfate|default_if_none:'0' }}</td>
+                  <td>{{ recipe.wateroriginalprofile.chloride|default_if_none:'0' }}</td>
+                  <td>{{ recipe.wateroriginalprofile.bicarbonate|default_if_none:'0' }}</td>
+                  <td>{{ recipe.wateroriginalprofile.ph|default_if_none:'0' }}</td>
+                </tr>
+                <tr>
+                  <td>Целевой{% if recipe.watertargetprofile.note %}<sup>2</sup>{% endif %}</td>
+                  <td>{{ recipe.watertargetprofile.calcum|default_if_none:'0' }}</td>
+                  <td>{{ recipe.watertargetprofile.magnesium|default_if_none:'0' }}</td>
+                  <td>{{ recipe.watertargetprofile.sodium|default_if_none:'0' }}</td>
+                  <td>{{ recipe.watertargetprofile.sulfate|default_if_none:'0' }}</td>
+                  <td>{{ recipe.watertargetprofile.chloride|default_if_none:'0' }}</td>
+                  <td>{{ recipe.watertargetprofile.bicarbonate|default_if_none:'0' }}</td>
+                  <td>{{ recipe.watertargetprofile.ph|default_if_none:'0' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-1">
+            {% if recipe.wateroriginalprofile.note %}
+            <small class="mr-2"><strong>1</strong>.&nbsp;{{ recipe.wateroriginalprofile.note }}</small>
+            {% endif %}
+            {% if recipe.watertargetprofile.note %}
+            <small class="mr-2"><strong>2</strong>.&nbsp;{{ recipe.watertargetprofile.note }}</small>
+            {% endif %}
+          </div>
+          <div class="mr-4 pr-4 mb-2">
+            <table class="table-ing-nb mt-1">
+              <thead>
+                <tr>
+                  <th>Добавки</th>
+                  <th>В затор, г</th>
+                  <th>В промывку, г</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for w in recipe.wateringredient_set.all %}
+                <tr>
+                  <td>{{ w.get_additive_display }}{% if w.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+                  <td>{{ w.amount_mash|floatformat }}</td>
+                  <td>{{ w.amount_sparge|floatformat }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+          <div>
+            <span class="section-name m-2">План затирания</span>
+          </div>
+          <div class="mr-4 pr-4">
+            <table class="table-ing-nb mt-1">
+              <thead>
+                <tr>
+                  <th>Пауза</th>
+                  <th>Темп.</th>
+                  <th>Длит.</th>
+                  <th class="d-none d-sm-table-cell">Нагрев</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for m in recipe.mashguidelines_set.all %}
+                <tr>
+                  <td>{{ m.get_type_rest_display }}{% if m.note %}&nbsp;<sup>{{ forloop.counter }}</sup>{% endif %}</td>
+                  <td>{{ m.step_temp }} &deg;C</td>
+                  <td>{{ m.step_time }} мин</td>
+                  <td class="d-none d-sm-table-cell">{{ m.get_type_mash_display }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mb-2">
+            {% for m in recipe.mashguidelines_set.all %}
+            {% if m.note %}
+            <small class="mr-2"><strong>{{ forloop.counter }}</strong>.&nbsp;{{ m.note }}</small>
+            {% endif %}
+            {% endfor %}
+          </div>
+          <div>
+            <span class="section-name m-2">Карбонизация</span>
+          </div>
+          <div class="mr-4 pr-4 mb-2">
+            <div class="note"></div>
+          </div>
+          <div>
+            <span class="section-name m-2">Результат варки</span>
+          </div>
+          <div class="mr-4 pr-4 mb-2">
+            <table class="table-ing-nb mt-1">
+              <thead>
+                <tr>
+                  <th>Параметры</th>
+                  <th>Расчётные</th>
+                  <th>Реальные</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Объём на варку</td>
+                  <td>{% if recipe.pre_boil_size %}{{ recipe.pre_boil_size }}л{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Плотность перед кипячением</td>
+                  <td>{% if recipe.PBG %}{{ recipe.PBG|gravity_to_plato }}{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Объём после кипячения</td>
+                  <td>{% if recipe.batch_size %}{{ recipe.batch_size }}л{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Объём бруха</td>
+                  <td>{% if recipe.sediment_after_boil %}{{ recipe.sediment_after_boil }}л{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Объём стартера</td>
+                  <td>{% if recipe.starter_volume %}{{ recipe.starter_volume }}л{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Объём на брожение</td>
+                  <td>{% if recipe.fermentation_size %}{{ recipe.fermentation_size }}л{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Объём на розлив</td>
+                  <td>{% if recipe.bottling_size %}{{ recipe.bottling_size }}л{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Начальная плотность</td>
+                  <td>{% if recipe.OG %}{{ recipe.OG|gravity_to_plato }}{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Конечная плотность</td>
+                  <td>{% if recipe.FG %}{{ recipe.FG|gravity_to_plato }}{% else %}---{% endif %}</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <span class="section-name m-2">Журнал рецепта</span>
+          </div>
+          <div class="mr-4 pr-4 mb-2">
+            <table class="table-ing-nb mt-1">
+              <thead>
+                <tr>
+                  <th style="width: 50%;"></th>
+                  <th style="width: 50%;">Дата</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Варка</td>
+                  <td></td>
+                </tr>
+                {% if dry_hop %}
+                <tr>
+                  <td>Сухое охмеление</td>
+                  <td></td>
+                </tr>
+                {% endif %}
+                <tr>
+                  <td>Колд краш</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Розлив</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="center-body mt-3">
+      <div class="row">
+        <div class="col-12">
+          <div class="my-3 mx-0">
+            <span class="section-name mx-0">Заметки к варке</span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-6">
+          <div class="my-3">
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="my-3">
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+            <div class="note"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

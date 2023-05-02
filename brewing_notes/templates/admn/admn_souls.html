@@ -1,0 +1,44 @@
+{% extends 'admn/admn_base.html' %}
+{% load brew core %}
+
+{% block content %}
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 mb-3 text-center">
+    <h3>Не активные аккаунты</h3>
+  </div>
+  <div class="col mr-sm-3 mb-3">
+  {% include 'blocks/paginator.html' %}
+  </div>
+  <div class="col-12 p-0 p-sm-3">
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'username' '-' %}">Имя</a></th>
+            <th class="d-none d-lg-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'email' '-' %}">E-mail</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'status' '-' %}">Статус</a></th>
+            <th class="d-none d-sm-table-cell" class="d-none d-md-table-cell" scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'last_login' '-' %}">Последний вход</a></th>
+            <th class="d-none d-lg-table-cell" scope="col" title="Дата регистрации"><a class="link" href="?{% url_replace view.request 'order_by' 'date_joined' '-' %}">Регистрация</a></th>
+            <th class="d-none d-md-table-cell" scope="col" title="Подтвержение почты"><i class="material-icons align-bottom">mark_email_read</i></th>
+            <th class="d-none d-md-table-cell" scope="col" title="Забанен"><i class="material-icons align-bottom">voice_over_off</i></th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for usr in object_list %}
+          <tr>
+            <td>{{ usr.username }}</td>
+            <td class="d-none d-lg-table-cell">{{ usr.email }}</td>
+            <td>{{ usr.get_status_display }}</td>
+            <td class="d-none d-sm-table-cell">{{ usr.last_login|date:"d.m.Y H:i" }}</td>
+            <td class="d-none d-lg-table-cell" class="d-none d-md-table-cell">{{ usr.date_joined|date:"d.m.Y H:i" }}</td>
+            <td class="d-none d-md-table-cell">{% if usr.is_confirm %}<i class="material-icons align-bottom">done</i>{% endif %}</td>
+            <td class="d-none d-md-table-cell">{% if usr.is_banned %}<i class="material-icons align-bottom">done</i>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}{{ box.hop.name }}.Кладовая{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center my-2">
+    <div class="d-inline-flex justify-content-between">
+      <a class="link" href="{{ box.hop.get_absolute_url }}"><h5 class="px-3">{{ box.hop.name }}&nbsp;({{ box.hop.company|default_if_none:'---' }})</h5></a>
+        {% if not box.hopswriteoff_set.all %}
+        <a class="link" data-toggle="modal" data-target="#modalEditHop" title="Редактировать"><i class="material-icons align-middle">edit</i></a>
+        {% endif %}
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="d-flex justify-content-around mb-3">
+      <span><i class="mr-2">Альфа кислота, %:</i><b>{{ box.alfa }}</b></span>
+      <span><i class="mr-2">Страна:</i><b>{{ box.hop.country|default_if_none:'---' }}</b></span>
+    </div>
+  </div>
+  <div class="col-12 text-right">
+    <span class="small">Дате:&nbsp;{{ box.created_date|default_if_none:'---' }}</span>
+  </div>
+  <div class="col-12 mb-3">
+    <table class="table table-ing">
+      <thead class="thead text-center">
+        <tr>
+          <th>Магазин</th>
+          <th>Закуплено, г</th>
+          <th>Остаток, г</th>
+          <th>Стоимость за г</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        <tr>
+          <td class="text-left">{{ box.supplier }}</td>
+          <td>{{ box.parish }}</td>
+          <td>{{ box.balance }}</td>
+          <td>{{ box.cost_per_unit }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 mb-2">
+    <p>{{ box.note }}</p>
+  </div>
+  {% if box.hopswriteoff_set.all %}
+  <div class="col-12 mb-2">
+    <h5 class="px-3">Расход хмеля:</h5>
+  </div>
+  <div class="col-12 mb-3">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Хмель</th>
+            <th class="w80px" title="граммы">Вес, г</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+          </tr>
+        </thead>
+        <tbody id="malts-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for h in box.hopswriteoff_set.all %}
+          <tr id="consumption-hop-{{ h.id }}" {% if h.spent %} style="color: #656666"{% endif %}>
+            <td>{{ h.recipe.name }}</td>
+            <td>{{ h.hop_reserve.hop.name }}{% if h.hop_reserve.hop.company %} | {{ h.hop_reserve.hop.company.name }}{% endif %}</td>
+            <td title="Килограммы">{{ h.amount }}</td>
+            <td title="Стоимость">{{ h.cost }}</td>
+            <td class="d-none d-sm-table-cell">{{ h.created_date|date:"d.m.Y" }}</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalEditHop" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-hop"  action="{% url 'pantry_hop_edit' box.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Хмель:</label>
+              <select class="form-control form-control-sm" name="hops">
+                {% for h in hops %}
+                <option value="{{ h.id }}"{% if h == box.hop %} selected{% endif %}>{% if h.company %}{{ h.company.name }} | {% endif %}{{ h.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Альфа, %:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_alfa" value="{{ box.alfa }}" step="0.1" min="1" max="99.99" required>
+              </div>
+              <div class="col">
+                <label>Вес, г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_parish" value="{{ box.parish }}" step="1" min="0" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Остаток, кг:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_balance" value="{{ box.balance }}" step="0.01" min="0" max="999.99" required>
+              </div>
+            </div>
+            <div class="form-row mb-2">
+               <div class="col">
+                <label>Стоимость за г:</label>
+                <input class="form-control form-control-sm" type="number" name="hop_cost_per_unit" value="{{ box.cost_per_unit }}" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Дата:</label>
+                <input type="text" name="hop_date" class="form-control form-control-sm" value="{{ box.date|date:'d.m.Y' }}" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="hop_supplier" value="{{ box.supplier }}">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="hop_note" rows="5">{{ box.note }}</textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

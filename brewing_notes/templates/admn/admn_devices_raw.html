@@ -1,0 +1,44 @@
+{% extends 'admn/admn_base.html' %}
+{% load brew core %}
+
+{% block content %}
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 mb-3 text-center">
+    <h3>Принятые пакеты</h3>
+  </div>
+  <div class="col mr-sm-3 mb-3">
+  {% include 'blocks/paginator.html' %}
+  </div>
+  <div class="col-12 p-0 p-sm-3">
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th scope="col">Дата</th>
+            <th class="d-none d-md-table-cell" scope="col">Токен</th>
+            <th class="d-none d-lg-table-cell" scope="col">IP</th>
+            <th scope="col">URL</th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent" style="font-size: 80%;">
+        {% for d in object_list %}
+          <tr>
+            <td>{{ d.date|date:"d.m.Y_H:i:s" }}</td>
+            <td class="d-none d-md-table-cell">{{ d.token }}</td>
+            <td class="d-none d-lg-table-cell">{{ d.ip }}</td>
+            <td>{{ d.url }}</td>
+          </tr>
+          <tr>
+            <td colspan="4" class="text-right">{{ d.body }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col mr-sm-3 mb-3">
+  {% include 'blocks/paginator.html' %}
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

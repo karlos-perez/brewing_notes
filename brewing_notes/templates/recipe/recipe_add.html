@@ -1,0 +1,943 @@
+{% extends 'base.html' %}
+{% load static brew core %}
+
+{% block page_title %}Добавление рецепта{% endblock %}
+
+{% block head %}
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+
+<script type="text/javascript">
+  $(function(){
+    $(".datepicker").datepicker({
+      language: 'ru',
+      autoclose: true,});
+    });
+  function ConvertPlatoSG(id, value){
+    var plato = value.value;
+    var sg = (plato / (258.6 - ((plato / 258.2) * 227.1))) + 1
+    sg = Number(Math.round(sg+'e'+3)+'e-'+3);
+    $(id).val(sg);
+	};
+</script>
+{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2 d-print-none">
+  <div class="col-12 d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{% url 'recipes_list' %}" title="Рецептурная">
+        <span class="small">Список рецептов</span>
+      </a>
+    </div>
+    <div>
+      <a class="link" href="{% url 'user_recipes' user.username %}" title="Мои рецепты">
+        <span class="small">Мои рецепты</span>
+      </a>
+      <a class="link ml-2" href="{% url 'user_favorites' user.username %}" title="Избранное">
+        <span class="small">Избранное</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 pt-2">
+    <h4 class="text-center">{% if '/add' in request.path %}Добавление{% else %}Редактирование{% endif %} рецепта</h4>
+  </div>
+  {% if form.non_field_errors %}
+  <div class="col-12 my-2">
+    {% for error in form.non_field_errors %}
+      <div class="alert alert-danger">
+        <strong>{{ error }}</strong>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="col my-2">
+    <form id="form-add" class="form-horizontal" method="post"  enctype="multipart/form-data">{% csrf_token %}
+      {% if '/recipes/add/' in request.path %}
+      <div class="form-row mb-2">
+        <div class="col-12 col-md-6">
+          <label for="{{ form.img.id_for_label }}">Обложка рецепта (фото результата)</label>
+          {{ form.img }}
+          {% if form.img.errors %}{{ form.img.errors }}{% else %}<span class="helptext">Только jpg < 4Мб</span>{% endif %}
+        </div>
+      </div>
+      {% else %}
+      {% include 'blocks/upload_image.html' %}
+      <div class="form-row mb-2">
+        <div class="col-12 mb-3">
+          <span class="d-block h5 mb-2">Обложка рецепта</span>
+          {% include 'recipe/cover.html' with object=object %}
+        </div>
+        <div class="col-12 mb-2">
+          <div class="">
+            <span class="h5 mr-2 align-middle">Дополнительные изображения</span>
+            <a class="link" onclick="AjaxImageUpload('{% get_content_attach_url recipe %}',$('#image-info-{{ recipe.pk }}'), this, {{ recipe.pk }}); return false;" href="" title="Добавить изображение"><i class="material-icons align-bottom mr-2">add_a_photo</i></a>
+          </div>
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div id="images-{{ recipe.pk }}" class="">
+          {% for pic in recipe.images %}
+          {% include 'blocks/image_item.html' %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <small id="image-info-{{ recipe.pk }}" class="mx-2"></small>
+      </div>
+      {% endif %}
+      <div class="form-row">
+        <div class="col-12 mb-2">
+          <span class="h5">Основные параметры рецепта</span>
+        </div>
+        <div class="col-12 col-md-1 mb-2">
+          <label for="{{ form.brew_number.id_for_label }}">№</label>
+          {{ form.brew_number }}
+          {% if form.brew_number.errors %}{{ form.brew_number.errors }}{% else %}<span class="helptext">{{ form.brew_number.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-12 col-md-7 mb-2">
+          <label for="{{ form.name.id_for_label }}">Название рецепта<strong class="red">*</strong></label>
+          {{ form.name }}
+          {% if form.name.errors %}{{ form.name.errors }}{% else %}<span class="helptext">{{ form.name.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-12 col-md-4 mb-2">
+          <label for="{{ form.style.id_for_label }}">Стиль</label>
+          {{ form.style }}
+          {% if form.style.errors %}{{ form.style.errors }}{% else %}<span class="helptext">{{ form.style.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="col-12 col-sm-4 mb-2">
+          <label for="{{ form.PBG.id_for_label }}">Перед кипячением</label>
+          <div class="input-group">
+            {{ form.PBG }}
+            <input type="number" aria-label="Plato" class="form-control" placeholder="Plato (xx.x)" step="0.1" onchange="ConvertPlatoSG('#id_PBG', this)">
+          </div>
+          {% if form.PBG.errors %}{{ form.PBG.errors }}{% else %}<span class="helptext">{{ form.PBG.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-12 col-sm-4 mb-2">
+          <label for="{{ form.OG.id_for_label }}">Начальная плотность<strong class="red">*</strong></label>
+          <div class="input-group">
+            {{ form.OG }}
+            <input type="number" aria-label="Plato" class="form-control" placeholder="Plato (xx.x)" step="0.1" onchange="ConvertPlatoSG('#id_OG', this)">
+          </div>
+          {% if form.OG.errors %}{{ form.OG.errors }}{% else %}<span class="helptext">{{ form.OG.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-12 col-sm-4 mb-2">
+          <label for="{{ form.FG.id_for_label }}">Конечная плотность<strong class="red">*</strong></label>
+          <div class="input-group">
+            {{ form.FG }}
+            <input type="number" aria-label="Plato" class="form-control" placeholder="Plato (xx.x)" step="0.1" onchange="ConvertPlatoSG('#id_FG', this)">
+          </div>
+          {% if form.FG.errors %}{{ form.FG.errors }}{% else %}<span class="helptext">{{ form.FG.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="col-6 col-md-3">
+          <label for="{{ form.abv.id_for_label }}">Алкоголь, %<strong class="red">*</strong></label>
+          {{ form.abv }}
+          {% if form.abv.errors %}{{ form.abv.errors }}{% else %}<span class="helptext">{{ form.abv.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.ibu.id_for_label }}">Горечь (IBU)<strong class="red">*</strong></label>
+          {{ form.ibu }}
+          {% if form.ibu.errors %}{{ form.ibu.errors }}{% else %}<span class="helptext">{{ form.ibu.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.srm.id_for_label }}">Цвет (SRM)<strong class="red">*</strong></label>
+          {{ form.srm }}
+          {% if form.srm.errors %}{{ form.srm.errors }}{% else %}<span class="helptext">{{ form.srm.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.boil_time.id_for_label }}">Время кипячения, мин<strong class="red">*</strong></label>
+          {{ form.boil_time }}
+          {% if form.boil_time.errors %}{{ form.boil_time.errors }}{% else %}<span class="helptext">{{ form.boil_time.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="col-6 col-md-3">
+          <label for="{{ form.batch_size.id_for_label }}">Размер партии<strong class="red">*</strong></label>
+          {{ form.batch_size }}
+          {% if form.batch_size.errors %}{{ form.batch_size.errors }}{% else %}<span class="helptext">{{ form.batch_size.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.mash_water.id_for_label }}">Вода на затор, л<strong class="red">*</strong></label>
+          {{ form.mash_water }}
+          {% if form.mash_water.errors %}{{ form.mash_water.errors }}{% else %}<span class="helptext">{{ form.mash_water.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.sparge_water.id_for_label }}">Вода на промывку, л<strong class="red">*</strong></label>
+          {{ form.sparge_water }}
+          {% if form.sparge_water.errors %}{{ form.sparge_water.errors }}{% else %}<span class="helptext">{{ form.sparge_water.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.pre_boil_size.id_for_label }}">Объём на кипячение, л</label>
+          {{ form.pre_boil_size }}
+          {% if form.pre_boil_size.errors %}{{ form.pre_boil_size.errors }}{% else %}<span class="helptext">{{ form.pre_boil_size.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="col-6 col-md">
+          <label for="{{ form.sediment_after_boil.id_for_label }}">Осадок брух, л</label>
+          {{ form.sediment_after_boil }}
+          {% if form.sediment_after_boil.errors %}{{ form.sediment_after_boil.errors }}{% else %}<span class="helptext">{{ form.sediment_after_boil.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md">
+          <label for="{{ form.starter_volume.id_for_label }}">Объём стартера, л</label>
+          {{ form.starter_volume }}
+          {% if form.starter_volume.errors %}{{ form.starter_volume.errors }}{% else %}<span class="helptext">{{ form.starter_volume.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md">
+          <label for="{{ form.bottling_size.id_for_label }}">Объём на розлив, л</label>
+          {{ form.bottling_size }}
+          {% if form.bottling_size.errors %}{{ form.bottling_size.errors }}{% else %}<span class="helptext">{{ form.bottling_size.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="{{ form.efficiency_mash.id_for_label }}">Эфф. затирания, %</label>
+          {{ form.efficiency_mash }}
+          {% if form.efficiency_mash.errors %}{{ form.efficiency_mash.errors }}{% else %}<span class="helptext">{{ form.efficiency_mash.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12">
+          <label for="{{ form.description.id_for_label }}">Пару слов о рецепте<strong class="red">*</strong></label>
+          {{ form.description }}
+          {% if form.description.errors %}{{ form.description.errors }}{% else %}<span class="helptext">{{ form.description.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-12">
+          <label for="{{ form.note.id_for_label }}">Заметки к рецепту</label>
+          {{ form.note }}
+          {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+          <label class="pr-2" for="{{ form.show_note.id_for_label }}">Показывать заметки всем</label>
+          {{ form.show_note }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="col-12 col-md-6">
+          <label for="{{ form.url_source.id_for_label }}">Ссылка на источник</label>
+          {{ form.url_source }}
+          {% if form.url_source.errors %}{{ form.url_source.errors }}{% else %}<span class="helptext">{{ form.url_source.help_text }}</span>{% endif %}
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="{{ form.url_discussion.id_for_label }}">Ссылка на обсуждение</label>
+          {{ form.url_discussion }}
+          {% if form.url_discussion.errors %}{{ form.url_discussion.errors }}{% else %}<span class="helptext">{{ form.url_discussion.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <script type="text/javascript">
+        $(function() {
+            $(".inline.{{ mash_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ mash_form.prefix }}',
+                prefix: "{{ mash_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ mash_form.prefix }}',
+            });
+            $(".inline.{{ grain_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ grain_form.prefix }}',
+                prefix: "{{ grain_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ grain_form.prefix }}',
+            });
+            $(".inline.{{ ferm_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ ferm_form.prefix }}',
+                prefix: "{{ ferm_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ ferm_form.prefix }}',
+            });
+            $(".inline.{{ hops_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ hops_form.prefix }}',
+                prefix: "{{ hops_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ hops_form.prefix }}',
+            });
+            $(".inline.{{ yeast_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ yeast_form.prefix }}',
+                prefix: "{{ yeast_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ yeast_form.prefix }}',
+            });
+            $(".inline.{{ misc_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ misc_form.prefix }}',
+                prefix: "{{ misc_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ misc_form.prefix }}',
+            })
+            $(".inline.{{ priming_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ priming_form.prefix }}',
+                prefix: "{{ priming_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ priming_form.prefix }}',
+            });
+            $(".inline.{{ water_original_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: 'Удалить',
+                prefix: "{{ water_original_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ water_original_form.prefix }}',
+            });
+            $(".inline.{{ water_target_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: 'Удалить',
+                prefix: "{{ water_target_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ water_target_form.prefix }}',
+            })
+            $(".inline.{{ water_ing_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: "link align-self-end delete-row-{{ water_ing_form.prefix }}",
+                prefix: "{{ water_ing_form.prefix }}",
+                formCssClass: 'dynamic-formset-{{ water_ing_form.prefix }}',
+            });
+            $(".inline.{{ log_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ log_form.prefix }}',
+                prefix: '{{ log_form.prefix }}',
+                formCssClass: 'dynamic-formset-{{ log_form.prefix }}'
+            });
+            $(".inline.{{ fermentation_form.prefix }}").formset({
+                addText: 'Добавить запись',
+                addCssClass: 'link',
+                deleteText: '<i class="material-icons" title="Удалить запись">delete_forever</i>',
+                deleteCssClass: 'link align-self-end delete-row-{{ fermentation_form.prefix }}',
+                prefix: '{{ fermentation_form.prefix }}',
+                formCssClass: 'dynamic-formset-{{ fermentation_form.prefix }}'
+            });
+        })
+      </script>
+      <fieldset class="my-3">
+        <legend class="h5">Шаги затирания:</legend>
+        {{ mash_form.management_form }}
+        {% if mash_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in mash_form.non_field_errors %}
+          <div class="col-12">
+            <div class="alert alert-danger">
+              <strong>{{ error }}</strong>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in mash_form %}
+        <div class="form-row inline {{ mash_form.prefix }} mb-2">
+          <div class="col-6 col-md-4">
+            <label for="{{ form.type_rest.id_for_label }}">Пауза</label>
+            {{ form.type_rest }}
+            {% if form.type_rest.errors %}{{ form.type_rest.errors }}{% else %}<span class="helptext">{{ form.type_rest.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-6 col-md-4">
+            <label for="{{ form.type_mash.id_for_label }}">Метод</label>
+            {{ form.type_mash }}
+            {% if form.type_mash.errors %}{{ form.type_mash.errors }}{% else %}<span class="helptext">{{ form.type_mash.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="{{ form.step_temp.id_for_label }}">Темп</label>
+            {{ form.step_temp }}
+            {% if form.step_temp.errors %}{{ form.step_temp.errors }}{% else %}<span class="helptext">{{ form.step_temp.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="{{ form.step_time.id_for_label }}">Длитель</label>
+            {{ form.step_time }}
+            {% if form.step_time.errors %}{{ form.step_time.errors }}{% else %}<span class="helptext">{{ form.step_time.help_text }}</span>{% endif %}
+          </div>
+          <div class="col">
+            <label for="{{ form.note.id_for_label }}">Примечание</label>
+            {{ form.note }}
+            {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+          </div>
+          {{ form.id }}
+          {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+        </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="my-3">
+        <legend class="h5">Зерновые ингредиенты</legend>
+        {{ grain_form.management_form }}
+        {% if grain_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in grain_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in grain_form %}
+        <div class="form-row inline {{ grain_form.prefix }} mb-2">
+          <div class="col-12 col-md-6">
+            <label for="{{ form.ingredient.id_for_label }}">Зерно</label>
+            {{ form.ingredient }}
+            {% if form.ingredient.errors %}{{ form.ingredient.errors }}{% else %}<span class="helptext">{{ form.ingredient.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-6 col-md-3">
+            <label for="{{ form.amount.id_for_label }}">Кол-во, кг</label>
+            {{ form.amount }}
+            {% if form.amount.errors %}{{ form.amount.errors }}{% else %}<span class="helptext">{{ form.amount.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-6 col-md-3">
+            <label for="{{ form.use.id_for_label }}">Внесение</label>
+            {{ form.use }}
+            {% if form.use.errors %}{{ form.use.errors }}{% else %}<span class="helptext">{{ form.use.help_text }}</span>{% endif %}
+          </div>
+          <div class="col">
+            <label for="{{ form.note.id_for_label }}">Примечание</label>
+            {{ form.note }}
+            {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+          </div>
+          {{ form.id }}
+          {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+        </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="my-3">
+        <legend class="h5">Сбраживаемое:</legend>
+        {{ ferm_form.management_form }}
+        {% if ferm_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in ferm_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in ferm_form %}
+          <div class="form-row inline {{ ferm_form.prefix }} mb-2">
+            <div class="col-12 col-md-7">
+              <label for="{{ form.ingredient.id_for_label }}">Название</label>
+              {{ form.ingredient }}
+              {% if form.ingredient.errors %}{{ form.ingredient.errors }}{% else %}<span class="helptext">{{ form.ingredient.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-1">
+              <label for="{{ form.amount.id_for_label }}">Кол-во</label>
+              {{ form.amount }}
+              {% if form.amount.errors %}{{ form.amount.errors }}{% else %}<span class="helptext">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-1">
+              <label for="{{ form.measure.id_for_label }}">Мера</label>
+              {{ form.measure }}
+              {% if form.measure.errors %}{{ form.measure.errors }}{% else %}<span class="helptext">{{ form.measure.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2">
+              <label for="{{ form.use.id_for_label }}">Внесение</label>
+              {{ form.use }}
+              {% if form.use.errors %}{{ form.use.errors }}{% else %}<span class="helptext">{{ form.use.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-1">
+              <label for="{{ form.time.id_for_label }}">Время</label>
+              {{ form.time }}
+              {% if form.time.errors %}{{ form.time.errors }}{% else %}<span class="helptext">{{ form.time.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Хмель:</legend>
+        {{ hops_form.management_form }}
+        {% if hops_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in hops_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in hops_form %}
+          <div class="form-row inline {{ hops_form.prefix }} mb-2">
+            <div class="col-12 col-md-8 col-lg-6">
+              <label for="{{ form.ingredient.id_for_label }}">Название</label>
+              {{ form.ingredient }}
+              {% if form.ingredient.errors %}{{ form.ingredient.errors }}{% else %}<span class="helptext">{{ form.ingredient.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2 col-lg-1">
+              <label for="{{ form.amount.id_for_label }}">Кол-во, г</label>
+              {{ form.amount }}
+              {% if form.amount.errors %}{{ form.amount.errors }}{% else %}<span class="helptext">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2 col-lg-1">
+              <label for="{{ form.alfa.id_for_label }}">Альфа, %</label>
+              {{ form.alfa }}
+              {% if form.alfa.errors %}{{ form.alfa.errors }}{% else %}<span class="helptext">{{ form.alfa.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-12 col-md-8 col-lg-2">
+              <label for="{{ form.use.id_for_label }}">Внесение</label>
+              {{ form.use }}
+              {% if form.use.errors %}{{ form.use.errors }}{% else %}<span class="helptext">{{ form.use.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2 col-lg-1">
+              <label for="{{ form.time.id_for_label }}">Время</label>
+              {{ form.time }}
+              {% if form.time.errors %}{{ form.time.errors }}{% else %}<span class="helptext">{{ form.time.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2 col-lg-1">
+              <label for="{{ form.temp.id_for_label }}">Темп.</label>
+              {{ form.temp }}
+              {% if form.temp.errors %}{{ form.temp.errors }}{% else %}<span class="helptext">{{ form.temp.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Дрожжи:</legend>
+        {{ yeast_form.management_form }}
+        {% if yeast_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in yeast_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in yeast_form %}
+          <div class="form-row inline {{ yeast_form.prefix }} mb-2">
+            <div class="col-12 col-sm-8">
+              <label for="{{ form.ingredient.id_for_label }}">Название</label>
+              {{ form.ingredient }}
+              {% if form.ingredient.errors %}{{ form.ingredient.errors }}{% else %}<span class="helptext">{{ form.ingredient.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-sm-2">
+              <label for="{{ form.amount.id_for_label }}">Кол-во</label>
+              {{ form.amount }}
+              {% if form.amount.errors %}{{ form.amount.errors }}{% else %}<span class="helptext">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-sm-2">
+              <label for="{{ form.measure.id_for_label }}">Мера</label>
+              {{ form.measure }}
+              {% if form.measure.errors %}{{ form.measure.errors }}{% else %}<span class="helptext">{{ form.measure.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Дополнительные ингредиенты:</legend>
+        {{ misc_form.management_form }}
+        {% if misc_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in misc_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in misc_form %}
+          <div class="form-row inline {{ misc_form.prefix }} mb-2">
+            <div class="col-12 col-md-7">
+              <label for="{{ form.ingredient.id_for_label }}">Название</label>
+              {{ form.ingredient }}
+              {% if form.ingredient.errors %}{{ form.ingredient.errors }}{% else %}<span class="helptext">{{ form.ingredient.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-1">
+              <label for="{{ form.amount.id_for_label }}">Кол-во</label>
+              {{ form.amount }}
+              {% if form.amount.errors %}{{ form.amount.errors }}{% else %}<span class="helptext">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-1">
+              <label for="{{ form.measure.id_for_label }}">Мера</label>
+              {{ form.measure }}
+              {% if form.measure.errors %}{{ form.measure.errors }}{% else %}<span class="helptext">{{ form.measure.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2">
+              <label for="{{ form.use.id_for_label }}">Внесение</label>
+              {{ form.use }}
+              {% if form.use.errors %}{{ form.use.errors }}{% else %}<span class="helptext">{{ form.use.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-1">
+              <label for="{{ form.time.id_for_label }}">Время</label>
+              {{ form.time }}
+              {% if form.time.errors %}{{ form.time.errors }}{% else %}<span class="helptext">{{ form.time.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Карбонизация:</legend>
+        {{ priming_form.management_form }}
+        {% if priming_form.non_field_errors %}
+        <div class="form-row">
+          {% for error in priming_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in priming_form %}
+          <div class="form-row inline {{ priming_form.prefix }}">
+            <div class="col-12 col-md-6">
+              <label for="{{ form.priming_method.id_for_label }}">Праймер</label>
+              {{ form.priming_method }}
+              {% if form.priming_method.errors %}{{ form.priming_method.errors }}{% else %}<span class="helptext">{{ form.priming_method.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-4 col-md-2">
+              <label for="{{ form.amount.id_for_label }}">Кол-во</label>
+              {{ form.amount }}
+              {% if form.amount.errors %}{{ form.amount.errors }}{% else %}<span class="helptext">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-4 col-md-2">
+              <label for="{{ form.measure.id_for_label }}">Мера</label>
+              {{ form.measure }}
+              {% if form.measure.errors %}{{ form.measure.errors }}{% else %}<span class="helptext">{{ form.measure.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-4 col-md-2">
+              <label for="{{ form.temp.id_for_label }}">Темп.</label>
+              {{ form.temp }}
+              {% if form.temp.errors %}{{ form.temp.errors }}{% else %}<span class="helptext">{{ form.temp.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Профиль брожения:</legend>
+        {{ fermentation_form.management_form }}
+        {% if fermentation_form.errors %}
+        <div class="form-row">
+          {% for error in fermentation_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in fermentation_form %}
+          <div class="form-row inline {{ fermentation_form.prefix }}">
+            <div class="col-4 col-md-2 col-lg-1">
+              <label for="{{ form.order.id_for_label }}">№</label>
+              {{ form.order }}
+              {% if form.order.errors %}{{ form.order.errors }}{% else %}<span class="helptext">{{ form.order.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-4 col-md-2 col-lg-1">
+              <label for="{{ form.temp.id_for_label }}">Темп.</label>
+              {{ form.temp }}
+              {% if form.temp.errors %}{{ form.temp.errors }}{% else %}<span class="helptext">{{ form.temp.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-4 col-md-2 col-lg-1">
+              <label for="{{ form.duration.id_for_label }}">Длит, д</label>
+              {{ form.duration }}
+              {% if form.duration.errors %}{{ form.duration.errors }}{% else %}<span class="helptext">{{ form.duration.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-12 col-md-6 col-lg-2">
+              <label for="{{ form.stage.id_for_label }}">Этап</label>
+              {{ form.stage }}
+              {% if form.stage.errors %}{{ form.stage.errors }}{% else %}<span class="helptext">{{ form.stage.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Дневник рецепта:</legend>
+        <div class="mb-2">
+          <label class="pr-2" for="{{ form.show_log.id_for_label }}">Показывать журнал всем</label>
+          {{ form.show_log }}
+        </div>
+        {{ log_form.management_form }}
+        {% if log_form.errors %}
+        <div class="form-row">
+          {% for error in log_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in log_form %}
+          <div class="form-row inline {{ log_form.prefix }}">
+            <div class="col-6 col-md-2">
+              <label for="{{ form.event.id_for_label }}">Событие</label>
+              {{ form.event }}
+              {% if form.event.errors %}{{ form.event.errors }}{% else %}<span class="helptext">{{ form.event.help_text }}</span>{% endif %}
+            </div>
+            <div class="col-6 col-md-2">
+              <label for="{{ form.date.id_for_label }}">Дата</label>
+              {{ form.date }}
+              {% if form.date.errors %}{{ form.date.errors }}{% else %}<span class="helptext">{{ form.date.help_text }}</span>{% endif %}
+            </div>
+            <div class="col">
+              <label for="{{ form.note.id_for_label }}">Примечание</label>
+              {{ form.note }}
+              {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+            </div>
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <h3>Водоподготовка</h3>
+      <fieldset class="mb-4">
+        <legend class="h5">Исходный профиль воды, мг/л (ppm):</legend>
+        {{ water_original_form.management_form }}
+        {% if water_original_form.errors %}
+        <div class="form-row">
+          {% for error in water_original_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in water_original_form %}
+        <div class="form-row inline {{ water_original_form.prefix }} mb-2">
+          <div class="col-4 col-lg-1">
+            <label for="{{ form.calcum.id_for_label }}">Ca<sup>+2</sup></label>
+            {{ form.calcum }}
+            {% if form.calcum.errors %}{{ form.calcum.errors }}{% else %}<span class="helptext">{{ form.calcum.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-1">
+            <label for="{{ form.magnesium.id_for_label }}">Mg<sup>+2</sup></label>
+            {{ form.magnesium }}
+            {% if form.magnesium.errors %}{{ form.magnesium.errors }}{% else %}<span class="helptext">{{ form.magnesium.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-1">
+            <label for="{{ form.sodium.id_for_label }}">Na<sup>+</sup></label>
+            {{ form.sodium }}
+            {% if form.sodium.errors %}{{ form.sodium.errors }}{% else %}<span class="helptext">{{ form.sodium.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-4 col-lg-1">
+            <label for="{{ form.sulfate.id_for_label }}">SO<sub>4</sub><sup>-2</sup></label>
+            {{ form.sulfate }}
+            {% if form.sulfate.errors %}{{ form.sulfate.errors }}{% else %}<span class="helptext">{{ form.sulfate.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-1">
+            <label for="{{ form.chloride.id_for_label }}">Cl<sup>-</sup></label>
+            {{ form.chloride }}
+            {% if form.chloride.errors %}{{ form.chloride.errors }}{% else %}<span class="helptext">{{ form.chloride.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-4 col-lg-1">
+            <label for="{{ form.bicarbonate.id_for_label }}">HCO<sub>3</sub><sup>-</sup></label>
+            {{ form.bicarbonate }}
+            {% if form.bicarbonate.errors %}{{ 3orm.bicarbonate.errors }}{% else %}<span class="helptext">{{ form.bicarbonate.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-6">
+            <label for="{{ form.ph.id_for_label }}">PH</label>
+            {{ form.ph }}
+            {% if form.ph.errors %}{{ form.ph.errors }}{% else %}<span class="helptext">{{ form.ph.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-12">
+            <label for="{{ form.note.id_for_label }}">Примечание</label>
+            {{ form.note }}
+            {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+          </div>
+          {{ form.id }}
+          {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+        </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Целевой профиль воды, мг/л (ppm):</legend>
+        {{ water_target_form.management_form }}
+        {% if water_target_form.errors %}
+        <div class="form-row">
+          {% for error in water_target_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in water_target_form %}
+        <div class="form-row inline {{ water_target_form.prefix }} mb-2">
+          <div class="col-4 col-lg-1">
+            <label for="{{ form.calcum.id_for_label }}">Ca<sup>+2</sup></label>
+            {{ form.calcum }}
+            {% if form.calcum.errors %}{{ form.calcum.errors }}{% else %}<span class="helptext">{{ form.calcum.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-1">
+            <label for="{{ form.magnesium.id_for_label }}">Mg<sup>+2</sup></label>
+            {{ form.magnesium }}
+            {% if form.magnesium.errors %}{{ form.magnesium.errors }}{% else %}<span class="helptext">{{ form.magnesium.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-1">
+            <label for="{{ form.sodium.id_for_label }}">Na<sup>+</sup></label>
+            {{ form.sodium }}
+            {% if form.sodium.errors %}{{ form.sodium.errors }}{% else %}<span class="helptext">{{ form.sodium.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-4 col-lg-1">
+            <label for="{{ form.sulfate.id_for_label }}">SO<sub>4</sub><sup>-2</sup></label>
+            {{ form.sulfate }}
+            {% if form.sulfate.errors %}{{ form.sulfate.errors }}{% else %}<span class="helptext">{{ form.sulfate.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-1">
+            <label for="{{ form.chloride.id_for_label }}">Cl<sup>-</sup></label>
+            {{ form.chloride }}
+            {% if form.chloride.errors %}{{ form.chloride.errors }}{% else %}<span class="helptext">{{ form.chloride.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-4 col-lg-1">
+            <label for="{{ form.bicarbonate.id_for_label }}">HCO<sub>3</sub><sup>-</sup></label>
+            {{ form.bicarbonate }}
+            {% if form.bicarbonate.errors %}{{ 3orm.bicarbonate.errors }}{% else %}<span class="helptext">{{ form.bicarbonate.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-3 col-lg-6">
+            <label for="{{ form.ph.id_for_label }}">PH</label>
+            {{ form.ph }}
+            {% if form.ph.errors %}{{ form.ph.errors }}{% else %}<span class="helptext">{{ form.ph.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-12">
+            <label for="{{ form.note.id_for_label }}">Примечание</label>
+            {{ form.note }}
+            {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+          </div>
+          {{ form.id }}
+          {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+        </div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="mb-4">
+        <legend class="h5">Корректировка воды:</legend>
+        {{ water_ing_form.management_form }}
+        {% if water_ing_form.errors %}
+        <div class="form-row">
+          {% for error in water_ing_form.non_field_errors %}
+            <div class="col-12">
+              <div class="alert alert-danger">
+                <strong>{{ error }}</strong>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% for form in water_ing_form %}
+        <div class="form-row inline {{ water_ing_form.prefix }} mb-2">
+          <div class="col-8">
+            <label for="{{ form.additive.id_for_label }}">Добавка</label>
+            {{ form.additive }}
+            {% if form.additive.errors %}{{ form.additive.errors }}{% else %}<span class="helptext">{{ form.additive.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-2">
+            <label for="{{ form.amount_mash.id_for_label }}">В Заторную вода, г</label>
+            {{ form.amount_mash }}
+            {% if form.amount_mash.errors %}{{ form.amount_mash.errors }}{% else %}<span class="helptext">{{ form.amount_mash.help_text }}</span>{% endif %}
+          </div>
+          <div class="col-2">
+            <label for="{{ form.amount_sparge.id_for_label }}">В Промывочную воду, г</label>
+            {{ form.amount_sparge }}
+            {% if form.amount_sparge.errors %}{{ form.amount_sparge.errors }}{% else %}<span class="helptext">{{ form.amount_sparge.help_text }}</span>{% endif %}
+          </div>
+          <div class="col">
+            <label for="{{ form.note.id_for_label }}">Примечание</label>
+            {{ form.note }}
+            {% if form.note.errors %}{{ form.note.errors }}{% else %}<span class="helptext">{{ form.note.help_text }}</span>{% endif %}
+          </div>
+          {{ form.id }}
+          {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+        </div>
+        {% endfor %}
+      </fieldset>
+      <div class="form-row">
+        <div class="col d-flex justify-content-between">
+          {% if '/recipes/add/' in request.path %}
+          <a class="link btn btn-outline-secondary" href="{{ request.META.HTTP_REFERER }}" title="Назад">Назад</a>
+          {% else %}
+          <a class="link btn btn-outline-secondary" href="" data-toggle="modal" data-target="#modalDelete"  title="Удалить">Удалить</a>
+          {% endif %}
+          <button class="btn btn-secondary" form="form-add" type="submit">Сохранить рецепт</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block modal %}
+{% if '/recipes/edit/' in request.path %}
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить данный рецепт?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="delete-form" action="{% url 'recipe_delete' recipe.slug %}">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

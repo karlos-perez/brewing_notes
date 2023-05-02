@@ -1,0 +1,128 @@
+{% load core static %}
+
+<script src="{% static 'js/fine-uploader.min.js' %}" type="text/javascript"></script>
+<div id="upload_div" style="display:none"></div>
+<script>
+var uploader = {};
+var uploader_counter_place;
+var block_img;
+var block_type;
+window.onload = function () {
+    uploader = new qq.FineUploaderBasic({
+        multiple: false,
+        debug: false,
+        button: $('#upload_div')[0],
+        validation: {
+            sizeLimit: 4096000,
+        },
+        callbacks: {
+            onComplete: function (id, fileName, data) {
+                if (data.success) {
+                    if (block_type == 'image'){
+                        block_img.append(data.html).fadeIn("slow");;
+
+                    }
+                    else if (block_type == 'cover'){
+                        ReplaceCover(data);
+                    }
+                    else if (block_type == 'logo'){
+                        ReplaceLogo(data);
+                    }
+                    else {
+                        ReplaceAvatar(data);
+                    }
+                }
+                else {
+                    uploader_counter_place.addClass('red');
+                    uploader_counter_place.text(data.error);
+                }
+            },
+            onProgress: function (id, fileName, loaded, total) {
+                progress = Math.round(loaded / total * 100) + '% of ' + Math.round(total / 1024) + ' kB';
+                uploader_counter_place.text(progress);
+            }
+        }
+    });
+};
+function AjaxImageUpload(path, counter, elem, id) {
+    if ($(elem).attr('id') == 'avatar-uploader'){
+        block_type = 'avatar'
+    }
+    else if ($(elem).attr('id') == 'cover-uploader') {
+        block_type = 'cover'
+    }
+    else if ($(elem).attr('id') == 'logo-uploader') {
+        block_type = 'logo'
+    }
+    else {
+        block_img = $('#images-'+id);
+        block_type = 'image';
+    }
+	  uploader_counter_place = counter;
+	  uploader.setEndpoint(path);
+    var params = {'csrfmiddlewaretoken': '{{ csrf_token }}', 'content_style': 'image'};
+    if (id){
+        params['pk'] = id;
+    }
+    uploader.setParams(params);
+	  $('input[type=file]','#upload_div').click();
+}
+function ReplaceAvatar(data){
+    var a = $(data.html).find('img').attr('src');
+    $("<img>").attr("src", a);
+    var avatar = $('.avatar');
+    avatar.fadeOut("slow", function () {
+        avatar.replaceWith(data.html).fadeIn("slow");
+    });
+}
+function ReplaceCover(data){
+    var a = $(data.html).find('img').attr('src');
+    $("<img>").attr("src", a);
+    var cover = $('.cover');
+    cover.fadeOut("slow", function () {
+        cover.replaceWith(data.html).fadeIn("slow");
+    });
+}
+function ReplaceLogo(data){
+    var a = $(data.html).find('img').attr('src');
+    $("<img>").attr("src", a);
+    var logo = $('.logo');
+    logo.fadeOut("slow", function () {
+        logo.replaceWith(data.html).fadeIn("slow");
+    });
+}
+function AvatarDelete(path){
+    $.post(path, function (data) {
+        if (data.success) {
+            ReplaceAvatar(data);
+        }
+    });
+}
+function CoverDelete(path, id){
+    data = {'pk': id}
+    $.post(path, data, function (data) {
+        if (data.success) {
+            ReplaceCover(data);
+        }
+    });
+}
+function LogoDelete(path, id){
+    data = {'pk': id}
+    $.post(path, data, function (data) {
+        if (data.success) {
+            ReplaceLogo(data);
+        }
+    });
+}
+function ImageDelete(path, id){
+    data = {'pk': id}
+    $.post(path, data, function (data) {
+        if (data.success) {
+            let img = $('#image-'+id);
+            img.fadeOut("slow", function (){
+                img.remove();
+            });
+        }
+    });
+}
+</script>

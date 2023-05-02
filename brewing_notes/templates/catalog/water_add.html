@@ -1,0 +1,124 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}Добавление солода или зерна{% endblock %}
+
+
+{% block content %}
+<script>
+  function allChecked() {
+      $('input[name="styles"]').attr('checked', true);
+  }
+  function allNoChecked() {
+      $('input[name="styles"]').attr('checked', false);
+  }
+</script>
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-start py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{% if '/edit/' in request.path %}Редактиврование{% else %}Добавление{% endif %} профиля воды</h4>
+      </div>
+    </div>
+    {% if form.non_field_errors %}
+    <div class="row my-2">
+      {% for error in form.non_field_errors %}
+      <div class="col-12 text-center">
+        <div class="alert alert-danger">
+          <strong>{{ error }}</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% include 'blocks/naming_rules.html' %}
+    <form id="form-add" class="w-100" method="post">{% csrf_token %}
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.name.id_for_label }}">Название</label>
+          {{ form.name }}
+          {% if form.name.errors %}{{ form.name.errors }}{% else %}<span class="helptext">{{ form.name.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.calcum.id_for_label }}">Ca<sup>+2</sup>&nbsp;(Кальций)</label>
+          {{ form.calcum }}
+          {% if form.calcum.errors %}{{ form.calcum.errors }}{% else %}<span class="helptext">{{ form.calcum.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.magnesium.id_for_label }}">Mg<sup>+2</sup>&nbsp;(Магний)</label>
+          {{ form.magnesium }}
+          {% if form.magnesium.errors %}{{ form.magnesium.errors }}{% else %}<span class="helptext">{{ form.magnesium.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.sodium.id_for_label }}">Na<sup>+</sup>&nbsp;(Натрий)</label>
+          {{ form.sodium }}
+          {% if form.sodium.errors %}{{ form.sodium.errors }}{% else %}<span class="helptext">{{ form.sodium.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.sulfate.id_for_label }}">SO<sub>4</sub><sup>-2</sup>&nbsp;(Сульфаты)</label>
+          {{ form.sulfate }}
+          {% if form.sulfate.errors %}{{ form.sulfate.errors }}{% else %}<span class="helptext">{{ form.sulfate.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.chloride.id_for_label }}">Cl<sup>-</sup>&nbsp;(Хлориды)</label>
+          {{ form.chloride }}
+          {% if form.chloride.errors %}{{ form.chloride.errors }}{% else %}<span class="helptext">{{ form.chloride.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.bicarbonate.id_for_label }}">HCO<sub>3</sub><sup>-</sup>&nbsp;(Бикарбонаты)</label>
+          {{ form.bicarbonate }}
+          {% if form.bicarbonate.errors %}{{ form.bicarbonate.errors }}{% else %}<span class="helptext">{{ form.bicarbonate.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-sm-4 col-md-3 col-lg-2">
+          <label for="{{ form.ph.id_for_label }}">pH</label>
+          {{ form.ph }}
+          {% if form.ph.errors %}{{ form.ph.errors }}{% else %}<span class="helptext">{{ form.ph.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.description.id_for_label }}">Описание</label>
+          {{ form.description }}
+          {% if form.description.errors %}{{ form.description.errors }}{% else %}<span class="helptext">{{ form.description.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12">
+          <label>В каких стилях применяется:</label>
+        </div>
+        {% for row in form.styles|columns:3 %}
+        <div class=" col-12 col-sm-6 col-lg-4">
+          {% for item in row %}
+          <div>
+            {{ item }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12">
+          <a class="link mx-3" onclick="allChecked()">Выбрать все</a>
+          <a class="link" onclick="allNoChecked()">Снять все</a>
+        </div>
+      </div>
+      <div class="form-row mb-3">
+        <div class="col-12 d-flex justify-content-end">
+          <button form="form-add" type="submit" class="btn btn-secondary ml-auto">{% if '/edit/' in request.path %}Сохранить{% else %}Добавить в справочник{% endif %}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

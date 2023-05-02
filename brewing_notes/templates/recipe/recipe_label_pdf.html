@@ -1,0 +1,144 @@
+{% load static brew core qr_code %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="{% static 'css/style_pdf.css' %}" rel="stylesheet">
+  </head>
+<body>
+  <div class="container">
+    <div class="content-center py-3">
+      <div class="center-header mb-3">
+        <table class="table-sett p-0">
+          {% for i in rows_label %}
+          <tr>
+            <td class="td-label px-2 py-1">
+              <div class="row mx-0" style="height: 25mm;">
+                {% if recipe.user.obj_pic %}
+                <div class="col p-0" style="width: 20%;">
+                  <img src="{{ recipe.user.get_logo }}" class="img" height="100%" alt="logo">
+                </div>
+                {% endif %}
+                <div class="col text-right">
+                  <div>
+                    <span class="label-type">{{ recipe.get_type_display }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row mx-0 pt-2">
+                <div class="col text-center">
+                  <div class="">
+                    <span class="label-name">{{ recipe.name }}</span>
+                  </div>
+                  <div>
+                    <span>{{ recipe.style.name }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row mx-0" style="height: 30mm;">
+                <div class="col text-right px-4 pt-2">
+                  <div class="m-2">
+                    <span>OG <b>{{ recipe.OG|gravity_to_plato }}</b></span>
+                  </div>
+                  <div class="m-2">
+                    <span>ABV <b>{{ recipe.abv }} %</b></span>
+                  </div>
+                  <div class="m-2">
+                    <span>IBU <b>{{ recipe.ibu }}</b></span>
+                  </div>
+                  {% if bottling %}
+                  <div class="m-2">
+                    <span>дата розлива: {{ bottling|date:"d.m.Y" }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="col px-0">
+                  <div class="text-right">
+                  {% qr_from_text recipe.get_full_short_link size='8' %}
+                  </div>
+                </div>
+              </div>
+              <div class="row mx-0 pt-1">
+                <div class="col px-0 text-left">
+                  <span style="font-size: 70%">
+                    {% if recipe.matches_style %}
+                    Рецепт соотвествует стилю
+                    {% else %}
+                    Рецепт не соотвествует стилю
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="col px-0 text-right">
+                  <span style="font-size: 70%">Рецепт создан на BrewingNotes.ru</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-label px-2 py-1">
+              <div class="row mx-0" style="height: 25mm;">
+                {% if recipe.user.obj_pic %}
+                <div class="col p-0" style="width: 25%;">
+                  <img src="{{ recipe.user.get_logo }}" class="img" height="100%" alt="logo">
+                </div>
+                {% endif %}
+                <div class="col text-right">
+                  <div>
+                    <span class="label-type">{{ recipe.get_type_display }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row mx-0 pt-2">
+                <div class="col text-center">
+                  <div class="">
+                    <span class="label-name">{{ recipe.name }}</span>
+                  </div>
+                  <div>
+                    <span class="">{{ recipe.style.name }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row mx-0" style="height: 30mm;">
+                <div class="col text-right px-4 pt-2">
+                  <div class="m-2">
+                    <span>OG <b>{{ recipe.OG|gravity_to_plato }}</b></span>
+                  </div>
+                  <div class="m-2">
+                    <span>ABV <b>{{ recipe.abv }} %</b></span>
+                  </div>
+                  <div class="m-2">
+                    <span>IBU <b>{{ recipe.ibu }}</b></span>
+                  </div>
+                  {% if bottling %}
+                  <div class="m-2">
+                    <span>дата розлива: {{ bottling|date:"d.m.Y" }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="col px-0">
+                  <div class="text-right">
+                  {% qr_from_text recipe.get_full_short_link size='8' %}
+                  </div>
+                </div>
+              </div>
+              <div class="row mx-0 pt-1">
+                <div class="col px-0 text-left">
+                  <span style="font-size: 70%">
+                    {% if recipe.matches_style %}
+                    Рецепт соотвествует стилю
+                    {% else %}
+                    Рецепт не соотвествует стилю
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="col px-0 text-right">
+                  <span style="font-size: 70%">Рецепт создан на BrewingNotes.ru</span>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+</body>

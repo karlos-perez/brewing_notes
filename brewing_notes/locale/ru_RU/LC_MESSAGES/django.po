@@ -1,0 +1,2657 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-13 07:21+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: brew/admin.py:36 brew/admin.py:44 brew/admin.py:52 brew/admin.py:62
+#: brew/admin.py:71 brew/admin.py:82 brew/admin.py:93 brew/admin.py:104
+#: brew/admin.py:115 brew/admin.py:126 brew/admin.py:136 brew/admin.py:146
+#: brew/admin.py:156 brew/admin.py:167 brew/admin.py:254 brew/admin.py:286
+#: brew/admin.py:300 brew/admin.py:313 brew/admin.py:326 brew/admin.py:338
+#: brew/admin.py:349 brew/admin.py:364 catalog/admin.py:14 catalog/admin.py:38
+#: catalog/admin.py:54 catalog/admin.py:63 catalog/admin.py:74
+#: catalog/admin.py:88 catalog/admin.py:101 catalog/admin.py:115
+#: catalog/admin.py:129 catalog/admin.py:138 logdata/admin.py:13
+#: logdata/admin.py:31 logdata/admin.py:45 pantry/admin.py:12
+#: pantry/admin.py:25 pantry/admin.py:38 pantry/admin.py:71 pantry/admin.py:82
+#: pantry/admin.py:94 pantry/admin.py:106 publications/admin.py:12
+#: publications/admin.py:21
+msgid "Main"
+msgstr "Главное"
+
+#: brew/admin.py:53 brew/admin.py:73 brew/admin.py:84 brew/admin.py:95
+#: brew/admin.py:107 brew/admin.py:118 brew/admin.py:128 brew/admin.py:137
+#: brew/admin.py:147 brew/admin.py:158 brew/admin.py:169 brew/constants.py:137
+#: brew/models.py:472 brew/models.py:694 pantry/models.py:29
+#: pantry/models.py:105
+msgid "Note"
+msgstr "Заметка"
+
+#: brew/admin.py:262
+msgid "Recipe parametrs"
+msgstr "Параметры рецепта"
+
+#: brew/admin.py:265
+msgid "Brew parametrs"
+msgstr "Параметры варки"
+
+#: brew/admin.py:269 brew/admin.py:289 brew/admin.py:303 brew/models.py:424
+#: catalog/admin.py:15 catalog/admin.py:43 catalog/admin.py:77
+#: catalog/admin.py:91 catalog/admin.py:104 catalog/admin.py:119
+#: catalog/admin.py:130 catalog/admin.py:142 catalog/models.py:15
+#: pantry/admin.py:15 pantry/admin.py:28 pantry/admin.py:41 pantry/admin.py:72
+#: pantry/admin.py:84 pantry/admin.py:96 pantry/admin.py:108
+#: pantry/models.py:15 publications/admin.py:13
+msgid "Description"
+msgstr "Описание"
+
+#: brew/admin.py:272
+msgid "SEO"
+msgstr "Поисковая оптимизация"
+
+#: brew/admin.py:276
+msgid "Favorites"
+msgstr "Избранное"
+
+#: brew/admin.py:312
+msgid "Basic"
+msgstr "Основной"
+
+#: brew/admin.py:315
+msgid "Second"
+msgstr "Второй"
+
+#: brew/admin.py:317
+msgid "Third"
+msgstr "Третий"
+
+#: brew/admin.py:318
+msgid "Fourth"
+msgstr "Четвёртый"
+
+#: brew/admin.py:328 brew/admin.py:353 logdata/admin.py:15 logdata/admin.py:33
+#: logdata/admin.py:46
+msgid "Data"
+msgstr "Данные"
+
+#: brew/ajax.py:81
+msgid "Bad upload"
+msgstr "Неудачная загрузка"
+
+#: brew/ajax.py:91
+msgid "Can't read file name"
+msgstr "Имя файла не читается"
+
+#: brew/ajax.py:110
+msgid "Upload error"
+msgstr "Ошибка загрузки"
+
+#: brew/ajax.py:117
+msgid "File is not image format"
+msgstr "Файл не является изображением"
+
+#: brew/ajax.py:124
+#, python-brace-format
+msgid "Not supported image file format {self._filename} - {f_ext.lower()}"
+msgstr "Не поддерживается формат изображения {self._filename} - {f_ext.lower()}"
+
+#: brew/ajax.py:144
+msgid "Error saving image"
+msgstr "Ошибка сохранения изображения"
+
+#: brew/ajax.py:185
+msgid "Settings have been saved"
+msgstr "Настройки сохранены"
+
+#: brew/ajax.py:317 brew/views.py:1452
+msgid "no subject"
+msgstr "Объект не найден"
+
+#: brew/ajax.py:330 brew/views.py:1467
+#, python-brace-format
+msgid "Message {recipient} sent successfully"
+msgstr "Сообщение {recipient} успешно отправлено"
+
+#: brew/ajax.py:337 brew/views.py:1474
+msgid "Unable to send message"
+msgstr "Невозможно отправить сообщение"
+
+#: brew/ajax.py:350
+msgid "Unable computing recipe"
+msgstr "Невозможно вычислить рецепт"
+
+#: brew/ajax.py:374
+msgid "Device successfully removed"
+msgstr "Устройство успешно удалено"
+
+#: brew/ajax.py:379
+msgid "You cannot delete device"
+msgstr "Вы не можете удалить устройство"
+
+#: brew/ajax.py:385
+msgid "Error deleted device"
+msgstr "Ошибка удаления устройства"
+
+#: brew/ajax.py:405
+msgid "Module successfully removed"
+msgstr "Модуль успешно удален"
+
+#: brew/ajax.py:410
+msgid "You cannot delete module"
+msgstr "Вы не можете удалить модуль"
+
+#: brew/ajax.py:416
+msgid "Error deleted module"
+msgstr "Ошибка при удалении модуля"
+
+#: brew/ajax.py:429
+#, python-brace-format
+msgid "Device {device.name} active"
+msgstr "Устройство {device.name} активно"
+
+#: brew/ajax.py:432
+#, python-brace-format
+msgid "Device {device.name} is not active"
+msgstr "Устройство {device.name} не активно"
+
+#: brew/ajax.py:442
+msgid "You cannot change the device status"
+msgstr "Вы не можете изменить состояние устройства"
+
+#: brew/ajax.py:448
+msgid "Error change status"
+msgstr "Ошибки изменения статуса"
+
+#: brew/ajax.py:531 publications/ajax.py:57
+msgid "You are not allowed for add image"
+msgstr "Вам не разрешено добавлять изображение"
+
+#: brew/ajax.py:549 publications/ajax.py:87 publications/ajax.py:115
+msgid "You cannot delete images"
+msgstr "Вы не можете удалить изображение"
+
+#: brew/ajax.py:566
+msgid "Receive notification active"
+msgstr "Получение уведомлений активированно"
+
+#: brew/ajax.py:569
+msgid "Receive notification is not active"
+msgstr "Получение уведомлений не активированно"
+
+#: brew/ajax.py:577
+msgid "You cannot change the receive notification"
+msgstr "Вы не можете изменить параметр Получение уведомлений"
+
+#: brew/ajax.py:582
+msgid "Error change parameter receive notification"
+msgstr "Ошибка изменения параметра получения уведомления"
+
+#: brew/ajax.py:595
+msgid "User water profile successfully removed"
+msgstr "Пользовательский профиль воды успешно удалён"
+
+#: brew/ajax.py:598
+#, python-brace-format
+msgid "User {usr.username} delete User water profile"
+msgstr "Пользователь {usr.username} удалил Пользовательский профиль воды"
+
+#: brew/ajax.py:600
+#, python-brace-format
+msgid "User {request.user.username} delete User water profile {object_id}"
+msgstr "Пользователь {request.user.username} удалил Пользовательский профиль воды {object_id}"
+
+#: brew/ajax.py:606
+msgid "You cannot delete water profile"
+msgstr "Вы не можете удалить профиль воды"
+
+#: brew/ajax.py:612
+msgid "Error deleted user water profile"
+msgstr "Ошибка удаления Пользовательского профиля воды"
+
+#: brew/ajax.py:630
+msgid "You cannot get recipe link"
+msgstr "Вы не можете получить ссылку на рецепт"
+
+#: brew/ajax.py:633
+msgid "Error get full link"
+msgstr "Ошибка получения ссылки на рецепт"
+
+#: brew/ajax.py:653
+msgid "You cannot delete recipe link"
+msgstr "Вы не можете удалить ссылку на рецепт"
+
+#: brew/ajax.py:656
+msgid "Error delete full link"
+msgstr "Ошибка удаления ссылки на рецепт"
+
+#: brew/ajax.py:750 brew/ajax.py:778
+#, python-brace-format
+msgid "Settings {equipment.name} saved"
+msgstr "Настройки {equipment.name} сохранены"
+
+#: brew/ajax.py:754 brew/ajax.py:782
+msgid "You cannot change the equipment"
+msgstr "Вы не можете изменить Оборудование"
+
+#: brew/ajax.py:760
+msgid "Error save equipment"
+msgstr "Ошибка сохранения Оборудования"
+
+#: brew/ajax.py:788
+msgid "Error change status equipment"
+msgstr "Ошибка изменения состояния Оборудования"
+
+#: brew/ajax.py:821
+#, python-brace-format
+msgid "Settings {equipment.name} reset"
+msgstr "Настройки {equipment.name} сброшены"
+
+#: brew/ajax.py:825
+msgid "You cannot settings reset the equipment"
+msgstr "Вы не можете сбросить настройки оборудования"
+
+#: brew/ajax.py:831
+msgid "Error reset equipment"
+msgstr "Ошибка сброса оборудования"
+
+#: brew/ajax.py:872
+msgid "You cannot reset the module"
+msgstr "Вы не можете сбросить модуль"
+
+#: brew/ajax.py:878
+msgid "Error full reset module"
+msgstr "Ошибка полного сброса модуля"
+
+#: brew/constants.py:13
+msgid "Punished"
+msgstr "Наказанный"
+
+#: brew/constants.py:14
+msgid "Dubious"
+msgstr "Сомнительный"
+
+#: brew/constants.py:15 brew/models.py:76 brew/models.py:132 brew/models.py:399
+#: brew/models.py:422 brew/models.py:445 brew/models.py:898 brew/models.py:944
+#: pantry/models.py:13 publications/models.py:30
+msgid "User"
+msgstr "Пользователь"
+
+#: brew/constants.py:16
+msgid "Premium"
+msgstr "Премиум"
+
+#: brew/constants.py:17
+msgid "Entity"
+msgstr "Организация"
+
+#: brew/constants.py:18
+msgid "Moderator"
+msgstr "Модератор"
+
+#: brew/constants.py:19
+msgid "Administrator"
+msgstr "Администратор"
+
+#: brew/constants.py:30 brew/constants.py:117 brew/constants.py:139
+#: brew/constants.py:152 brew/constants.py:260 catalog/constants.py:122
+msgid "Other"
+msgstr "Другое"
+
+#: brew/constants.py:31
+msgid "Normal"
+msgstr "Обычный"
+
+#: brew/constants.py:32
+msgid "Classical"
+msgstr "Классический"
+
+#: brew/constants.py:33
+msgid "For beginner"
+msgstr "Для новичка"
+
+#: brew/constants.py:34
+msgid "Transferred"
+msgstr "Перенесённый"
+
+#: brew/constants.py:48
+msgid "Mash in"
+msgstr "Начало затирания"
+
+#: brew/constants.py:49
+msgid "Acid rest"
+msgstr "Кислотная"
+
+#: brew/constants.py:50
+msgid "Beta-glucanase rest"
+msgstr "Бета-глюкановая"
+
+#: brew/constants.py:51
+msgid "Protein rest"
+msgstr "Белковая"
+
+#: brew/constants.py:52
+msgid "Maltose rest"
+msgstr "Мальтозная"
+
+#: brew/constants.py:53
+msgid "Saccharification rest"
+msgstr "Осахаривания"
+
+#: brew/constants.py:54
+msgid "Dextrin rest"
+msgstr "Декстриновая"
+
+#: brew/constants.py:55
+msgid "Mash out"
+msgstr "Конец затирания"
+
+#: brew/constants.py:64
+msgid "Infusion"
+msgstr "Долив"
+
+#: brew/constants.py:65
+msgid "Decoction"
+msgstr "Отварки"
+
+#: brew/constants.py:66
+msgid "External heating"
+msgstr "Внешний нагрев"
+
+#: brew/constants.py:78
+msgid "On boil"
+msgstr "На кипячение"
+
+#: brew/constants.py:79
+msgid "Hop stand"
+msgstr "Хмелевая пауза"
+
+#: brew/constants.py:80
+msgid "On fermentation"
+msgstr "На основное брожение"
+
+#: brew/constants.py:81
+msgid "On bottling"
+msgstr "На розлив"
+
+#: brew/constants.py:82
+msgid "On mash"
+msgstr "На затирание"
+
+#: brew/constants.py:95
+msgid "min"
+msgstr "мин"
+
+#: brew/constants.py:96
+msgid "g"
+msgstr "г"
+
+#: brew/constants.py:97
+msgid "kg"
+msgstr "кг"
+
+#: brew/constants.py:98
+msgid "ml"
+msgstr "мл"
+
+#: brew/constants.py:99
+msgid "l"
+msgstr "л"
+
+#: brew/constants.py:100
+msgid "Bar"
+msgstr "бар"
+
+#: brew/constants.py:101
+msgid "psi"
+msgstr "psi"
+
+#: brew/constants.py:102
+msgid "pieces"
+msgstr "шт"
+
+#: brew/constants.py:113
+msgid "Corn sugar"
+msgstr "Декстроза"
+
+#: brew/constants.py:114
+msgid "CO2 keg"
+msgstr "Принудительная"
+
+#: brew/constants.py:115
+msgid "Wort / Speise"
+msgstr "Сусло / Шпайзе"
+
+#: brew/constants.py:116
+msgid "DME"
+msgstr "DME"
+
+#: brew/constants.py:131 brew/constants.py:153
+msgid "Primary fermentation"
+msgstr "Основное брожение"
+
+#: brew/constants.py:132
+msgid "Brew"
+msgstr "Варка"
+
+#: brew/constants.py:133 brew/constants.py:154
+msgid "Secondary fermentation"
+msgstr "Дображивание"
+
+#: brew/constants.py:134 brew/constants.py:156
+msgid "Cold crash"
+msgstr "Колд краш"
+
+#: brew/constants.py:135 brew/constants.py:159
+msgid "Carbonisation"
+msgstr "Карбонизация"
+
+#: brew/constants.py:136
+msgid "Bottling"
+msgstr "Розлив"
+
+#: brew/constants.py:138 brew/constants.py:158
+msgid "Dry hop"
+msgstr "Сухое охмеление"
+
+#: brew/constants.py:155
+msgid "Lagering"
+msgstr "Лагеризация"
+
+#: brew/constants.py:157
+msgid "Maturation"
+msgstr "Созревание"
+
+#: brew/constants.py:184
+msgid "Fermenter"
+msgstr "Ферментёр"
+
+#: brew/constants.py:185 brew/constants.py:212
+msgid "Kettle"
+msgstr "Заторник"
+
+#: brew/constants.py:186
+msgid "BIAB system"
+msgstr "BIAB система"
+
+#: brew/constants.py:187
+msgid "K-RIMS two tier system"
+msgstr "K-RIMS двухуровневый"
+
+#: brew/constants.py:188
+msgid "K-RIMS single-level system"
+msgstr "K-RIMS одноуровневый"
+
+#: brew/constants.py:209
+msgid "No mode"
+msgstr "Нет режима"
+
+#: brew/constants.py:210
+msgid "Fermenter: cooler"
+msgstr "Ферментёр: охладитель"
+
+#: brew/constants.py:211
+msgid "Fermenter: heater"
+msgstr "Ферментёр: нагреватель"
+
+#: brew/constants.py:213
+msgid "BIAB: heater"
+msgstr "BIAB: нагреватель"
+
+#: brew/constants.py:214
+msgid "BIAB: pump"
+msgstr "BIAB: насос"
+
+#: brew/constants.py:215
+msgid "K-RIMS two tier: heater"
+msgstr "K-RIMS двухуровневый: нагреватель"
+
+#: brew/constants.py:216
+msgid "K-RIMS two tier: pump"
+msgstr "K-RIMS двухуровневый: насос"
+
+#: brew/constants.py:217
+msgid "K-RIMS single-level: heater"
+msgstr "K-RIMS одноуровневый: (нагреватель)"
+
+#: brew/constants.py:218
+msgid "K-RIMS single-level: pump (HLT)"
+msgstr "K-RIMS одноуровневый: насос (варочник)"
+
+#: brew/constants.py:219
+msgid "K-RIMS single-level: pump (MLT)"
+msgstr "K-RIMS одноуровневый: насос (заторник)"
+
+#: brew/constants.py:248
+msgid "Gypsum"
+msgstr "Гипс"
+
+#: brew/constants.py:249
+msgid "Calcium Chloride"
+msgstr "Хлорид кальция"
+
+#: brew/constants.py:250
+msgid "Epsom Salt"
+msgstr "Эпсома соль"
+
+#: brew/constants.py:251
+msgid "Magnesium Chloride"
+msgstr "Магний хлористый"
+
+#: brew/constants.py:252
+msgid "Canning Salt"
+msgstr "Поваренная соль"
+
+#: brew/constants.py:253
+msgid "Baking Soda"
+msgstr "Пищевая сода"
+
+#: brew/constants.py:254
+msgid "Chalk"
+msgstr "Мел"
+
+#: brew/constants.py:255
+msgid "Pickling Lime"
+msgstr "Гашенная известь"
+
+#: brew/constants.py:256
+msgid "Lactic Acid"
+msgstr "Молочная кислота"
+
+#: brew/constants.py:257
+msgid "Citric Acid"
+msgstr "Лимонная кислота"
+
+#: brew/constants.py:258
+msgid "Acetic Acid"
+msgstr "Уксусная кислота"
+
+#: brew/constants.py:259
+msgid "Phosphoric Acid"
+msgstr "Фосфорная кислота"
+
+#: brew/forms.py:67
+msgid "Required. 16 characters or fewer. Letters, digits and - _ only"
+msgstr "Необходимо 16 символов или меньше. Только буквы, цифры и - _ "
+
+#: brew/forms.py:75
+msgid "Username is required"
+msgstr "Необходимо имя пользователя"
+
+#: brew/forms.py:77
+msgid "Incorrect letters in username"
+msgstr "Неправильные символы в имени пользователя"
+
+#: brew/forms.py:79
+msgid "Minimum - 3 letters"
+msgstr "Минимум - 3 символа"
+
+#: brew/forms.py:81
+msgid "Maximum - 16 letters"
+msgstr "Максимум - 16 символов"
+
+#: brew/forms.py:91
+msgid "This username has already existed."
+msgstr "Это имя пользователя уже существует"
+
+#: brew/forms.py:96
+msgid "Password is required"
+msgstr "Необходим пароль"
+
+#: brew/forms.py:139 catalog/forms.py:26 catalog/forms.py:114
+msgid "The name must not be empty"
+msgstr "Имя не должно быть пустым"
+
+#: brew/forms.py:145
+#, python-brace-format
+msgid "Image file too large ( > {settings.MAX_UPLOAD_IMAGE_SIZE/1048576}MB )"
+msgstr "Файл изображения слишком большой ( > {settings.MAX_UPLOAD_IMAGE_SIZE/1048576} MB )"
+
+#: brew/forms.py:241
+msgid "Required field"
+msgstr "Обязательное поле"
+
+#: brew/models.py:52
+msgid "Title SEO"
+msgstr "Название SEO"
+
+#: brew/models.py:53
+msgid "Description SEO"
+msgstr "Описание SEO"
+
+#: brew/models.py:54
+msgid "Keywords SEO"
+msgstr "Ключевые слова SEO"
+
+#: brew/models.py:77 logdata/models.py:37 logdata/models.py:57
+msgid "Token"
+msgstr "Токен"
+
+#: brew/models.py:78
+msgid "Active device"
+msgstr "Активное устройство"
+
+#: brew/models.py:94 brew/models.py:887
+msgid "Device type"
+msgstr "Тип устройства"
+
+#: brew/models.py:98
+msgid "Connected device"
+msgstr "Подключенное устройство"
+
+#: brew/models.py:99
+msgid "Connected devices"
+msgstr "Подключенные устройства"
+
+#: brew/models.py:117
+msgid "Operation mode"
+msgstr "Режим работы"
+
+#: brew/models.py:121
+msgid "BNC-module"
+msgstr "BNC-модуль"
+
+#: brew/models.py:122
+msgid "BNC-modules"
+msgstr "BNC-модули"
+
+#: brew/models.py:133
+msgid "Type equipment"
+msgstr "Тип оборудования"
+
+#: brew/models.py:134
+msgid "Active equipment"
+msgstr "Активное оборудование"
+
+#: brew/models.py:135
+msgid "Main module"
+msgstr "Основной модуль"
+
+#: brew/models.py:136
+msgid "Second module"
+msgstr "Второй модуль"
+
+#: brew/models.py:137
+msgid "Third module"
+msgstr "Третий модуль"
+
+#: brew/models.py:138
+msgid "Fourth module"
+msgstr "Четвёртый модуль"
+
+#: brew/models.py:139
+msgid "Kp main"
+msgstr "Kp основной"
+
+#: brew/models.py:140
+msgid "Kd main"
+msgstr "Kd основной"
+
+#: brew/models.py:141
+msgid "Ki main"
+msgstr "Ki основной"
+
+#: brew/models.py:142
+msgid "Hysteresys main"
+msgstr "Гистерезис основной"
+
+#: brew/models.py:143
+msgid "Kp second"
+msgstr "Kp второй"
+
+#: brew/models.py:144
+msgid "Kd second"
+msgstr "Kd второй"
+
+#: brew/models.py:145
+msgid "Ki second"
+msgstr "Ki второй"
+
+#: brew/models.py:146
+msgid "Hysteresys second"
+msgstr "Гистерезис второй"
+
+#: brew/models.py:147 brew/models.py:148
+msgid "Number of pump inits cycle third"
+msgstr "Количество запусков насоса в цикле. Третьего модуля"
+
+#: brew/models.py:152
+msgid "Equipment from modules"
+msgstr "Оборудование из модулей"
+
+#: brew/models.py:153
+msgid "Equipments from modules"
+msgstr "Оборудование из модулей"
+
+#: brew/models.py:184
+msgid "Status user"
+msgstr "Статус пользователя"
+
+#: brew/models.py:185
+msgid "Recipe draft limit"
+msgstr "Лимит черновиков рецептов"
+
+#: brew/models.py:186
+msgid "Device connected limit"
+msgstr "Лимит подключённых устройств"
+
+#: brew/models.py:187
+msgid "BNC-module limit"
+msgstr "Лимит BNC-модулей"
+
+#: brew/models.py:188
+msgid "Equipment limit"
+msgstr "Лимит оборудования"
+
+#: brew/models.py:189
+msgid "Active"
+msgstr "Активный"
+
+#: brew/models.py:190
+msgid "Confirm"
+msgstr "Подтверждение"
+
+#: brew/models.py:191
+msgid "May add ingredients"
+msgstr "Может добавлять ингредиенты"
+
+#: brew/models.py:192
+msgid "Early release access"
+msgstr "Доступ к раннему релизу"
+
+#: brew/models.py:193
+msgid "Eternal ban"
+msgstr "Вечный бан"
+
+#: brew/models.py:194
+msgid "Can premium trial"
+msgstr "Есть пробный Премиум доступ"
+
+#: brew/models.py:195
+msgid "Premium expiration date"
+msgstr "Срок действия Премиум"
+
+#: brew/models.py:196
+msgid "Limit the log records in days"
+msgstr "Лимит кол-ва записей журнала в днях"
+
+#: brew/models.py:197
+msgid "Device on dashboard"
+msgstr "Устройство на панели"
+
+#: brew/models.py:199
+msgid "Recalculate recipes"
+msgstr "Перерасчет рецептов"
+
+#: brew/models.py:200
+msgid "Recalculate on new size"
+msgstr "Перерасчет на новый объём"
+
+#: brew/models.py:362
+#, python-brace-format
+msgid "Confirmation of registration at the {}"
+msgstr "Подтверждение регистрации на {}"
+
+#: brew/models.py:400
+msgid "Confirmation key"
+msgstr "Ключ подтверждения"
+
+#: brew/models.py:406
+msgid "Email confirmation"
+msgstr "Подтверждение электронной почты"
+
+#: brew/models.py:407
+msgid "Email confirmations"
+msgstr "Подтверждение электронной почты"
+
+#: brew/models.py:423 catalog/models.py:14
+msgid "Name"
+msgstr "Имя"
+
+#: brew/models.py:428
+msgid "User water profile"
+msgstr "Пользовательский профиль воды"
+
+#: brew/models.py:429
+msgid "User water profiles"
+msgstr "Пользовательские профили воды"
+
+#: brew/models.py:446 catalog/models.py:71
+msgid "Type beer"
+msgstr "Тип пива"
+
+#: brew/models.py:447 catalog/models.py:98
+msgid "Beer Style"
+msgstr "Стиль пива"
+
+#: brew/models.py:449
+msgid "Batch size (after boil)"
+msgstr "Размер партии (после кипячения)"
+
+#: brew/models.py:450
+msgid "Mash water"
+msgstr "Вода на затирание"
+
+#: brew/models.py:451
+msgid "Sparge water"
+msgstr "Промывочная вода"
+
+#: brew/models.py:452
+msgid "Volume after mash (pre boil)"
+msgstr "Объём на кипячения"
+
+#: brew/models.py:453
+msgid "Sediment after boil"
+msgstr "Осадок после кипячения"
+
+#: brew/models.py:454
+msgid "Volume in fermenter"
+msgstr "Объём в ферментере"
+
+#: brew/models.py:455
+msgid "Bottling size"
+msgstr "Разливочный объём"
+
+#: brew/models.py:456
+msgid "Yeast starter volume"
+msgstr "Объём дрожжевого стартера"
+
+#: brew/models.py:457
+msgid "Boil time"
+msgstr "Время кипячения"
+
+#: brew/models.py:458
+msgid "Efficiency brewing"
+msgstr "Эффективность варки"
+
+#: brew/models.py:459
+msgid "Efficiency mashing"
+msgstr "Эффективность затирания"
+
+#: brew/models.py:460
+msgid "Pre boil gravity"
+msgstr "Плотность до кипячения"
+
+#: brew/models.py:461
+msgid "Original gravity"
+msgstr "Начальная плотность"
+
+#: brew/models.py:462
+msgid "Final gravity"
+msgstr "Конечная плотность"
+
+#: brew/models.py:463
+msgid "Alcohol"
+msgstr "Алкоголь"
+
+#: brew/models.py:464
+msgid "IBUs"
+msgstr "IBU"
+
+#: brew/models.py:465
+msgid "Color in SRM"
+msgstr "Цвет в SRM"
+
+#: brew/models.py:466
+msgid "Conformity"
+msgstr "Соответствие"
+
+#: brew/models.py:467
+msgid "Maturation time"
+msgstr "Время созревания"
+
+#: brew/models.py:468
+msgid "UID"
+msgstr "UID"
+
+#: brew/models.py:469 publications/models.py:15 publications/models.py:31
+msgid "Status"
+msgstr "Статус"
+
+#: brew/models.py:470
+msgid "Fermentation temperature"
+msgstr "Температура брожения"
+
+#: brew/models.py:471
+msgid "Fermentation duration"
+msgstr "Длительность брожения"
+
+#: brew/models.py:473 catalog/constants.py:116
+msgid "Water agent"
+msgstr "Соли"
+
+#: brew/models.py:474
+msgid "Show note"
+msgstr "Показать заметку"
+
+#: brew/models.py:475
+msgid "Show log"
+msgstr "Показать журнал"
+
+#: brew/models.py:476
+msgid "Matches the style"
+msgstr "Соответствует стилю"
+
+#: brew/models.py:477
+msgid "Cost recipe"
+msgstr "Стоимость рецепта"
+
+#: brew/models.py:478
+msgid "Recipe source"
+msgstr "Источник рецепта"
+
+#: brew/models.py:479
+msgid "Discussion of the recipe"
+msgstr "Обсуждение рецепта"
+
+#: brew/models.py:481 catalog/models.py:16
+msgid "URL-identifier"
+msgstr "URL-идентификатор"
+
+#: brew/models.py:482
+msgid "Publication date"
+msgstr "Дата публикации"
+
+#: brew/models.py:483
+msgid "Private recipe"
+msgstr "Частный рецепт"
+
+#: brew/models.py:484
+msgid "Brew number"
+msgstr "Номер варки"
+
+#: brew/models.py:493
+msgid "Beer recipe"
+msgstr "Рецепт пива"
+
+#: brew/models.py:494
+msgid "Beer recipes"
+msgstr "Рецепты пива"
+
+#: brew/models.py:693 brew/models.py:802 brew/models.py:820 brew/models.py:832
+#: brew/models.py:886 brew/models.py:927 pantry/models.py:103
+msgid "Recipe"
+msgstr "Рецепт"
+
+#: brew/models.py:701
+msgid "Type rest"
+msgstr "Тип паузы"
+
+#: brew/models.py:702
+msgid "Type heating"
+msgstr "Вид нагрева"
+
+#: brew/models.py:703
+msgid "Mash temperature"
+msgstr "Температура паузы"
+
+#: brew/models.py:704
+msgid "Holding time"
+msgstr "Длительность паузы"
+
+#: brew/models.py:708
+msgid "Mash Step"
+msgstr "Шаг затирания"
+
+#: brew/models.py:709
+msgid "Mash Steps"
+msgstr "Шаги затирания"
+
+#: brew/models.py:716 brew/models.py:725
+msgid "Grain ingredient"
+msgstr "Зерновой ингредиент"
+
+#: brew/models.py:717 pantry/models.py:114
+msgid "Amount in kg"
+msgstr "Кол-во в кг"
+
+#: brew/models.py:718
+msgid "Grain"
+msgstr "Зерно"
+
+#: brew/models.py:719
+msgid "Dry substance"
+msgstr "Сухое вещество"
+
+#: brew/models.py:720 brew/models.py:739 brew/models.py:757 brew/models.py:775
+#: brew/models.py:790 brew/models.py:808
+msgid "Cost ingredient"
+msgstr "Стоимость ингредиента"
+
+#: brew/models.py:726
+msgid "Grain ingredients"
+msgstr "Зерновые ингредиенты"
+
+#: brew/models.py:733 brew/models.py:743
+msgid "Fermentable ingredient"
+msgstr "Сбраживаемый ингредиент"
+
+#: brew/models.py:735 brew/models.py:771 brew/models.py:788 brew/models.py:803
+#: pantry/models.py:124 pantry/models.py:145 pantry/models.py:156
+msgid "Amount"
+msgstr "Количество"
+
+#: brew/models.py:736 brew/models.py:772 brew/models.py:789 brew/models.py:804
+#: pantry/models.py:57 pantry/models.py:81 pantry/models.py:93
+#: pantry/models.py:125 pantry/models.py:146 pantry/models.py:157
+msgid "Measure"
+msgstr "Мера"
+
+#: brew/models.py:737 brew/models.py:753 brew/models.py:773
+msgid "When use"
+msgstr "Когда использовать"
+
+#: brew/models.py:738 brew/models.py:754 brew/models.py:774
+msgid "Time addition"
+msgstr "Время добавки"
+
+#: brew/models.py:744
+msgid "Fermentable ingredients"
+msgstr "Сбраживаемые ингредиенты"
+
+#: brew/models.py:751 catalog/models.py:193 pantry/models.py:134
+msgid "Hops"
+msgstr "Хмель"
+
+#: brew/models.py:752
+msgid "Amount in gram"
+msgstr "Кол-во в граммах"
+
+#: brew/models.py:755 catalog/models.py:187 pantry/models.py:67
+msgid "Alfa acid"
+msgstr "Альфа кислота"
+
+#: brew/models.py:756
+msgid "Temperature Hop Stand"
+msgstr "Температура"
+
+#: brew/models.py:761
+msgid "Hops ingredient"
+msgstr "Хмель"
+
+#: brew/models.py:762
+msgid "Hops ingredients"
+msgstr "Хмель"
+
+#: brew/models.py:769 brew/models.py:779
+msgid "Misc ingredient"
+msgstr "Прочий ингредиент"
+
+#: brew/models.py:780
+msgid "Misc ingredients"
+msgstr "Прочие ингредиенты"
+
+#: brew/models.py:787 catalog/models.py:218 pantry/models.py:78
+#: pantry/models.py:144
+msgid "Yeast"
+msgstr "Дрожжи"
+
+#: brew/models.py:794
+msgid "Yeasts ingredient"
+msgstr "Дрожжи"
+
+#: brew/models.py:795
+msgid "Yeasts ingredients"
+msgstr "Дрожжи"
+
+#: brew/models.py:805 logdata/models.py:54
+msgid "Temperature"
+msgstr "Температура"
+
+#: brew/models.py:806
+msgid "Priming method"
+msgstr "Метод карбонизации"
+
+#: brew/models.py:807
+msgid "Carbonisation level"
+msgstr "Уровень карбонизации"
+
+#: brew/models.py:812 brew/models.py:813
+msgid "Priming Information"
+msgstr "Информация о карбонизации"
+
+#: brew/models.py:824
+msgid "Water target profile"
+msgstr "Целевой профиль воды"
+
+#: brew/models.py:825
+msgid "Water target profiles"
+msgstr "Целевые профили воды"
+
+#: brew/models.py:836
+msgid "Water original profile"
+msgstr "Исходный профиль воды"
+
+#: brew/models.py:837
+msgid "Water original profiles"
+msgstr "Исходные профили воды"
+
+#: brew/models.py:844
+msgid "Additive"
+msgstr "Добавка"
+
+#: brew/models.py:845
+msgid "Amount in mash water"
+msgstr "Кол-во в заторную воду"
+
+#: brew/models.py:846
+msgid "Amount in sparge water"
+msgstr "Кол-во в промывочную воду"
+
+#: brew/models.py:850
+msgid "Additive to water"
+msgstr "Добавка в воду"
+
+#: brew/models.py:851
+msgid "Additives to water"
+msgstr "Добавки в воду"
+
+#: brew/models.py:858
+msgid "Event"
+msgstr "Событие"
+
+#: brew/models.py:859
+msgid "Date event"
+msgstr "Дата события"
+
+#: brew/models.py:863
+msgid "Brewing log"
+msgstr "Журнал варки"
+
+#: brew/models.py:864
+msgid "Brewing logs"
+msgstr "Журнал варки"
+
+#: brew/models.py:871
+msgid "Stage fermentation"
+msgstr "Стадия брожения"
+
+#: brew/models.py:872
+msgid "Temperature fermentation"
+msgstr "Температура брожения"
+
+#: brew/models.py:873
+msgid "Duration in days"
+msgstr "Длительность в днях"
+
+#: brew/models.py:874
+msgid "Order"
+msgstr "Порядок"
+
+#: brew/models.py:878
+msgid "Fermentation guideline"
+msgstr "Рекомендации по ферментации"
+
+#: brew/models.py:879
+msgid "Fermentation guidelines"
+msgstr "Рекомендации по ферментации"
+
+#: brew/models.py:888
+msgid "Show chart"
+msgstr "Показать график"
+
+#: brew/models.py:889
+msgid "Chart data"
+msgstr "Данные графика"
+
+#: brew/models.py:893 brew/models.py:894
+msgid "Recipe chart data"
+msgstr "Данные графика рецепта"
+
+#: brew/models.py:899
+msgid "User ID in Telegram"
+msgstr "ID пользователя в Телеграме"
+
+#: brew/models.py:900
+msgid "Username in TG"
+msgstr "Логин в Телеграме"
+
+#: brew/models.py:901
+msgid "First name in TG"
+msgstr "Имя в Телеграме"
+
+#: brew/models.py:902
+msgid "Last name in TG"
+msgstr "Фамилия в Телеграме"
+
+#: brew/models.py:903
+msgid "Telegram client lang"
+msgstr "Язык Телеграм клиента"
+
+#: brew/models.py:904
+msgid "User deeplink"
+msgstr "Диплинк пользователя"
+
+#: brew/models.py:905
+msgid "Profile enabled"
+msgstr "Профиль включен"
+
+#: brew/models.py:906
+msgid "User blocked bot"
+msgstr "Бот заблокирован пользователем"
+
+#: brew/models.py:907
+msgid "User banned"
+msgstr "Пользователь забанен"
+
+#: brew/models.py:908
+msgid "Receive notification"
+msgstr "Получать уведомление"
+
+#: brew/models.py:912
+msgid "User Telegram profile"
+msgstr "Телеграм профиль пользователя"
+
+#: brew/models.py:913
+msgid "Users Telegram profiles"
+msgstr "Телеграм профили пользователей"
+
+#: brew/models.py:928
+msgid "Access key"
+msgstr "Ключ доступа"
+
+#: brew/models.py:929 logdata/models.py:13 pantry/models.py:25
+msgid "Created date"
+msgstr "Дата создания"
+
+#: brew/models.py:932
+msgid "Key to full recipe"
+msgstr "Ключ к полному рецепту"
+
+#: brew/models.py:933
+msgid "Keys to full recipe"
+msgstr "Ключи к полному рецепту"
+
+#: brew/models.py:946
+msgid "Creation date"
+msgstr "Дата создания"
+
+#: brew/models.py:950
+msgid "Visitor Data Users"
+msgstr "Данные посещения пользователей"
+
+#: brew/models.py:951
+msgid "Visitors Data Users"
+msgstr "Данные посещения пользователей"
+
+#: brew/views.py:112
+msgid "Account is not active. Follow the link in the email to activate your account."
+msgstr "Аккаунт не активен. Перейдите по ссылке в письме, чтобы активировать учетную запись."
+
+#: brew/views.py:143
+msgid "The premium period has ended. You can renew it in the User Profile"
+msgstr "Премиальный период закончился. Вы можете продлить его в профиле пользователя"
+
+#: brew/views.py:146
+#, python-brace-format
+msgid "The premium period will end on {user.premium_end.strftime('%d.%m.%Y')}. You can renew it in the User Profile"
+msgstr "Премиум-период заканчивается {user.premium_end.strftime('%d.%m.%Y')}. Вы можете продлить его в профиле пользователя"
+
+#: brew/views.py:152
+msgid "User is not active or banned"
+msgstr "Пользователь не активен или забанен"
+
+#: brew/views.py:154
+msgid "Please enter the correct username and password. Both fields can be case sensitive."
+msgstr "Пожалуйста, введите правильное имя пользователя и пароль. Оба поля чувствительны к регистру."
+
+#: brew/views.py:169
+msgid "The user has been successfully created. A letter has been sent to your email. Follow the link in the email to activate your account."
+msgstr "Пользователь успешно создан. На вашу электронную почту было отправлено письмо. Перейдите по ссылке в письме, чтобы активировать свою учетную запись"
+
+#: brew/views.py:216
+#, python-brace-format
+msgid "Password recovery for {}"
+msgstr "Восстановление пароля для {}"
+
+#: brew/views.py:220
+msgid "Link for recover password send at you email"
+msgstr "Ссылка для восстановления пароля отправлена на Ваш email"
+
+#: brew/views.py:222
+msgid "User not registered in system"
+msgstr "Пользователь не зарегистрирован в системе"
+
+#: brew/views.py:224
+msgid "You have made too many requests. Please wait and try again later"
+msgstr "Вы сделали слишком много запросов. Подождите и попробуйте позже"
+
+#: brew/views.py:226
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+#: brew/views.py:265 brew/views.py:267
+msgid "The activation period has expired"
+msgstr "Срок активации истек"
+
+#: brew/views.py:279
+msgid "The user does not exist"
+msgstr "Пользователя не существует"
+
+#: brew/views.py:282 brew/views.py:293
+msgid "The confirmation email has send"
+msgstr "Письмо с подтверждением отправлено"
+
+#: brew/views.py:288
+msgid "User is already confirmed"
+msgstr "Пользователь уже подтвержден"
+
+#: brew/views.py:295
+msgid "Error send message"
+msgstr "Ошибка отправки письма"
+
+#: brew/views.py:513
+msgid "The recipe has been successfully submitted for moderation"
+msgstr "Рецепт успешно отправлен на модерацию"
+
+#: brew/views.py:516
+msgid "Error publishing"
+msgstr "Ошибка публикации"
+
+#: brew/views.py:664 brew/views.py:961 brew/views.py:2361
+msgid "Drafts limit is over"
+msgstr "Лимит черновиков исчерпан"
+
+#: brew/views.py:972
+msgid "Recipe copied successfully"
+msgstr "Рецепт успешно скопирован"
+
+#: brew/views.py:978
+msgid "Recipe copy error"
+msgstr "Ошибка копирования рецепта"
+
+#: brew/views.py:1161
+#, python-brace-format
+msgid "Recipe {self.object.name} successfully deleted"
+msgstr "Рецепт {self.object.name} успешно удалён"
+
+#: brew/views.py:1162
+msgid "Recipe {self.object.name} deleted"
+msgstr "Рецепт {self.object.name} удалён"
+
+#: brew/views.py:1164
+msgid "User: {self.object.user.username} deleted recipe: {self.object.name}"
+msgstr "Пользователь: {self.object.user.username} удалил рецепт: {self.object.name}"
+
+#: brew/views.py:1169
+msgid "Recipe delete error"
+msgstr "Ошибка удаления рецепта"
+
+#: brew/views.py:1196
+msgid "To calculate the parameters, the \"Pre boil size\" must not be zero"
+msgstr "Для расчета параметров \"Размер перед кипячением\" не должен быть равен нулю."
+
+#: brew/views.py:1199
+msgid "To calculate the parameters, the \"Pre boil gravity\" must not be 1.000"
+msgstr "Для расчета параметров \"плотность перед кипячением\" не должна быть 1.000"
+
+#: brew/views.py:1223
+msgid "Recipe parameters have been successfully updated"
+msgstr "Параметры рецепта обновлены"
+
+#: brew/views.py:1226
+msgid "Error updating recipe parameters"
+msgstr "Ошибка при обновлении параметров рецепта"
+
+#: brew/views.py:1272
+msgid "Only Premium user"
+msgstr "Только для Премиум пользователей"
+
+#: brew/views.py:1310
+msgid "Data added to recipe"
+msgstr "Данные добавлены в рецепт"
+
+#: brew/views.py:1314
+#, python-brace-format
+msgid "Error save chart data"
+msgstr "Не удалось сохранить данные диаграммы"
+
+#: brew/views.py:1477
+msgid "Error sending message"
+msgstr "Ошибка отправки письма"
+
+#: brew/views.py:1494
+msgid "Device limit is over"
+msgstr "Лимит устройств исчерпан"
+
+#: brew/views.py:1507
+msgid "Add device error"
+msgstr "Ошибка добавления устройств"
+
+#: brew/views.py:1522
+msgid "Modules limit is over"
+msgstr "Лимит модулей исчерпан"
+
+#: brew/views.py:1535
+msgid "Add module error"
+msgstr "Ошибка добавления модуля"
+
+#: brew/views.py:1558
+msgid "Settings saved successfully"
+msgstr "Настройки успешно сохранены"
+
+#: brew/views.py:1560
+msgid "You cannot add device on dashboard"
+msgstr "Вы не можете добавить устройство на панель"
+
+#: brew/views.py:1563
+msgid "Add device on dashboard error"
+msgstr "Ошибка добавления устройства на панель"
+
+#: brew/views.py:1578
+msgid "User water profile limit is over"
+msgstr "Лимит Профиля воды пользователя исчерпан"
+
+#: brew/views.py:1601
+msgid "Add user water profile error"
+msgstr "Ошибка добавляения Профиля воды"
+
+#: brew/views.py:1620
+msgid "Error of refusing a trial"
+msgstr "Ошибка отказа от пробного Премиум периода"
+
+#: brew/views.py:1640
+msgid "Trial period of premium access activated"
+msgstr "Пробный Премиум период активирован"
+
+#: brew/views.py:1646
+msgid "Error of activate a trial"
+msgstr "Ошибка активирования пробного Премиум периода"
+
+#: brew/views.py:1661
+msgid "You cannot delete telegram profile"
+msgstr "Вы не можете удалить Телеграм профиль"
+
+#: brew/views.py:1670
+msgid "Telegram profile deleted successfully"
+msgstr "Телеграм профиль удалён"
+
+#: brew/views.py:1671
+#, python-brace-format
+msgid "Telegram profile {tg_profile.user}: {tg_profile.user_tg_id} deleted"
+msgstr "Телеграм профиль {tg_profile.user}: {tg_profile.user_tg_id} удалён"
+
+#: brew/views.py:1673
+#, python-brace-format
+msgid "User: {usr} deleted telegram profile id: {tg_profile.user_tg_id}"
+msgstr "Пользователь {usr} удалил Телеграм профиль: {tg_profile.user_tg_id}"
+
+#: brew/views.py:1679
+msgid "Error deleted telegram profile"
+msgstr "Ошибка удаления Телеграм профиля"
+
+#: brew/views.py:1716
+msgid "User {user.username} successfully deleted"
+msgstr "Пользователь {user.username} успешно удалён"
+
+#: brew/views.py:1718 brew/views.py:1720
+msgid "User {user.username} self-deleted"
+msgstr "Пользователь {user.username} успешно самоудалился"
+
+#: brew/views.py:1728 brew/views.py:2270
+msgid "Error user delete"
+msgstr "Ошибка удаления пользователя"
+
+#: brew/views.py:1859
+msgid "Recipe status and сonformity changed successfully"
+msgstr "Статус и Соответствие рецепта успешно изменены"
+
+#: brew/views.py:1882
+msgid "Recipe status and сonformity changed error"
+msgstr "Ошибка изменения Статуса и Соответствие рецепта"
+
+#: brew/views.py:1907 brew/views.py:1917
+#, python-brace-format
+msgid "Refusal to publish a recipe: {self.object.name}"
+msgstr "Отказ в публикации рецепта: {self.object.name}"
+
+#: brew/views.py:1927
+msgid "Error refusal to publish"
+msgstr "Ошибка отказа в публикации"
+
+#: brew/views.py:2033
+msgid "Open access to the user to add ingredients"
+msgstr "Доступ пользователю для добавления ингредиентов открыт"
+
+#: brew/views.py:2044
+msgid "Access to the user to add ingredients is denied"
+msgstr "Доступ пользователю для добавления ингредиентов закрыт"
+
+#: brew/views.py:2058
+msgid "Draft limit changed"
+msgstr "Лимит черновиков изменен"
+
+#: brew/views.py:2068
+msgid "Error of changing the draft limit"
+msgstr "Ошибка изменения лимита черновиков"
+
+#: brew/views.py:2074
+msgid "Device limit changed"
+msgstr "Лимит устройств изменен"
+
+#: brew/views.py:2084
+msgid "Error of changing the device limit"
+msgstr "Ошибка изменения лимита устройств"
+
+#: brew/views.py:2090
+msgid "Record limit changed"
+msgstr "Лимит записи изменен"
+
+#: brew/views.py:2100
+msgid "Error of changing the record limit"
+msgstr "Ошибка изменения лимита записи"
+
+#: brew/views.py:2111
+msgid "User status changed"
+msgstr "Статус пользователя изменён"
+
+#: brew/views.py:2123
+msgid "Error user status changed"
+msgstr "Ошибки изменения статуса пользователя"
+
+#: brew/views.py:2134
+msgid "User Premium expiration date changed"
+msgstr "Дата истечения срока действия Премиум доступа изменена"
+
+#: brew/views.py:2144
+msgid "Error change end date premium"
+msgstr "Ошибка изменения срока действия Премиум доступа"
+
+#: brew/views.py:2258 brew/views.py:2260
+#, python-brace-format
+msgid "User {user.username} banned"
+msgstr "Пользователь {user.username} забанен"
+
+#: brew/views.py:2262
+#, python-brace-format
+msgid "User {self.request.user.username} has banned {user.username}"
+msgstr "Пользователь {self.request.user.username} заблокировал {user.username}"
+
+#: brew/views.py:2459
+msgid "Save recipe error"
+msgstr "Ошибка сохранения рецепта"
+
+#: brew/views.py:2479
+msgid "This functionality is only for Users with Premium status"
+msgstr "Эта функция доступна только для Пользователей со статусом Pro."
+
+#: brew/views.py:2613
+msgid "Recipe does not exist"
+msgstr "Рецепт не существует"
+
+#: brew/views.py:2617
+msgid "Add water agent in recipe error"
+msgstr "Ошибка добавления в рецепт"
+
+#: brew/views.py:2718 brew/views.py:2751
+msgid "Equipment limit is over"
+msgstr "Лимит оборудования исчерпан"
+
+#: brew/views.py:2734
+msgid "Add equipment error"
+msgstr "Ошибка добавления оборудования"
+
+#: brew/views.py:2779
+msgid "Delete equipment error"
+msgstr "Ошибка удаления оборудования"
+
+#: brew/views.py:2799 brew/views.py:2823
+msgid "Equipment not assembled"
+msgstr "Оборудование не собрано"
+
+#: brew/views.py:2856
+msgid "Error clear data on device"
+msgstr "Ошибка очистки данных на устройстве"
+
+#: brew/views.py:2882
+msgid "Email sent"
+msgstr "Email отправлен"
+
+#: brew/views.py:2885
+msgid "Error send feedback"
+msgstr "Ошибка отправки письма"
+
+#: catalog/admin.py:40 catalog/admin.py:75
+msgid "Vital Statistics"
+msgstr "Показатели стиля"
+
+#: catalog/admin.py:78 catalog/admin.py:105 catalog/admin.py:120
+#: catalog/admin.py:144
+msgid "Use"
+msgstr "Использование"
+
+#: catalog/admin.py:89 catalog/admin.py:102 catalog/admin.py:116
+msgid "Manufacturer"
+msgstr "Производитель"
+
+#: catalog/admin.py:90 catalog/admin.py:103 catalog/admin.py:117
+msgid "Parameters"
+msgstr "Параметры"
+
+#: catalog/admin.py:139
+msgid "Structure"
+msgstr "Структура"
+
+#: catalog/constants.py:8
+msgid "BJCP 2015"
+msgstr "BJCP 2015"
+
+#: catalog/constants.py:9
+msgid "BJCP 2021"
+msgstr "BJCP 2021"
+
+#: catalog/constants.py:30
+msgid "Light lager"
+msgstr "Светлый лагер"
+
+#: catalog/constants.py:31
+msgid "Pilsner"
+msgstr "Пильзнер"
+
+#: catalog/constants.py:32
+msgid "Amber lager"
+msgstr "Янтарный лагер"
+
+#: catalog/constants.py:33
+msgid "Dark lager"
+msgstr "Темный лагер"
+
+#: catalog/constants.py:34
+msgid "Bock"
+msgstr "Бок"
+
+#: catalog/constants.py:35
+msgid "IPA"
+msgstr "ИПА"
+
+#: catalog/constants.py:36
+msgid "Light ale"
+msgstr "Светлый эль"
+
+#: catalog/constants.py:37
+msgid "Amber Ale"
+msgstr "Янтарный эль"
+
+#: catalog/constants.py:38
+msgid "Brown Ale"
+msgstr "Коричневый эль"
+
+#: catalog/constants.py:39
+msgid "Strong Ale"
+msgstr "Крепкий эль"
+
+#: catalog/constants.py:40
+msgid "Sour Ale"
+msgstr "Кислый эль"
+
+#: catalog/constants.py:41
+msgid "Porter"
+msgstr "Портер"
+
+#: catalog/constants.py:42
+msgid "Stout"
+msgstr "Стаут"
+
+#: catalog/constants.py:43
+msgid "Wheat beer"
+msgstr "Пшеничное пиво"
+
+#: catalog/constants.py:44
+msgid "Special beer"
+msgstr "Специальное пиво"
+
+#: catalog/constants.py:54 catalog/constants.py:68
+msgid "Base malt"
+msgstr "Базовый солод"
+
+#: catalog/constants.py:55
+msgid "Specialty malt"
+msgstr "Специальный солод"
+
+#: catalog/constants.py:56
+msgid "Unmalted"
+msgstr "Несоложеный"
+
+#: catalog/constants.py:57 catalog/constants.py:90 catalog/constants.py:137
+msgid "Others"
+msgstr "Другое"
+
+#: catalog/constants.py:69
+msgid "Crystal malt"
+msgstr "Кристаллический солод"
+
+#: catalog/constants.py:70
+msgid "Roast malt"
+msgstr "Жжённый солод"
+
+#: catalog/constants.py:71
+msgid "Acid malt"
+msgstr "Кислый солод"
+
+#: catalog/constants.py:72
+msgid "Wheat malt"
+msgstr "Пшеничный солод"
+
+#: catalog/constants.py:84
+msgid "Sugar"
+msgstr "Сахар"
+
+#: catalog/constants.py:85
+msgid "Extract"
+msgstr "Экстракт"
+
+#: catalog/constants.py:86
+msgid "Fruit"
+msgstr "Фрукты"
+
+#: catalog/constants.py:87
+msgid "Juice"
+msgstr "Сок"
+
+#: catalog/constants.py:88
+msgid "Honey"
+msgstr "Мёд"
+
+#: catalog/constants.py:89
+msgid "Non-fermentable"
+msgstr "Не сбраживаемое"
+
+#: catalog/constants.py:99
+msgid "Pellet"
+msgstr "Гранулированный"
+
+#: catalog/constants.py:100
+msgid "Leaf whole"
+msgstr "Шишковой хмель"
+
+#: catalog/constants.py:101
+msgid "Lupulin Pellet"
+msgstr "Лупулин"
+
+#: catalog/constants.py:115
+msgid "Spice"
+msgstr "Специи"
+
+#: catalog/constants.py:117
+msgid "Herbs"
+msgstr "Травы"
+
+#: catalog/constants.py:118
+msgid "Fining"
+msgstr "Осветление"
+
+#: catalog/constants.py:119 catalog/models.py:77
+msgid "Flavor"
+msgstr "Вкус"
+
+#: catalog/constants.py:120
+msgid "Acid"
+msgstr "Кислота"
+
+#: catalog/constants.py:121
+msgid "Bacteria"
+msgstr "Бактерии"
+
+#: catalog/constants.py:133
+msgid "Ale"
+msgstr "Элевые"
+
+#: catalog/constants.py:134
+msgid "Lagers"
+msgstr "Лагерные"
+
+#: catalog/constants.py:135
+msgid "Wheat"
+msgstr "Пшеничные"
+
+#: catalog/constants.py:136
+msgid "Wine"
+msgstr "Винные"
+
+#: catalog/constants.py:148
+msgid "Low"
+msgstr "Низкий"
+
+#: catalog/constants.py:149
+msgid "Medium"
+msgstr "Средний"
+
+#: catalog/constants.py:150
+msgid "High"
+msgstr "Высокий"
+
+#: catalog/constants.py:151
+msgid "Very High"
+msgstr "Очень высокий"
+
+#: catalog/constants.py:152
+msgid "Unknown"
+msgstr "Неизвестно"
+
+#: catalog/forms.py:47
+msgid "Share is not a percentage (0...100%)"
+msgstr "Доля не в процентах (0...100%)"
+
+#: catalog/models.py:36
+msgid "Calcum"
+msgstr "Кальций"
+
+#: catalog/models.py:37
+msgid "Bicarbonate"
+msgstr "Бикарбонат"
+
+#: catalog/models.py:38
+msgid "Sulfate"
+msgstr "Сульфат"
+
+#: catalog/models.py:39
+msgid "Chloride"
+msgstr "Хлорид"
+
+#: catalog/models.py:40
+msgid "Sodium"
+msgstr "Натрий"
+
+#: catalog/models.py:41
+msgid "Magnesium"
+msgstr "Магний"
+
+#: catalog/models.py:42
+msgid "PH"
+msgstr "PH"
+
+#: catalog/models.py:46 catalog/models.py:47
+msgid "Water chemistry"
+msgstr "Коррекция воды"
+
+#: catalog/models.py:55 catalog/models.py:74
+msgid "Index"
+msgstr "Индекс"
+
+#: catalog/models.py:56 catalog/models.py:69
+msgid "The year of publishing BJCP"
+msgstr "Год публикации BJCP"
+
+#: catalog/models.py:57 catalog/models.py:70
+msgid "Beer Style Guidelines"
+msgstr "Рекомендации по пивным стилям"
+
+#: catalog/models.py:61
+msgid "Beer Style Category"
+msgstr "Категория стиля пива"
+
+#: catalog/models.py:62
+msgid "Beer Style Categories"
+msgstr "Категории стиля пива"
+
+#: catalog/models.py:72
+msgid "Category"
+msgstr "Категория"
+
+#: catalog/models.py:75
+msgid "Aroma"
+msgstr "Аромат"
+
+#: catalog/models.py:76
+msgid "Appearance"
+msgstr "Внешний вид"
+
+#: catalog/models.py:78
+msgid "Mouthfeel"
+msgstr "Ощущение во рту"
+
+#: catalog/models.py:79
+msgid "Comments"
+msgstr "Комментарии"
+
+#: catalog/models.py:80
+msgid "History"
+msgstr "История"
+
+#: catalog/models.py:81
+msgid "Characteristic Ingredients"
+msgstr "Характерные ингредиенты"
+
+#: catalog/models.py:82
+msgid "Style Comparison"
+msgstr "Сравнение стилей"
+
+#: catalog/models.py:83
+msgid "OG minimal"
+msgstr "НП мин"
+
+#: catalog/models.py:84
+msgid "OG maximal"
+msgstr "НП макс"
+
+#: catalog/models.py:85
+msgid "FG minimal"
+msgstr "КП мин"
+
+#: catalog/models.py:86
+msgid "FG maximal"
+msgstr "КП макс"
+
+#: catalog/models.py:87
+msgid "ABV minimal"
+msgstr "ABV мин"
+
+#: catalog/models.py:88
+msgid "ABV maximal"
+msgstr "ABV макс"
+
+#: catalog/models.py:89
+msgid "IBUs minimal"
+msgstr "IBUs мин"
+
+#: catalog/models.py:90
+msgid "IBUs maximal"
+msgstr "IBUs макс"
+
+#: catalog/models.py:91
+msgid "SRM minimal"
+msgstr "SRM мин"
+
+#: catalog/models.py:92
+msgid "SRM maximal"
+msgstr "SRM макс"
+
+#: catalog/models.py:93
+msgid "Carbonisation min"
+msgstr "Карбонизация мин"
+
+#: catalog/models.py:94
+msgid "Carbonisation max"
+msgstr "Карбонизация макс"
+
+#: catalog/models.py:99
+msgid "Beer Styles"
+msgstr "Стили пива"
+
+#: catalog/models.py:113 catalog/models.py:128
+msgid "Country"
+msgstr "Страна"
+
+#: catalog/models.py:114
+msgid "Countries"
+msgstr "Страны"
+
+#: catalog/models.py:122 catalog/models.py:123 catalog/models.py:129
+msgid "Company"
+msgstr "Компания"
+
+#: catalog/models.py:127 catalog/models.py:250
+msgid "Use in styles"
+msgstr "Применение в стилях"
+
+#: catalog/models.py:130
+msgid "Sourse"
+msgstr "Источник"
+
+#: catalog/models.py:143
+msgid "Type grain"
+msgstr "Тип зерна"
+
+#: catalog/models.py:144
+msgid "Category grain"
+msgstr "Категория зерна"
+
+#: catalog/models.py:145
+msgid "Share up in percentage"
+msgstr "Доля в %"
+
+#: catalog/models.py:147 catalog/models.py:168
+msgid "Color in Lovibond"
+msgstr "Цвет в Lovibond"
+
+#: catalog/models.py:149 catalog/models.py:170 pantry/models.py:43
+msgid "Extractivity"
+msgstr "Экстрактивность"
+
+#: catalog/models.py:151
+msgid "Protein"
+msgstr "Белок"
+
+#: catalog/models.py:156 catalog/models.py:157 pantry/models.py:42
+#: pantry/models.py:113
+msgid "Malt"
+msgstr "Солод"
+
+#: catalog/models.py:167
+msgid "Type fermentable"
+msgstr "Тип сырья"
+
+#: catalog/models.py:175 pantry/models.py:54 pantry/models.py:123
+msgid "Fermentable"
+msgstr "Сбраживаемое"
+
+#: catalog/models.py:176
+msgid "Fermentables"
+msgstr "Сбраживаемое"
+
+#: catalog/models.py:186
+msgid "Type hops"
+msgstr "Тип хмеля"
+
+#: catalog/models.py:192 pantry/models.py:66
+msgid "Hop"
+msgstr "Хмель"
+
+#: catalog/models.py:203
+msgid "Short name"
+msgstr "Марка"
+
+#: catalog/models.py:204
+msgid "Type yeast"
+msgstr "Тип дрожжей"
+
+#: catalog/models.py:205
+msgid "It's dry yeast"
+msgstr "Сухие"
+
+#: catalog/models.py:206
+msgid "Alcohol tolerance"
+msgstr "Устойчивость к алкоголю"
+
+#: catalog/models.py:208
+msgid "Flocculation"
+msgstr "Флокуляция"
+
+#: catalog/models.py:209
+msgid "Attenuation"
+msgstr "Аттенюация"
+
+#: catalog/models.py:211
+msgid "Minimal temperature"
+msgstr "Минимальная температура"
+
+#: catalog/models.py:213
+msgid "Maximal temperature"
+msgstr "Максимальная температура"
+
+#: catalog/models.py:219
+msgid "Yeasts"
+msgstr "Дрожжи"
+
+#: catalog/models.py:235
+msgid "Type additive"
+msgstr "Тип добавки"
+
+#: catalog/models.py:239
+msgid "Misc additive"
+msgstr "Разные добавки"
+
+#: catalog/models.py:240
+msgid "Misc additives"
+msgstr "Разные добавки"
+
+#: catalog/models.py:254
+msgid "Water profile"
+msgstr "Профиль воды"
+
+#: catalog/models.py:255
+msgid "Water profiles"
+msgstr "Профили воды"
+
+#: logdata/models.py:11
+msgid "Device"
+msgstr "Устройство"
+
+#: logdata/models.py:12
+msgid "IP"
+msgstr "IP"
+
+#: logdata/models.py:14
+msgid "Beer temperature"
+msgstr "Температура пива"
+
+#: logdata/models.py:15
+msgid "Fridge temperature"
+msgstr "Температура ферментёра"
+
+#: logdata/models.py:16
+msgid "Room temperature"
+msgstr "Температура помещения"
+
+#: logdata/models.py:17
+msgid "Auxiliary temperature"
+msgstr "Температура устройства"
+
+#: logdata/models.py:18
+msgid "Gravity"
+msgstr "Плотность"
+
+#: logdata/models.py:19
+msgid "Tilt angle"
+msgstr "Угол наклона"
+
+#: logdata/models.py:20
+msgid "Voltage"
+msgstr "Напряжение"
+
+#: logdata/models.py:21
+msgid "Pressure"
+msgstr "Давление"
+
+#: logdata/models.py:22
+msgid "RSSI in dBm"
+msgstr "RSSI в dBm"
+
+#: logdata/models.py:26
+msgid "Device data log"
+msgstr "Журнал данных устройства"
+
+#: logdata/models.py:27
+msgid "Device data logs"
+msgstr "Журнал данных устройства"
+
+#: logdata/models.py:38 logdata/models.py:52 pantry/models.py:106
+msgid "Date"
+msgstr "Дата"
+
+#: logdata/models.py:39
+msgid "Hostname"
+msgstr "Имя хоста"
+
+#: logdata/models.py:40
+msgid "Referer"
+msgstr "Реферер"
+
+#: logdata/models.py:41
+msgid "URL"
+msgstr "URL"
+
+#: logdata/models.py:42
+msgid "POST data"
+msgstr "POST данные"
+
+#: logdata/models.py:46 logdata/models.py:47
+msgid "Device raw data"
+msgstr "Сырые данные с устройства"
+
+#: logdata/models.py:51
+msgid "Module"
+msgstr "Модуль"
+
+#: logdata/models.py:53
+msgid "Timestamp"
+msgstr "Отметка времени"
+
+#: logdata/models.py:55
+msgid "Relay state"
+msgstr "Состояние реле"
+
+#: logdata/models.py:56
+msgid "Sensor ID"
+msgstr "Датчик ID"
+
+#: logdata/models.py:58
+msgid "Version"
+msgstr "Версия"
+
+#: logdata/models.py:62
+msgid "Module data log"
+msgstr "Журнал данных модуля"
+
+#: logdata/models.py:63
+msgid "Module data logs"
+msgstr "Журнал данных модуля"
+
+#: pantry/ajax.py:57
+msgid "You cannot add malt"
+msgstr "Вы не можете добавить солод"
+
+#: pantry/ajax.py:62
+msgid "Can't find malt"
+msgstr "Солод не найден"
+
+#: pantry/ajax.py:65
+msgid "Error add malt in pantry"
+msgstr "Ошибка добавления солода в Кладовую"
+
+#: pantry/ajax.py:78 pantry/ajax.py:170
+msgid "You cannot delete malt"
+msgstr "Вы не можете удалить солод"
+
+#: pantry/ajax.py:84 pantry/ajax.py:176
+msgid "Error delete malt in pantry"
+msgstr "Ошибка удаления солода в Кладовой"
+
+#: pantry/ajax.py:136
+msgid "Malt consumption error. Consumption more parish"
+msgstr "Ошибка списания солода. Расход больше прихода"
+
+#: pantry/ajax.py:141
+msgid "You cannot add consumption malt"
+msgstr "Вы не можете списать солод"
+
+#: pantry/ajax.py:146
+msgid "Can't find malt or recipe"
+msgstr "Не найден солод или рецепт"
+
+#: pantry/ajax.py:149
+msgid "Error add consumption malt"
+msgstr "Ошибка списания солода"
+
+#: pantry/ajax.py:168
+msgid "The amount of malt write-offs more parish"
+msgstr "Кол-во списания солода больше прихода"
+
+#: pantry/ajax.py:216
+msgid "You cannot add hop"
+msgstr "Вы не можете добавить хмель"
+
+#: pantry/ajax.py:221
+msgid "Can't find hop"
+msgstr "Не найден хмель"
+
+#: pantry/ajax.py:224
+msgid "Error add hop in pantry"
+msgstr "Ошибка добавления хмеля в Кладовую"
+
+#: pantry/ajax.py:237 pantry/ajax.py:329
+msgid "You cannot delete hop"
+msgstr "Вы не можете удалить хмель"
+
+#: pantry/ajax.py:243 pantry/ajax.py:335
+msgid "Error delete hop in pantry"
+msgstr "Ошибка удаления хмеля в Кладовой"
+
+#: pantry/ajax.py:295
+msgid "Hop consumption error. Consumption more parish"
+msgstr "Ошибка списания хмеля. Расход больше прихода"
+
+#: pantry/ajax.py:300
+msgid "You cannot add consumption hop"
+msgstr "Вы не можете списать хмель"
+
+#: pantry/ajax.py:305
+msgid "Can't find hop or recipe"
+msgstr "Не найден хмель или рецепт"
+
+#: pantry/ajax.py:308
+msgid "Error add consumption hop"
+msgstr "Ошибка списания хмеля"
+
+#: pantry/ajax.py:327
+msgid "The amount of hop write-offs more parish"
+msgstr "Кол-во списания хмеля больше прихода"
+
+#: pantry/ajax.py:381
+msgid "You cannot add yeast"
+msgstr "Вы не можете добавить дрожжи"
+
+#: pantry/ajax.py:386
+msgid "Can't find yeast"
+msgstr "Дрожжи не найдены"
+
+#: pantry/ajax.py:389
+msgid "Error add yeast in pantry"
+msgstr "Ошибка добавления дрожжей в Кладовую"
+
+#: pantry/ajax.py:402 pantry/ajax.py:495
+msgid "You cannot delete yeast"
+msgstr "Вы не можете удалить дрожжи"
+
+#: pantry/ajax.py:408 pantry/ajax.py:501
+msgid "Error delete yeast in pantry"
+msgstr "Ошибка удаления дрожжей в Кладовой"
+
+#: pantry/ajax.py:461
+msgid "Yeast consumption error. Consumption more parish"
+msgstr "Ошибка списания дрожжей. Расход больше прихода"
+
+#: pantry/ajax.py:466
+msgid "You cannot add consumption yeast"
+msgstr "Вы не можете списать дрожжи"
+
+#: pantry/ajax.py:471
+msgid "Can't find yeast or recipe"
+msgstr "Не найдены дрожжи или рецепт"
+
+#: pantry/ajax.py:474
+msgid "Error add consumption yeast"
+msgstr "Ошибка списания дрожжей"
+
+#: pantry/ajax.py:493
+msgid "The amount of yeast write-offs more parish"
+msgstr "Кол-во списания дрожжей больше прихода"
+
+#: pantry/ajax.py:547
+msgid "You cannot add fermentable"
+msgstr "Вы не можете добавить Сбраживаемые ингредиенты"
+
+#: pantry/ajax.py:552
+msgid "Can't find fermentable"
+msgstr "Сбраживаемый ингредиент не найден"
+
+#: pantry/ajax.py:555
+msgid "Error add fermentable in pantry"
+msgstr "Ошибка добавления Сбраживаемого ингредиента в Кладовую"
+
+#: pantry/ajax.py:568 pantry/ajax.py:661
+msgid "You cannot delete fermentable"
+msgstr "Вы не можете удалить Сбраживаемый ингредиент"
+
+#: pantry/ajax.py:574 pantry/ajax.py:667
+msgid "Error delete fermentable in pantry"
+msgstr "Ошибка удаления Сбраживаемого ингредиента"
+
+#: pantry/ajax.py:627
+msgid "Fermentable consumption error. Consumption more parish"
+msgstr "Ошибка списания Сбраживаемого ингредиента. Расход больше прихода"
+
+#: pantry/ajax.py:632
+msgid "You cannot add consumption fermentable"
+msgstr "Вы не можете списать Сбраживаемый ингредиент"
+
+#: pantry/ajax.py:637
+msgid "Can't find fermentable or recipe"
+msgstr "Не найден Сбраживаемый ингредиент или рецепт"
+
+#: pantry/ajax.py:640
+msgid "Error add consumption fermentable"
+msgstr "Ошибка списания Сбраживаемого ингредиента"
+
+#: pantry/ajax.py:659
+msgid "The amount of fermentable write-offs more parish"
+msgstr "Кол-во списания Сбраживаемого ингредиента больше прихода"
+
+#: pantry/ajax.py:713
+msgid "You cannot add misc"
+msgstr "Вы не можете добавить Добавку"
+
+#: pantry/ajax.py:718
+msgid "Can't find misc"
+msgstr "Добавка не найдена"
+
+#: pantry/ajax.py:721
+msgid "Error add misc in pantry"
+msgstr "Ошибка добавления Добавки в Кладовую"
+
+#: pantry/ajax.py:734 pantry/ajax.py:827
+msgid "You cannot delete misc"
+msgstr "Вы не можете удалить Добавку"
+
+#: pantry/ajax.py:740 pantry/ajax.py:833
+msgid "Error delete misc in pantry"
+msgstr "Ошибка удаления Добавки в Кладовой"
+
+#: pantry/ajax.py:793
+msgid "Misc consumption error. Consumption more parish"
+msgstr "Ошибка списания Добавки. Расход больше прихода"
+
+#: pantry/ajax.py:798
+msgid "You cannot add consumption misc"
+msgstr "Вы не можете списать Добавку"
+
+#: pantry/ajax.py:803
+msgid "Can't find misc or recipe"
+msgstr "Не найдена Добавка или рецепт"
+
+#: pantry/ajax.py:806
+msgid "Error add consumption misc"
+msgstr "Ошибка списания Добавки"
+
+#: pantry/ajax.py:825
+msgid "The amount of misc write-offs more parish"
+msgstr "Кол-во списания Добавки больше прихода"
+
+#: pantry/models.py:14
+msgid "Enabled in system"
+msgstr "Включено в системе"
+
+#: pantry/models.py:19
+msgid "Pantry user"
+msgstr "Пользователь кладовой"
+
+#: pantry/models.py:20
+msgid "Pantry users"
+msgstr "Пользователи кладовой"
+
+#: pantry/models.py:24 pantry/models.py:102
+msgid "Pantry"
+msgstr "Кладовая"
+
+#: pantry/models.py:26
+msgid "Experation date"
+msgstr "Срок годностия"
+
+#: pantry/models.py:27
+msgid "Spent"
+msgstr "Потраченный"
+
+#: pantry/models.py:28
+msgid "The supplier"
+msgstr "Поставщик"
+
+#: pantry/models.py:30
+msgid "Cost per unit"
+msgstr "Стоимость за единицу"
+
+#: pantry/models.py:44
+msgid "Parish amount in kg"
+msgstr "Приход в кг"
+
+#: pantry/models.py:45
+msgid "Balance amount in kg"
+msgstr "Остаток в кг"
+
+#: pantry/models.py:49
+msgid "Malt reserve"
+msgstr "Запас солода"
+
+#: pantry/models.py:50
+#, fuzzy
+#| msgid "Maltose rest"
+msgid "Malts reserve"
+msgstr "Запас солодов"
+
+#: pantry/models.py:55 pantry/models.py:79 pantry/models.py:91
+msgid "Parish amount"
+msgstr "Кол-во прихода"
+
+#: pantry/models.py:56 pantry/models.py:80 pantry/models.py:92
+msgid "Balance amount"
+msgstr "Кол-во остатка"
+
+#: pantry/models.py:61
+msgid "Fermentable reserve"
+msgstr "Запас Сбраживаемого ингредиента"
+
+#: pantry/models.py:62
+msgid "Fermentables reserve"
+msgstr "Запас Сбраживаемых ингредиентов"
+
+#: pantry/models.py:68
+msgid "Parish amount in g"
+msgstr "Приход в г"
+
+#: pantry/models.py:69
+msgid "Balance amount in g"
+msgstr "Остаток в г"
+
+#: pantry/models.py:73
+msgid "Hop reserve"
+msgstr "Запас хмеля"
+
+#: pantry/models.py:74
+msgid "Hops reserve"
+msgstr "Запас хмеля"
+
+#: pantry/models.py:85
+msgid "Yeast reserve"
+msgstr "Запас дрожжей"
+
+#: pantry/models.py:86
+msgid "Yeasts reserve"
+msgstr "Запас дрожжей"
+
+#: pantry/models.py:90 pantry/models.py:155
+msgid "Misc"
+msgstr "Добавка"
+
+#: pantry/models.py:97 pantry/models.py:98
+msgid "Misc reserve"
+msgstr "Запас Добавок"
+
+#: pantry/models.py:104
+msgid "Cost"
+msgstr "Стоимость"
+
+#: pantry/models.py:118
+msgid "Malt write-off"
+msgstr "Списание солода"
+
+#: pantry/models.py:119
+msgid "Malts write-off"
+msgstr "Списание солодов"
+
+#: pantry/models.py:129
+msgid "Fermentable write-off"
+msgstr "Списание Сбраживаемого ингредиента"
+
+#: pantry/models.py:130
+msgid "Fermentables write-off"
+msgstr "Списание Сбраживаемых ингредиентов"
+
+#: pantry/models.py:135
+msgid "Amount in g"
+msgstr "Количество в г"
+
+#: pantry/models.py:139
+msgid "Hop write-off"
+msgstr "Списание хмеля"
+
+#: pantry/models.py:140
+msgid "Hops write-off"
+msgstr "Списание хмеля"
+
+#: pantry/models.py:150
+msgid "Yeast write-off"
+msgstr "Списание дрожжей"
+
+#: pantry/models.py:151
+msgid "Yeasts write-off"
+msgstr "Списание дрожжей"
+
+#: pantry/models.py:161 pantry/models.py:162
+msgid "Misc write-off"
+msgstr "Списание Добавки"
+
+#: pantry/views.py:43
+msgid "Not enough rights"
+msgstr "Недостаточно прав"
+
+#: pantry/views.py:52
+msgid "The pantry is already activated"
+msgstr "Кладовая уже подключена"
+
+#: pantry/views.py:56
+msgid "The pantry is not enabled"
+msgstr "Кладовая не активна"
+
+#: pantry/views.py:214
+msgid "The amount of malt balance more parish"
+msgstr "Кол-во солода в остатке больше прихода"
+
+#: pantry/views.py:218
+msgid "The error malt edit"
+msgstr "Ошибка редактирования солода"
+
+#: pantry/views.py:317
+msgid "The amount of fermentable balance more parish"
+msgstr "Кол-во Сбраживаемого ингредиента в остатке больше прихода"
+
+#: pantry/views.py:321
+msgid "The error fermentable edit"
+msgstr "Ошибка редактирования Сбраживаемого ингредиента"
+
+#: pantry/views.py:401
+msgid "The amount of hop balance more parish"
+msgstr "Кол-во хмеля в остатке больше прихода"
+
+#: pantry/views.py:405
+msgid "The error hop edit"
+msgstr "Ошибка редактирования хмеля"
+
+#: pantry/views.py:490
+msgid "The amount of yeast balance more parish"
+msgstr "Кол-во дрожжей в остатке больше прихода"
+
+#: pantry/views.py:494
+msgid "The error yeast edit"
+msgstr "Ошибка редактирования дрожжей"
+
+#: pantry/views.py:592
+msgid "The amount of misc balance more parish"
+msgstr "Кол-во Добавки в остатке больше прихода"
+
+#: pantry/views.py:596
+msgid "The error misc edit"
+msgstr "Ошибка редактирования Добавки"
+
+#: publications/admin.py:22
+msgid "Content"
+msgstr "Содержание"
+
+#: publications/admin.py:23
+msgid "Meta"
+msgstr "Мета"
+
+#: publications/models.py:16
+msgid "Permission user"
+msgstr "Разрешение пользователя"
+
+#: publications/models.py:20 publications/models.py:29
+msgid "Topic"
+msgstr "Тема"
+
+#: publications/models.py:21
+msgid "Topics"
+msgstr "Темы"
+
+#: publications/models.py:37
+msgid "Post"
+msgstr "Сообщение"
+
+#: publications/models.py:38
+msgid "Posts"
+msgstr "Сообщения"
+
+#: publications/views.py:98
+msgid "Post saved"
+msgstr "Сообщение сохранено"
+
+#: publications/views.py:100
+#, python-brace-format
+msgid "Error saving post"
+msgstr "Ошибка сохранения сообщения"
+
+#~ msgid "Professional"
+#~ msgstr "Профессионал"
+
+#~ msgid "Not in style"
+#~ msgstr "Не в стиле"
+
+#~ msgid "In style"
+#~ msgstr "В стиле"
+
+#~ msgid "On secondary fermentation"
+#~ msgstr "На дображивание"
+
+#~ msgid "Recipe publishing error"
+#~ msgstr "Ошибка публикации рецепта"

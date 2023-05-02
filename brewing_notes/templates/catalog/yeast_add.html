@@ -1,0 +1,149 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}Добавление дрожжей{% endblock %}
+
+{% block content %}
+<script>
+  function allChecked() {
+      $('input[name="styles"]').attr('checked', true);
+  }
+  function allNoChecked() {
+      $('input[name="styles"]').attr('checked', false);
+  }
+</script>
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-start py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{% if '/edit/' in request.path %}Редактирование{% else %}Добавление{% endif %} дрожжей</h4>
+      </div>
+    </div>
+    {% if form.non_field_errors %}
+    <div class="row my-2">
+      {% for error in form.non_field_errors %}
+      <div class="col-12 text-center">
+        <div class="alert alert-danger">
+          <strong>{{ error }}</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% include 'blocks/naming_rules.html' %}
+    <form id="form-add" class="form-horizontal" method="post">{% csrf_token %}
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.name.id_for_label }}">Название</label>
+          {{ form.name }}
+          {% if form.name.errors %}{{ form.name.errors }}{% else %}<span class="helptext">{{ form.name.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-12 col-sm-6">
+          <label for="{{ form.short_name.id_for_label }}">Марка</label>
+          {{ form.short_name }}
+          {% if form.short_name.errors %}{{ form.short_name.errors }}{% else %}<span class="helptext">{{ form.short_name.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-12 col-sm-6">
+          <label for="{{ form.type.id_for_label }}">Категория</label>
+          {{ form.type }}
+          {% if form.type.errors %}{{ form.type.errors }}{% else %}<span class="helptext">{{ form.type.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12 col-sm-6">
+          <label for="{{ form.company.id_for_label }}">Компания</label>
+          {{ form.company }}
+          {% if form.company.errors %}{{ form.company.errors }}{% else %}<span class="helptext">{{ form.company.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-12 col-sm-6">
+          <label for="{{ form.country.id_for_label }}">Страна</label>
+          {{ form.country }}
+          {% if form.country.errors %}{{ form.country.errors }}{% else %}<span class="helptext">{{ form.country.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-6 col-md-3 ">
+          <label for="{{ form.min_temperature.id_for_label }}">Мин. темп. &deg;C</label>
+          {{ form.min_temperature }}
+          {% if form.min_temperature.errors %}{{ form.min_temperature.errors }}{% else %}<span class="helptext">{{ form.min_temperature.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3 ">
+          <label for="{{ form.max_temperature.id_for_label }}">Макс. темп. &deg;C</label>
+          {{ form.max_temperature }}
+          {% if form.max_temperature.errors %}{{ form.max_temperature.errors }}{% else %}<span class="helptext">{{ form.max_temperature.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.attenuation.id_for_label }}">Аттенюация, %</label>
+          {{ form.attenuation }}
+          {% if form.attenuation.errors %}{{ form.attenuation.errors }}{% else %}<span class="helptext">{{ form.attenuation.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-6 col-md-3">
+          <label for="{{ form.tolerance.id_for_label }}">Толерантность, %</label>
+          {{ form.tolerance }}
+          {% if form.tolerance.errors %}{{ form.tolerance.errors }}{% else %}<span class="helptext">{{ form.tolerance.help_text }}</span>{% endif %}
+        </div>
+        <div class="form-group col-12 col-sm-6 col-md-3">
+          <label for="{{ form.flocculation.id_for_label }}">Флокуляция</label>
+          {{ form.flocculation }}
+          {% if form.flocculation.errors %}{{ form.flocculation.errors }}{% else %}<span class="helptext">{{ form.flocculation.help_text }}</span>{% endif %}
+        </div>
+     </div>
+     <div class="form-row">
+        <div class="form-group col-12">
+          <label class="mr-2" for="{{ form.its_dry.id_for_label }}">Дрожжи сухие:</label>
+          {{ form.its_dry }}
+          {% if form.its_dry.errors %}{{ form.its_dry.errors }}{% else %}<span class="helptext">{{ form.its_dry.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.url_source.id_for_label }}">Источник</label>
+          {{ form.url_source }}
+          {% if form.url_source.errors %}{{ form.url_source.errors }}{% else %}<span class="helptext">{{ form.url_source.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-12">
+          <label for="{{ form.description.id_for_label }}">Описание</label>
+          {{ form.description }}
+          {% if form.description.errors %}{{ form.description.errors }}{% else %}<span class="helptext">{{ form.description.help_text }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12">
+          <label>В каких стилях применяется:</label>
+        </div>
+        {% for row in form.styles|columns:3 %}
+        <div class=" col-12 col-sm-6 col-lg-4">
+          {% for item in row %}
+          <div>
+            {{ item }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12">
+          <a class="link mx-3" onclick="allChecked()">Выбрать все</a>
+          <a class="link" onclick="allNoChecked()">Снять все</a>
+        </div>
+      </div>
+      <div class="form-row mb-2">
+        <div class="col-12 d-flex justify-content-end">
+          <button form="form-add" type="submit" class="btn btn-secondary ml-auto">{% if '/edit/' in request.path %}Сохранить{% else %}Добавить в справочник{% endif %}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

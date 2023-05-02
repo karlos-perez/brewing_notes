@@ -1,0 +1,36 @@
+<div class="row main-body mb-2 d-print-none">
+  <div class="col">
+    <nav class="navbar navbar-expand-md navbar-dark justify-content-end py-1">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-catalog-collaps" aria-controls="nav-catalog-collaps" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav-catalog-collaps">
+        <div class="head-menu">
+          <ul class="navbar-nav text-right">
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/malts/' in request.path %} active{% endif %}" href="{% url 'malts_list' %}">Зерновые</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/fermentables/' in request.path %} active{% endif %}" href="{% url 'ferms_list' %}">Сбраживаемые</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/hops/' in request.path %} active{% endif %}" href="{% url 'hops_list' %}">Хмель</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/yeasts/' in request.path %} active{% endif %}" href="{% url 'yeasts_list' %}">Дрожжи</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/misc/' in request.path %} active{% endif %}" href="{% url 'misc_list' %}">Добавки</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/waters/' in request.path %} active{% endif %}" href="{% url 'waters_list' %}">Вода</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/catalog/styles/' in request.path %} active{% endif %}" href="{% url 'styles_list' %}">Стили пива</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>

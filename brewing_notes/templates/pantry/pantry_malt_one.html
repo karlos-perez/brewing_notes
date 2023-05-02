@@ -1,0 +1,138 @@
+{% extends 'pantry/pantry_base.html' %}
+{% load static %}
+
+{% block page_title %}{{ box.malt.name }}&nbsp;({{ box.malt.company|default_if_none:'---' }}).Кладовая{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.ru.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'pantry/pantry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center my-2">
+    <div class="d-inline-flex justify-content-between">
+      <a class="link" href="{{ box.malt.get_absolute_url }}"><h5 class="px-3">{{ box.malt.name }}&nbsp;({{ box.malt.company|default_if_none:'---' }})</h5></a>
+        {% if not box.maltswriteoff_set.all %}
+        <a class="link" data-toggle="modal" data-target="#modalEditMalt" title="Редактировать"><i class="material-icons align-middle">edit</i></a>
+        {% endif %}
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="d-flex justify-content-around mb-3">
+      <span><i class="mr-2">Категория:</i><b>{{ box.malt.get_type_display }}</b></span>
+      <span><i class="mr-2">Страна:</i><b>{{ box.malt.country|default_if_none:'---' }}</b></span>
+    </div>
+  </div>
+  <div class="col-12 text-right">
+    <span class="small">Дате:&nbsp;{{ box.created_date|default_if_none:'---' }}</span>
+  </div>
+  <div class="col-12 mb-3">
+    <table class="table table-ing">
+      <thead class="thead text-center">
+        <tr>
+          <th>Магазин</th>
+          <th>Закуплено, кг</th>
+          <th>Остаток, кг</th>
+          <th>Стоимость за кг</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        <tr>
+          <td class="text-left">{{ box.supplier }}</td>
+          <td>{{ box.parish }}</td>
+          <td>{{ box.balance }}</td>
+          <td>{{ box.cost_per_unit }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-12 mb-2">
+    <p>{{ box.note }}</p>
+  </div>
+  {% if box.maltswriteoff_set.all %}
+  <div class="col-12 mb-2">
+    <h5 class="px-3">Расход солода:</h5>
+  </div>
+  <div class="col-12 mb-3">
+      <table class="table table-list mb-0">
+        <thead class="thead text-center">
+          <tr>
+            <th>Рецепт</th>
+            <th>Солод</th>
+            <th class="w80px" title="Килограммы">Вес, кг</th>
+            <th class="w80px" title="Стоимость">Стоимость</th>
+            <th class="d-none d-sm-table-cell w80px" title="Дата">Дата</th>
+          </tr>
+        </thead>
+        <tbody id="malts-list" class="overflow-auto" style="max-height: 50vh;">
+          {% for m in box.maltswriteoff_set.all %}
+          <tr id="consumption-malt-{{ m.id }}" {% if m.spent %} style="color: #656666"{% endif %}>
+            <td>{{ m.recipe.name }}</td>
+            <td>{{ m.malt_reserve.malt.name }}{% if m.malt_reserve.malt.company %} | {{ m.malt_reserve.malt.company.name }}{% endif %}</td>
+            <td title="Килограммы">{{ m.amount }}</td>
+            <td title="Стоимость">{{ m.cost }}</td>
+            <td class="d-none d-sm-table-cell">{{ m.created_date|date:"d.m.Y" }}</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalEditMalt" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="modal-body">
+          <form id="form-add-malt"  action="{% url 'pantry_malt_edit' box.id %}" method="post">{% csrf_token %}
+            <div class="form-group mb-2">
+              <label>Солод:</label>
+              <select class="form-control form-control-sm" name="malts">
+                {% for m in malts %}
+                <option value="{{ m.id }}"{% if m == box.malt %} selected{% endif %}>{% if m.company %}{{ m.company.name }} | {% endif %}{{ m.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-row mb-2">
+              <div class="col">
+                <label>Вес, кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_parish" value="{{ box.parish }}" step="0.01" min="0" max="999.99" required>
+              </div>
+              <div class="col">
+                <label>Стоимость за кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_cost_per_unit" value="{{ box.cost_per_unit }}" step="0.01" min="0" max="99999.99" required>
+              </div>
+              <div class="col">
+                <label>Остаток, кг:</label>
+                <input class="form-control form-control-sm" type="number" name="malt_balance" value="{{ box.balance }}" step="0.01" min="0" max="999.99" required>
+              </div>
+            </div>
+            <div class="form-group mb-2">
+              <label>Дата:</label>
+              <input type="text" name="malt_date" class="form-control form-control-sm" value="{{ box.date|date:'d.m.Y' }}" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-language="ru">
+            </div>
+            <div class="form-group mb-2">
+              <label>Магазин:</label>
+              <input class="form-control form-control-sm" type="text" name="malt_supplier" value="{{ box.supplier }}">
+            </div>
+            <div class="form-group mb-2">
+              <label>Примечание:</label>
+              <textarea class="form-control form-control-sm" name="malt_note" rows="5">{{ box.note }}</textarea>
+            </div>
+            <div class="form-group d-flex justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark ml-2 btn-sm">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

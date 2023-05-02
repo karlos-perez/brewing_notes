@@ -1,0 +1,255 @@
+{% extends 'index.html' %}
+{% load static core brew qr_code %}
+
+{% block seo %}
+  <title>Рецепт пива {{ recipe.seo_title }}</title>
+  <meta name="description" content="{{ recipe.seo_description }}"/>
+  <meta name="keywords" content="{{ recipe.seo_keywords }}"/>
+{% endblock %}
+
+{% block head %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+</style>
+<link rel="stylesheet" href="{% static 'plugins/fancybox/jquery.fancybox.css' %}"/>
+<script src="{% static 'plugins/fancybox/jquery.fancybox.pack.js' %}"></script>
+<script>
+  $(document).ready(function() {
+      $('.gallery').fancybox({
+          openEffect	: 'none',
+          closeEffect	: 'none'
+      });
+  });
+</script>
+{% endblock %}
+
+{% block base %}
+{% if request.user == recipe.user or not recipe.private %}
+<div class="row main-body mb-2  d-print-none">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}" title="{{ recipe.name }}">
+        <span class="small">Полная версия рецепта</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_authenticated %}
+      <a class="link print-button" href="" title="Распечатать"><i class="material-icons align-bottom">&#xe8ad;</i></a>
+      {% endif %}
+    </div>
+  </div>
+  {% if user.is_authenticated %}
+  <script>
+    $('.print-button').on('click', function() {
+        window.print();
+        return false;
+    });
+  </script>
+  {% endif %}
+</div>
+<div class="row">
+  <div class="mb-2 pl-3 d-none d-print-block w-100">
+    <table class="w-100">
+      <tr>
+        <td class="w-50">
+          {% if recipe.user.obj_pic %}
+          <img class="img" src="{{ recipe.user.get_logo }}" height="100" alt="logo">
+          {% endif %}
+        </td>
+        <td class="text-right px-4 w-50 align-top">
+          <img class="img" src="{% static 'img/logo_print.png' %}" height="40" alt="logo">
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<div class="row main-body py-3 condensed">
+  <div class="col-12 col-sm-9 mb-3">
+    <div class="d-flex justify-content-between">
+      <a class="link" href="{% url 'recipes_public_list' %}?tp={{ recipe.type }}&st=">
+        <span class="h5">{{ recipe.get_type_display }}</span>
+      </a>
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}">
+        <span class="h5" itemprop="identifier">#{{ recipe.uid }}</span>
+      </a>
+    </div>
+    <div>
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}">
+        <h3 itemprop="name">{{ recipe.name }}</h3>
+      </a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center border-line">
+      <div class="param">OG&nbsp;{{ recipe.OG|formatted_float }}</div>
+      <div class="param">FG&nbsp;{{ recipe.FG|formatted_float }}</div>
+      <div class="param">ABV&nbsp;{{ recipe.abv|floatformat }}%</div>
+      <div class="param">IBU&nbsp;{{ recipe.ibu }}</div>
+      <div class="param">SRM&nbsp;{{ recipe.srm|floatformat }}</div>
+    </div>
+    <div class="my-1">
+        <a class="link" href="{% url 'recipes_public_list' %}?tp=&st={{ recipe.style.id }}">
+          <span>{{ recipe.style.get_guides_display }}: {{ recipe.style|default_if_none:'---' }}</span>
+          <meta itemprop="recipeCategory" content="{{ recipe.style.name }}"/>
+        </a>
+    </div>
+  </div>
+  <div class="col-12 col-sm-3 d-flex justify-content-center align-items-center mb-3">
+    <div class="d-none d-print-block">
+      {% qr_from_text recipe.get_full_short_link size="S" %}
+    </div>
+    <div class="d-print-none">
+    {% if recipe.img %}
+      <a class="gallery" rel="pics" href="{{ recipe.img.url|watermark }}">
+        <img class="img-thumbnail" src='{{ recipe.get_avatar|thumbnail:"width=150, height=150" }}' itemprop="image" alt="{{ recipe.name }}">
+      </a>
+    {% else %}
+      <img class="img-thumbnail" src='{{ recipe.get_avatar|thumbnail:"width=150, height=150" }}' style="background-color: {{ srm_color }};" itemprop="image">
+    {% endif %}
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="head-section">Описание</div>
+    <div class="body-section mb-3 px-2 py-1">
+      <div itemprop="description">{{ recipe.description|linebreaks }}</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-4">
+  <div class="head-section">Основные показатели</div>
+    <div class="body-section mb-3 p-2">
+      <div class="d-flex justify-content-between py-1" itemprop="recipeYield">
+        <span class="">Размер партии</span>
+        <span class="text-right">{{ recipe.batch_size|floatformat }}&nbsp;л</span>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="">Вода на затор</span>
+        <span class="text-right">{{ recipe.mash_water|floatformat }}&nbsp;л</span>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="">Вода на промывку</span>
+        <span class="text-right">{{ recipe.sparge_water|floatformat }}&nbsp;л</span>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="">Время кипения</span>
+        <span class="text-right">{{ recipe.boil_time }}&nbsp;мин</span>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="">Начальная плотность</span>
+        <span class="text-right">{{ recipe.OG|formatted_float }}</span>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="">Конечная плотность</span>
+        <span class="text-right">{{ recipe.FG|formatted_float }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="head-section">Затирание</div>
+    <div class="body-section mb-3 p-2">
+      <div class="body-head py-1">
+        <span>Ингредиенты</span>
+      </div>
+      {% for i in mash %}
+      <div class="d-flex justify-content-between py-1" itemprop="recipeIngredient">
+        <span class="">{{ i.ingredient }}{% if i.note %}*{% endif %}</span>
+        <span class="text-right">{{ i.amount|floatformat }}&nbsp;{% if i.measure %}{{ i.get_measure_display }}{% else %}кг{% endif %}</span>
+      </div>
+      {% endfor%}
+      <div class="body-head py-1">
+        <span>Параметры</span>
+      </div>
+      {% for m in recipe.mashguidelines_set.all %}
+      <div class="d-flex justify-content-between py-1">
+        <span class="">{{ m.step_temp }}&deg;C{% if m.note %}*{% endif %}</span>
+        <span class="text-right">{{ m.step_time }}&nbsp;мин</span>
+      </div>
+      {% endfor%}
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="head-section">Варка</div>
+    <div class="body-section mb-3 p-2">
+      <div class="body-head py-1">
+        <span>Параметры</span>
+      </div>
+      <div class="d-flex justify-content-between py-1">
+        <span class="">Время кипения</span>
+        <span class="text-right">{{ recipe.boil_time }}&nbsp;мин</span>
+      </div>
+      <div class="body-head py-1">
+        <span>Ингредиенты</span>
+      </div>
+      {% for i in boil %}
+      <div class="d-flex justify-content-between py-1" itemprop="recipeIngredient">
+        <span class="">{{ i.ingredient.name }} {% if i.alfa %}({{ i.alfa }}%){% endif%}{% if i.note %}*{% endif %}</span>
+        <span class="text-right">{{ i.amount|floatformat }}&nbsp;{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %} | {{ i.time }}&nbsp;мин</span>
+      </div>
+      {% endfor%}
+    </div>
+  </div>
+  {% if chilling %}
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="head-section">Охлаждение</div>
+    <div class="body-section mb-3 p-2">
+      {% for i in chilling %}
+      <div class="d-flex justify-content-between py-1" itemprop="recipeIngredient">
+        <span class="">{{ i.ingredient.name }} {% if i.alfa %}({{ i.alfa }}%){% endif%}{% if i.note %}*{% endif %}</span>
+        <span class="text-right">{{ i.amount|floatformat }}{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %} | {{ i.temp }}&deg;C | {{ i.time }}&nbsp;мин</span>
+      </div>
+      {% endfor%}
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="head-section">Ферментация</div>
+    <div class="body-section mb-3 p-2">
+      {% for i in recipe.yeastsingredients_set.all %}
+      <div class="d-flex justify-content-between py-1" itemprop="recipeIngredient">
+        <span class="">{{ i.ingredient.short_name }} ({{ i.ingredient.name }}){% if i.note %}*{% endif %}</span>
+      </div>
+      {% endfor%}
+      {% if dry_hop %}
+        {% for i in dry_hop %}
+          <div class="d-flex justify-content-between py-1">
+            <span class="">{{ i.ingredient }} {% if i.alfa %}({{ i.alfa }}%){% endif%}{% if i.note %} *{% endif %}</span>
+            <span class="text-right">{{ i.amount|floatformat }}{% if i.measure %}{{ i.get_measure_display }}{% else %}г{% endif %} | {{ i.time }}&nbsp;дн</span>
+          </div>
+        {% endfor%}
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="head-section">Карбонизация</div>
+    <div class="body-section mb-3 p-2">
+      <div class="d-flex justify-content-between px-2 py-1" itemprop="recipeIngredient">
+        <span class="">{{ recipe.priming.get_priming_method_display }}{% if i.note %}*{% endif %}</span>
+        <span class="text-right">{{ recipe.priming.amount|floatformat }}&nbsp;{{ recipe.priming.get_measure_display }}</span>
+      </div>
+    </div>
+  </div>
+  {% if recipe.show_note and recipe.note %}
+  <div class="col-12">
+    <div class="head-section">Заметки</div>
+    <div class="body-section mb-3 px-2 py-1">
+      <div>{{ recipe.note|linebreaks }}</div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-12">
+    <div class="">
+      <a class="link" href="{% url 'recipe_detail' recipe.slug %}" itemprop="url"><small>* Примечания к рецепту смотрите в более развернутой версии рецепта</small></a>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="d-flex justify-content-between border-line-top">
+      <div>
+        <span class="">Составил рецепт: <a class="link" href="{% url 'user_recipes' recipe.user %}"><b itemprop="author">{{ recipe.user }}</b></a></span>
+      </div>
+      <div class="d-none d-print-block">
+        <span class="text-right">{{ recipe.get_full_short_link }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+  {% include 'recipe/recipe_private.html' %}
+{% endif %}
+{% endblock %}

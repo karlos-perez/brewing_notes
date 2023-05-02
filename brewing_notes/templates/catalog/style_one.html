@@ -1,0 +1,164 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}Описание стиля {{ style }}{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-start py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <span class="">Категория: {{ style.category.index }}. {{ style.category.name }} ({{ style.get_guides_display }})</span>
+        <h4>{{ style }}</h4>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-12">
+        <h5>Параметры стиля:</h5>
+      </div>
+      <div class="col-12 col-sm-6 text-center">
+        <div>
+          <small><strong>Начальная плотность</strong></small>
+        </div>
+        <div>
+          <small>{{ style.OG_min|gravity_to_plato }} &#8211; {{ style.OG_max|gravity_to_plato }}</small>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 text-center">
+        <div>
+            <small><strong>Конечная плотность</strong></small>
+        </div>
+        <div>
+          <small>{{ style.FG_min|gravity_to_plato }} &#8211; {{ style.FG_max|gravity_to_plato }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3 text-center">
+        <div>
+          <small><strong>Алкоголь</strong></small>
+        </div>
+        <div>
+          <small>{{ style.ABV_min }} &#8211; {{ style.ABV_max }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3 text-center">
+        <div>
+            <small><strong>Горечь IBU</strong></small>
+        </div>
+        <div>
+          <small>{{ style.IBUs_min }} &#8211; {{ style.IBUs_max }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3 text-center">
+        <div>
+            <small><strong>Цвет SRM</strong></small>
+        </div>
+        <div>
+          <small>{{ style.SRM_min }} &#8211; {{ style.SRM_max }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3 text-center">
+        <div>
+            <small><strong>CO<sub>2</sub></strong></small>
+        </div>
+        <div>
+          <small>{{ style.CO2_min }} &#8211; {{ style.CO2_max }}</small>
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-12">
+        <h5>Описание:</h5>
+        <p>{{ style.description|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Аромат:</h5>
+        <p>{{ style.aroma|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Внешний вид:</h5>
+        <p>{{ style.appearance|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Вкус:</h5>
+        <p>{{ style.flavor|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Ощущение во рту:</h5>
+        <p>{{ style.mouthfeel|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Комментарии:</h5>
+        <p>{{ style.comments|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>История:</h5>
+        <p>{{ style.history|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Сравнение стилей:</h5>
+        <p>{{ style.comparison|linebreaks }}</p>
+      </div>
+      <div class="col-12">
+        <h5>Характерные ингредиенты:</h5>
+        <p>{{ style.ingredients|linebreaks }}</p>
+      </div>
+      <div class="col-12 text-right">
+        {% if style.guides == 0 %}
+        <small>Перевод: <a class="link" href="https://profibeer.ru/styles/bjcp/">Profibeer</a> </small>
+        {% else %}
+        <small>Перевод: <a class="link" href="https://brewscrew.ru/">BrewsCrew</a> </small>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-12 col-md-4 mb-2">
+        <span class="h5">Солод</span>
+        {% for item in style.malt_set.all %}
+        <div>
+          <a class="link" href="{% url 'malt_one' item.slug %}">
+            <small>{{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="col-12 col-md-4 mb-2">
+        <span class="h5">Хмель</span>
+        {% for item in style.hops_set.all %}
+        <div>
+          <a class="link" href="{% url 'hop_one' item.slug %}">
+            <small>{{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="col-12 col-md-4 mb-2">
+        <span class="h5">Дрожжи</span>
+        {% for item in style.yeasts_set.all %}
+        <div>
+          <a class="link" href="{% url 'yeast_one' item.slug %}">
+            <small>{{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-12 col-sm-8 mb-2 d-flex justify-content-end">
+        <a class="btn btn-secondary" href="{% url 'recipes_list' %}?st={{ style.pk }}">Показать рецепты по данному стилю</a>
+      </div>
+      <div class="col-12 col-sm-4 mb-2 d-flex justify-content-end">
+        <a class="btn btn-secondary" href="{% url 'styles_list' %}">Назад к списку</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

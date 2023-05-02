@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load core brew static qr_code %}
+
+{% block seo %}
+  <title>{{ recipe.seo_title }}</title>
+  <meta name="description" content="{{ recipe.seo_description }}"/>
+  <meta name="keywords" content="{{ recipe.seo_keywords }}"/>
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'plugins/fancybox/jquery.fancybox.css' %}"/>
+<script src="{% static 'plugins/fancybox/jquery.fancybox.pack.js' %}"></script>
+<script>
+  $(document).ready(function() {
+      $('.gallery').fancybox({
+          openEffect	: 'none',
+          closeEffect	: 'none'
+      });
+  });
+</script>
+{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col">
+    <nav class="w-100">
+      <ol class="breadcrumb d-print-none mb-0">
+        {% if user.is_authenticated %}
+        <li class="breadcrumb-item"><a class="link" href="{% url 'recipes_list' %}"><small>Рецептурная</small></a></li>
+        <li class="breadcrumb-item mr-auto"><a class="link" href="{% url 'user_recipes' recipe.user.username %}"><small>{% if request.user == recipe.user %}Мои рецепты{% else %}Рецепты пользователя {{ recipe.user }}{% endif %}</small></a></li>
+        {% else %}
+        <li class="breadcrumb-item mr-auto"><a class="link" href="{% url 'recipes_public_list' %}"><small>Опубликованные рецепты</small></a></li>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <li class="px-2"><a class="link print-button" href="" title="Распечатать"><i class="material-icons align-bottom">&#xe8ad;</i></a></li>
+        {% endif %}
+      </ol>
+    </nav>
+  </div>
+  {% if user.is_authenticated %}
+  <script>
+    $('.print-button').on('click', function() {
+        window.print();
+        return false;
+    });
+  </script>
+  {% endif %}
+</div>
+<div class="row main-body">
+  <div class="mb-2 pl-3 d-none d-print-block w-100">
+    <table class="w-100">
+      <tr>
+        <td class="w-50">
+          {% if recipe.user.obj_pic %}
+          <img class="img" src="{{ recipe.user.get_logo }}" height="100" alt="logo">
+          {% endif %}
+        </td>
+        <td class="text-right px-4 w-50 align-top">
+          <img class="img" src="{% static 'img/logo_print.png' %}" height="40" alt="logo">
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<div class="row main-body py-3 condensed" itemscope itemtype="https://schema.org/Recipe">
+    <div class="col-12 col-sm-9 mb-3">
+      <div class="d-flex justify-content-between">
+        <a class="link" href="{% url 'recipes_public_list' %}?tp={{ recipe.type }}&st=">
+          <span class="h5">{{ recipe.get_type_display }}</span>
+        </a>
+        <a class="link" href="{% url 'recipe_detail' recipe.slug %}">
+          <span class="h5" itemprop="identifier">#{{ recipe.uid }}</span>
+        </a>
+      </div>
+      <div>
+        <a class="link" href="{% url 'recipe_detail' recipe.slug %}">
+          <h3 itemprop="name">{{ recipe.name }}</h3>
+        </a>
+      </div>
+      <div class="d-flex justify-content-between align-items-center border-line">
+        <div class="param">OG&nbsp;{{ recipe.OG|formatted_float }}</div>
+        <div class="param">FG&nbsp;{{ recipe.FG|formatted_float }}</div>
+        <div class="param">ABV&nbsp;{{ recipe.abv|floatformat }}%</div>
+        <div class="param">IBU&nbsp;{{ recipe.ibu }}</div>
+        <div class="param">SRM&nbsp;{{ recipe.srm|floatformat }}</div>
+      </div>
+      <div class="my-1">
+          <a class="link" href="{% url 'recipes_public_list' %}?tp=&st={{ recipe.style.id }}">
+            <span>{{ recipe.style.get_guides_display }}: {{ recipe.style }}</span>
+            <meta itemprop="recipeCategory" content="{{ recipe.style.name }}"/>
+          </a>
+      </div>
+    </div>
+    <div class="col-12 col-sm-3 d-flex justify-content-center align-items-center mb-3">
+      <div class="d-none d-print-block">
+        {% qr_from_text recipe.get_full_short_link size="S" %}
+      </div>
+      <div class="d-print-none">
+      {% if recipe.img %}
+        <a class="gallery" rel="pics" href="{{ recipe.img.url|watermark }}">
+          <img class="img-thumbnail" src='{{ recipe.get_avatar|thumbnail:"width=150, height=150" }}' itemprop="image" alt="{{ recipe.name }}">
+        </a>
+      {% else %}
+        <img class="img-thumbnail" src='{{ recipe.get_avatar|thumbnail:"width=150, height=150" }}' style="background-color: {{ srm_color }};" itemprop="image">
+      {% endif %}
+      </div>
+    </div>
+    <div class="col-12">
+      <div itemprop="description">{{ recipe.description|linebreaks }}</div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4">
+      <div class="head-section">Солод</div>
+      <div class="body-section mb-3">
+      {% for g in recipe.grainingredients_set.all %}
+        <div class="px-2 py-1" itemprop="recipeIngredient">
+          <span class="">{{ g }}</span>
+        </div>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4">
+      <div class="head-section">Хмель</div>
+      <div class="body-section mb-3">
+      {% for h in recipe.hopsingredients_set.all|qs_distinct:'ingredient' %}
+        <div class="px-2 py-1" itemprop="recipeIngredient">
+          <span class="">{{ h }}</span>
+        </div>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="col-12 col-sm-12 col-md-4">
+      <div class="head-section">Дрожжи</div>
+      <div class="body-section mb-3">
+      {% for y in recipe.yeastsingredients_set.all %}
+        <div class="px-2 py-1" itemprop="recipeIngredient">
+          <span class="">{{ y }}</span>
+        </div>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="col-12 ">
+      <div class="d-flex justify-content-between align-items-center border-line-top py-1">
+        <div class="">
+          <span class="">Рецепт составил:  <a class="link" href="{% url 'user_recipes' recipe.user %}"><b itemprop="author">{{ recipe.user }}</b></a></span>
+        </div>
+        <div>
+          <div class="d-none d-print-block">
+            <span class="">{{ recipe.get_full_short_link }}</span>
+          </div>
+          <div class="d-print-none">
+            <a class="link" href="{% url 'recipe_detail' recipe.slug %}" itemprop="url">
+              <span class="">Посмотреть полный рецепт</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

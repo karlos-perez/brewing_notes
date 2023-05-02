@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Что такое BNC-модуль?{% endblock %}
+
+{% block center %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-between my-3">
+     <div>
+      <a class="link d-inline-flex" href="{% url 'docs_conn_devices' %}">
+        <i class="material-icons align-bottom">chevron_left</i>
+        <span class="d-none d-md-block">Подключение устройств</span>
+      </a>
+    </div>
+    <div>
+      <a class="link" href="{% url 'docs_main' %}">Оглавление</a>
+    </div>
+    <div>
+      <a class="link d-inline-flex" href="{% url 'docs_bnc_creation' %}">
+        <span class="d-none d-md-block">Создание BNC-модуля и настройка</span>
+        <i class="material-icons align-bottom">chevron_right</i>
+      </a>
+    </div>
+  </div>
+  <div class="col-12 text-center mb-3">
+    <h3>Что такое BNC-модуль?</h3>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="d-flex justify-content-center">
+      <img src="/media/docs/BNCmodule/BNCmodule_logo.png" alt="BNC-модули логотип">
+    </div>
+  </div>  
+  <div class="col-12 p-3">
+    <div class="mx-3">
+      <p class="mb-3"><strong>«BNC-модуль»</strong> - автоматика на основе умного Wi-Fi реле с термометром «Sonoff TH10 (TH16)».</p>
+      <div class="d-flex justify-content-center">
+        <img src="/media/docs/BNCmodule/Sonoff-TH16-DS18.jpg" height="300px" alt="Sonoff TH16 with DS18B20">
+        <img src="/media/docs/BNCmodule/Sonoff-TH16.jpg" height="300px" alt="Sonoff TH16">
+      </div>
+      <p class="mb-3">Основная цель нашего проекта <strong>«BNC-модули»</strong> - дать пользователям (которые не имея особых навыков и бюджета) возможность создать себе на базе простого популярного и доступного Wi-Fi реле автоматику для нашего хобби (Пивоварение) с полной интеграцией с нашим сервисом рецептов. Что гораздо упрощает весь процесс создания пива: от расчётов рецепта до варки и сбраживания.</p>
+      <h5>Что такое BNC-модуль по простому?</h5>
+      <p class="mb-3">Это прошитый нашим программным обеспечением <strong>Sonoff TH10 (TH16)</strong> с термометром DS18B20.</p>
+      <p>Наше программное обеспечение позволяет объединить несколько модулей для работы над одной задачей. Таким образом можно сконфигурировать нужное оборудование из нескольких доступных модулей. Список возможного оборудования на данный момент можно посмотреть в разделе <a class="link" href="{% url 'docs_bnc_equipments' %}"><strong>Виды оборудования</strong></a>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

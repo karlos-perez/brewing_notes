@@ -1,0 +1,10 @@
+<div class="row main-body my-4">
+  <div class="col py-4 text-center">
+    <h3 class="text-center mb-4">К сожалению автор решил скрыть данный рецепт от всех.</h3>
+    <div class="my-4">
+      <a class="link" href="{% if user.is_authenticated %}{% url 'recipes_list' %}{% else %}{% url 'recipes_public_list' %}{% endif %}">
+        <span class="h5">Посмотрите другие наши опубликованные рецепты</span>
+      </a>
+    </div>
+  </div>
+</div>

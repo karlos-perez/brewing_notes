@@ -1,0 +1,27 @@
+{% extends 'user/user_messages_base.html' %}
+{% load brew core %}
+
+{% block messages %}
+<form method="post">{% csrf_token %}
+  <div class="form-group">
+    <label>Получатель</label>
+    <select class="form-control" name="recipient">
+      <option selected value="">------</option>
+      {% for usr in users %}
+      <option value="{{ usr.pk }}">{{ usr }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Тема сообщения</label>
+    {{ form.subject }}
+  </div>
+  <div class="form-group">
+    <label>Сообщение</label>
+    {{ form.body }}
+  </div>
+  <div class="form-group">
+    <button type="submit" class="btn btn-secondary btn-block">Отправить</button>
+  </div>
+</form>
+{% endblock %}

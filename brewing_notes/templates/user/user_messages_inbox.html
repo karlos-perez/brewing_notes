@@ -1,0 +1,95 @@
+{% extends 'user/user_messages_base.html' %}
+{% load brew core %}
+
+{% block messages %}
+<script>
+  function SendMessage(url, pk){
+      var subject = $('#send-subject-'+pk).val();
+      var message = $('#send-message-'+pk);
+      var _alert = $('#alert')
+      $.post(url, {subject: subject, message: message.val()}, function (data) {
+          if (data.success) {
+              message.val('');
+              if (_alert.hasClass('alert-danger')) {
+                  _alert.removeClass('alert-danger');
+              }
+              _alert.addClass('alert-success')
+              _alert.css("display", "block");
+              $('#alert-msg').text(data.result);
+              $('#collapseMessage-'+pk).collapse('hide');
+          } else {
+               if (_alert.hasClass('alert-success')) {
+                  _alert.removeClass('alert-success');
+              }
+              _alert.addClass('alert-danger')
+              _alert.css("display", "block");
+              $('#alert-msg').text(data.error);
+          };
+      });
+  };
+  function ReadMassage(url, pk){
+      $('#collapseMessage-'+pk).collapse('toggle');
+      let unread = Number($('#unread-message').text()) - 1;
+      if($('#message-subject-'+pk).hasClass('font-weight-bold')) {
+          $.post(url, {}, function (data) {
+              if (data.success) {
+                  $('#message-subject-'+pk).removeClass('font-weight-bold');
+                  $('#icon-message-'+pk).text('mark_email_read');
+                  $('#unread-message').text(unread);
+                  if (unread == 0) {
+                      $('#unread-msg').css("display", "none");
+                  }
+                  $('#delete-msg-'+pk).css("display", "block");
+              }
+          });
+      }
+  };
+</script>
+<div class="row">
+  <div class="col-12 col-md-6">
+    <small>Всего входящих сообщений: </small>
+    <small id="total-message">{{ total }}</small>
+  </div>
+  <div class="col-12 col-md-6">
+    <small>Не прочитанные: </small>
+    <small id="unread-message">{{ user.unread_msg_count|default_if_none:0 }}</small>
+  </div>
+</div>
+<div class="row justify-content-center">
+  {% include 'blocks/paginator.html' %}
+</div>
+{% for m in object_list %}
+<div id="message-{{ m.pk }}">
+  <div class="row p-3">
+    <div class="px-0">
+      <i id="icon-message-{{ m.pk }}" class="align-bottom material-icons">{% if not m.read_at %}mark_email_unread{% else %}mark_email_read{% endif %}</i>
+    </div>
+    <div class="px-3">
+      <img class="img-thumbnail" src="{{ m.sender.get_avatar|thumbnail:"width=45,height=45" }}" class="mr-3" alt="">
+    </div>
+    <div class="mr-auto px-0">
+      <a class="link" href="{% url 'user_recipes' m.sender.username %}"><span class="d-flex mt-0">{{ m.sender }}</span></a>
+      <a onclick="ReadMassage('{% url 'read_message' m.pk %}', {{ m.pk }}); return false;" class="d-flex link"><small id="message-subject-{{ m.pk }}" class="{% if not m.read_at %} font-weight-bold{% endif %}">{{ m.subject }}</small></a>
+    </div>
+    <div class="">
+      <small class="">{{ m.sent_at|date:"d.m.Y H:i" }}</small>
+      <a id="delete-msg-{{ m.pk }}" class="link align-top text-right" href="" onclick="DeleteMessage({{ m.pk }}, '{% url 'delete_message' m.pk  %}'); return false;" {% if not m.read_at %}style="display: none"{% endif %} title="Удалить"><i class="material-icons">&#xe872;</i></a>
+    </div>
+  </div>
+  <div class="collapse mt-3 px-4" id="collapseMessage-{{ m.pk }}">
+    <div class="row">
+      <p>{{ m.body|linebreaks }}</p>
+    </div>
+    <div class="row">
+      <div class="input-group mb-3">
+        <input id="send-subject-{{ m.pk }}" type="hidden" name="subject" value="Re: {{ m.subject }}" />
+        <textarea id="send-message-{{ m.pk }}" class="form-control" name="message" placeholder="Быстрый ответ..."></textarea>
+        <div class="input-group-append">
+          <input onclick="SendMessage('{% url 'push_message' m.sender.pk %}', {{ m.pk }}); return false;" class="btn btn-secondary" value="Отправить" type="submit" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

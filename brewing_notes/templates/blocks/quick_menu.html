@@ -1,0 +1,32 @@
+<div class="row main-body d-none d-sm-block mb-2 d-print-none">
+  <div class="d-flex justify-content-around py-2">
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/calcs' in request.path %} active{% endif %}" href="{% url 'computing_main' %}">Калькуляторы</a>
+    </div>
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/computing/recipe' in request.path %} active{% endif %}" href="{% url 'create_recipe' %}">Расчёт</a>
+    </div>
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/user/recipes' in request.path %} active{% endif %}" href="{% url 'user_recipes' user.username %}">Рецепты</a>
+    </div>
+    {% if user.all_device %}
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/telemetry' in request.path %} active{% endif %}" href="{% url 'device_info' user.all_device.first.token %}">Телеметрия</a>
+    </div>
+    {% elif user.all_bnc_modules %}
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/telemetry' in request.path %} active{% endif %}" href="{% url 'modules_list' %}">Телеметрия</a>
+    </div>
+    {% endif %}
+    {% if user.available_pantry %}
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/pantry' in request.path %} active{% endif %}" href="{% url 'pantry_balance' user.username %}">Кладовка</a>
+    </div>
+    {% endif %}
+    {% if user.is_moderator %}
+    <div>
+      <a class="btn btn-outline-secondary btn-sm{% if '/management' in request.path %} active{% endif %}" href="{% url 'admn_main' %}">Дежурка</a>
+    </div>
+    {% endif %}
+  </div>
+</div>

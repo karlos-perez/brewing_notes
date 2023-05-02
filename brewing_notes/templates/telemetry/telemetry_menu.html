@@ -1,0 +1,31 @@
+<div class="row main-body mb-2">
+  <div class="col">
+    <nav class="navbar navbar-expand-md navbar-dark justify-content-end">
+      <button class="navbar-toggler my-1" type="button" data-toggle="collapse" data-target="#nav-catalog-collaps" aria-controls="nav-catalog-collaps" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav-catalog-collaps">
+        <div class="head-menu mr-auto">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'main' %}">Главная</a>
+            </li>
+            {% if user.all_device %}
+            <li class="nav-item">
+              <a class="nav-link{% if '/device/' in request.path %} active{% endif %}" href="{% url 'device_info' user.all_device.first.token %}">Устройства</a>
+            </li>
+            {% endif %}
+            {% if user.all_bnc_modules %}
+            <li class="nav-item">
+              <a class="nav-link{% if '/bnc-modules/' in request.path %} active{% endif %}" href="{% url 'modules_list' %}">BNC-модули</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if '/equipment/' in request.path %} active{% endif %}" href="{% url 'equipments_list' %}">Обрудование</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>

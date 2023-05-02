@@ -1,0 +1,19 @@
+{% load core %}
+
+<div class="logo d-inline-flex">
+  <div>
+    <div>
+      <img id="image-place" class="img-thumbnail" src='{{ user.get_logo|thumbnail:"width=150, height=150" }}' alt="">
+    </div>
+    <div class="text-center">
+      <small id="logo_counter" class="">jpeg | png < 4Мб</small>
+    </div>
+  </div>
+  <div>
+    {% if user.obj_pic %}
+    <div id="image-delete" class="link" onclick="LogoDelete('{% url 'logo_delete' %}', {{ user.obj_pic.pk }}); return false;" title="Удалить"><i class="material-icons">&#xe92b;</i></div>
+    {% else %}
+    <div id="logo-uploader" class="link" onclick="AjaxImageUpload('{% get_image_attach_url user %}', $('#logo_counter'), this, {{ user.pk }}); return false;" title="Установить логотип"><i class="material-icons">&#xe923;</i></div>
+    {% endif %}
+  </div>
+</div>

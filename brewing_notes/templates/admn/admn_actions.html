@@ -1,0 +1,53 @@
+{% extends 'admn/admn_base.html' %}
+{% load brew core %}
+
+{% block content %}
+<div class="row main-body mb-2 py-3">
+  <div class="col-12 mb-3 text-center">
+    <h3>Действия пользователей</h3>
+  </div>
+  <div class="col-12 col-sm-6 col-md-4 mb-3">
+    <form>
+      <div class="input-group">
+        <select class="custom-select" name="filter">
+          <option {% if not request.GET.tp %}selected{% endif %} value="">-- Действие --</option>
+          {% for s in actions %}
+          <option {% if request.GET.filter == s.0|stringformat:"i" %}selected{% endif %} value="{{ s.0 }}">{{ s.1 }}</option>
+          {% endfor %}
+        </select>
+        <div class="input-group-append">
+          <button type="submit" class="btn btn-secondary" type="button">Выбрать</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="col mr-sm-3 mb-3">
+  {% include 'blocks/paginator.html' %}
+  </div>
+  <div class="col-12 p-0 p-sm-3">
+    <div class="table-div">
+      <table class="table table-list mb-0">
+        <thead class="thead">
+          <tr>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'timestamp' '-' %}">Дата</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'user' '-' %}">Пользователь</a></th>
+            <th scope="col"><a class="link" href="?{% url_replace view.request 'order_by' 'action_type' '-' %}">Действие</a></th>
+            <th class="d-none d-md-table-cell" scope="col">Описание</th>
+          </tr>
+        </thead>
+        <tbody class="tbody-transporent">
+        {% for act in object_list %}
+          <tr>
+            <td>{{ act.timestamp|date:"H:i:s d.m.Y" }}</td>
+            <td>{{ act.user }}</td>
+            <td>{{ act.get_action_type_display }}</td>
+            <td class="d-none d-md-table-cell"><span title="{{ act.description }}" style="cursor: default;">{{ act.verb }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

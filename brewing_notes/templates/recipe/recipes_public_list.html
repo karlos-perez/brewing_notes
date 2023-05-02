@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load core brew static %}
+
+
+{% block seo %}
+  <title>Рецепты пива{% if filter_type %} категории {{ filter_type }}{% endif %}{% if filter_style %} стиля {{ filter_style.name }}{% endif %}</title>
+  <meta name="keywords" content="рецепты пива, {% if filter_type %}{{ filter_type }},{% endif %} рецепт домашнего пива, рецепт для новичков, простой рецепт пива, мастер рецептов, рассчитать рецепт, BrewPiLess, iSpindel, BPL, поделиться рецептом, BeerXML, база рецептов пива, стили пива, ингредиенты пива, справочник солода, справочник хмеля, справочник дрожжей, домашнее пиво, крафтовое пиво,  домашнее пивоварение, ячмень, солод, дрожжи, хмель, лагер, эль, зерновое пиво, пилснер, венское пиво, пшеничное пиво, светлый эль, витбир, янтарный эль, коричневый эль, стаут, портер, ипа, неипа, апа, NEIPA, IPA, APA, stout, RIS"/>
+  <meta name="description" content="Список рецептов пива{% if filter_type %} категории {{ filter_type }}{% endif %}{% if filter_style %} стиля {{ filter_style.name }}{% endif %}, а так же ингредиентов, стилей и необходимый набор калькуляторов Пивовара. Рассчитывайте и создавайте рецепт, подключайте устройства и контролируйте брожение удалённо." />
+{% endblock %}
+
+{% block center %}
+{% if user.is_authenticated %}
+<div class="row main-body mb-2">
+  <div class="col-12 d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{% url 'recipes_list' %}" title="Плиточный вид рецептов">
+        <span class="small">Табличный список</span>
+      </a>
+    </div>
+    <div>
+      <a class="link ml-2" href="{% url 'user_recipes' user.username %}" title="Мои рецепты">
+        <span class="small">Мои рецепты</span>
+      </a>
+      <a class="link ml-2" href="{% url 'user_favorites' user.username %}" title="Избранные рецепты">
+        <span class="small">Избранное</span>
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="row mb-2">
+  <div class="col px-sm-0">
+    <form>
+      <div class="d-inline-flex">
+        <div class="input-group">
+          <select class="custom-select" name="tp">
+            <option {% if not request.GET.tp %}selected{% endif %} value="">Все категории</option>
+            {% for t in type %}
+            <option {% if request.GET.tp == t.0|stringformat:"i" %}selected{% endif %} value="{{ t.0 }}">{{ t.1 }}</option>
+            {% endfor %}
+          </select>
+          <select class="custom-select" name="st">
+            <option {% if not request.GET.st %}selected{% endif %} value="">Все стили</option>
+            {% for s in all|qs_distinct:'style' %}
+            {% if s %}<option {% if request.GET.st == s.pk|stringformat:"i" %}selected{% endif %} value="{{ s.pk }}">{{ s.name }} ({{ s.index }})</option>{% endif %}
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-secondary" title="Отфильтровать"><i class="material-icons align-bottom">filter_alt</i></button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% include 'blocks/paginator.html' %}
+<div class="row">
+  {% for item in object_list %}
+  <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 d-flex justify-content-center">
+    <div class="card bg-color mb-2">
+      <div class="card-img d-flex justify-content-center mt-3">
+        <a class="link" href="{% if user.is_authenticated %}{% url 'recipe_detail' item.slug %}{% else %}{% url 'recipe_card' item.uid %}{% endif %}">
+          <img class="card-img-top card-cover" src="{{ item.get_avatar|thumbnail:"width=300, height=300" }}">
+        </a>
+      </div>
+      <div class="card-body">
+        <div class="text-center mb-1">
+          <h5 class="card-title mb-0">{{ item.get_type_display }}</h5>
+          <small class="text-muted">{{ item.style.name }}</small>
+        </div>
+        <div>
+          <a class="card-link link mb-1" href="{% if user.is_authenticated %}{% url 'recipe_detail' item.slug %}{% else %}{% url 'recipe_card' item.uid %}{% endif %}"><p class="card-title"><strong>{{ item.name }}</strong></p></a>
+        </div>
+        <div class="card-text">
+          <small class="d-block">НП: {{ item.OG|gravity_to_plato }}</small>
+          <small class="d-block">ABV: {{ item.abv }}&nbsp;%</small>
+          <small class="d-block">IBU: {{ item.ibu }}</small>
+        </div>
+      </div>
+      <div class="card-footer">
+        <a href="{% if user.is_authenticated %}{% url 'recipe_detail' item.slug %}{% else %}{% url 'recipe_card' item.uid %}{% endif %}" class="card-link link">Более подробно</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% include 'blocks/paginator.html' %}
+{% endblock %}

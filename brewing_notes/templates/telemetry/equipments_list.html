@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Оборудование{% endblock %}
+
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block center %}
+{% include 'telemetry/telemetry_menu.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12 text-center pt-3">
+    <h4>Оборудование</h4>
+  </div>
+  {% if user.equipment_available %}
+  <div class="col-12 d-flex justify-content-between pr-3 mb-3">
+    <div>
+      <a class="btn btn-secondary" href="{% url 'docs_bnc_equipments' %}">
+        <span>Виды оборудования</span>
+      </a>
+    </div>
+    <div>
+      <button class="btn btn-secondary" data-toggle="modal" data-target="#modalAddEquipment" title="Добавить оборудование">Добавить оборудование</button>
+    </div>
+  </div>
+  {% endif %}
+  {% for e in user.all_equipment %}
+  {% if e.type == 1 %}
+  <div class="col-12 col-md-6 d-inline-flex h240px my-3 p-2 equipment-{{ e.id }}">
+    <div class="d-flex justify-content-center align-items-center">
+      <img src="/media/equipment/icons/kettle.png" alt="{{ e.get_type_display }}" width="200px" height="200px">
+    </div>
+    <div class="d-flex flex-column justify-content-between w-100 pl-3">
+      <div>
+        <div class="d-flex justify-content-between mb-2">
+          <div>
+            <i id="equip-ready-{{ e.id }}" class="material-icons align-bottom {% if e.is_ready %}green" title="Оборудование собрано">playlist_add_check{% else %}red" title="Оборудование собрано не полностью">playlist_remove{% endif %}</i>
+            <a href="{% url 'equipments_help' %}#fermenter"><span class="h6">{{ e.get_type_display }}</span></a>
+          </div>
+          <div>
+            <div id="equip-busy-{{ e.id }}" {% if not e.is_ready %}hidden{% endif %}>
+              <a class="btn btn-secondary" href="{% url 'equipment_kettle' e.id %}">
+                <i class="material-icons align-bottom {% if e.active %}red" title="Оборудование работает">stop_circle{% else %}green" title="Оборудование свободно">play_circle{% endif %}</i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="h6"><strong>{{ e.name }}</strong></span>
+        </div>
+      </div>
+      <div>
+        <form id="save-form-equipment-{{ e.id }}" action="{% url 'equipment_save' e.id %}" method="post">{% csrf_token %}
+          <div class="input-group input-group-sm mb-3 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 1</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_1"{% if e.active %} disabled{% endif %}>
+              {% if e.main %}
+              <option value="{{ e.main.id }}" selected>{{ e.main }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.main != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+        </form>
+      </div>
+      <div class="d-flex justify-content-between pb-1">
+        <div class="pt-1">
+          {% if not e.active %}
+          <a class="link" onclick="ShowModalEquipmentDelete('{% url 'equipment_delete' e.id %}');" title="Удалить оборудование"><i class="material-icons align-bottom">&#xe92b;</i></a>
+          {% endif %}
+        </div>
+        <div>
+          <a class="btn btn-secondary btn-sm{% if e.active %} disabled" role="button" aria-disabled="true"{% else %}"{% endif %} onclick="equipmentSave({{ e.id }});">Сохранить</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif e.type == 0 %}
+  <div class="col-12 col-md-6 d-inline-flex h240px my-3 p-2 equipment-{{ e.id }}">
+    <div class="d-flex justify-content-center align-items-center">
+      <img src="/media/equipment/icons/fermenter.png" alt="{{ e.get_type_display }}" width="200px" height="200px">
+    </div>
+    <div class="d-flex flex-column justify-content-between w-100 pl-3">
+      <div>
+        <div class="d-flex justify-content-between mb-2">
+          <div>
+            <i id="equip-ready-{{ e.id }}" class="material-icons align-bottom {% if e.is_ready %}green" title="Оборудование собрано">playlist_add_check{% else %}red" title="Оборудование собрано не полностью">playlist_remove{% endif %}</i>
+            <a href="{% url 'equipments_help' %}#kettle"><span class="h6">{{ e.get_type_display }}</span></a>
+          </div>
+          <div>
+            <div id="equip-busy-{{ e.id }}" {% if not e.is_ready %}hidden{% endif %}>
+              <a class="btn btn-secondary" href="{% url 'equipment_fermenter' e.id %}">
+                <i class="material-icons align-bottom {% if e.active %}red" title="Оборудование работает">stop_circle{% else %}green" title="Оборудование свободно">play_circle{% endif %}</i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="h6"><strong>{{ e.name }}</strong></span>
+        </div>
+      </div>
+      <div>
+        <form id="save-form-equipment-{{ e.id }}" action="{% url 'equipment_save' e.id %}" method="post">{% csrf_token %}
+          <div class="input-group input-group-sm mb-3 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 1</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_1"{% if e.active %} disabled{% endif %}>
+              {% if e.main %}
+              <option value="{{ e.main.id }}" selected>{{ e.main }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.main != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+          <div class="input-group input-group-sm mb-3 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 2</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_2"{% if e.active %} disabled{% endif %}>
+              {% if e.second %}
+              <option value="{{ e.second.id }}" selected>{{ e.second }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.second != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+        </form>
+      </div>
+      <div class="d-flex justify-content-between pb-1">
+        <div class="pt-1">
+          {% if not e.active %}
+          <a class="link" onclick="ShowModalEquipmentDelete('{% url 'equipment_delete' e.id %}');" title="Удалить оборудование"><i class="material-icons align-bottom">&#xe92b;</i></a>
+          {% endif %}
+        </div>
+        <div>
+          <a class="btn btn-secondary btn-sm{% if e.active %} disabled" role="button" aria-disabled="true"{% else %}"{% endif %} onclick="equipmentSave({{ e.id }});">Сохранить</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif e.type == 2 or e.type == 3 %}
+  <div class="col-12 col-md-6 d-inline-flex h240px my-3 p-2 equipment-{{ e.id }}">
+    <div class="d-flex justify-content-center align-items-center">
+      {% if e.type == 2 %}
+      <img src="/media/equipment/icons/biab.png" alt="{{ e.get_type_display }}" width="200px" height="200px">
+      {% elif e.type == 3 %}
+      <img src="/media/equipment/icons/krims_tt.png" alt="{{ e.get_type_display }}" width="200px" height="200px">
+      {% endif %}
+    </div>
+    <div class="d-flex flex-column justify-content-between w-100 pl-3">
+      <div>
+        <div class="d-flex justify-content-between mb-2">
+          <div>
+            <i id="equip-ready-{{ e.id }}" class="material-icons align-bottom {% if e.is_ready %}green" title="Оборудование собрано">playlist_add_check{% else %}red" title="Оборудование собрано не полностью">playlist_remove{% endif %}</i>
+            <span class="h6">{{ e.get_type_display }}</span>
+          </div>
+          <div>
+            <div id="equip-busy-{{ e.id }}" {% if not e.is_ready %}hidden{% endif %}>
+              <a class="link" href="">
+                <i class="material-icons align-bottom {% if e.active %}red" title="Оборудование работает">stop_circle{% else %}green" title="Оборудование свободно">play_circle{% endif %}</i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="h6"><strong>{{ e.name }}</strong></span>
+        </div>
+      </div>
+      <div>
+        <form id="save-form-equipment-{{ e.id }}" action="{% url 'equipment_save' e.id %}" method="post">{% csrf_token %}
+          <div class="input-group input-group-sm mb-3 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 1</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_1"{% if e.active %} disabled{% endif %}>
+              {% if e.main %}
+              <option value="{{ e.main.id }}" selected>{{ e.main }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.main != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+          <div class="input-group input-group-sm mb-3 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 2</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_3"{% if e.active %} disabled{% endif %}>
+              {% if e.third %}
+              <option value="{{ e.third.id }}" selected>{{ e.third }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.third != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+        </form>
+      </div>
+      <div class="d-flex justify-content-between pb-1">
+        <div class="pt-1">
+          {% if not e.active %}
+          <a class="link" onclick="ShowModalEquipmentDelete('{% url 'equipment_delete' e.id %}');" title="Удалить оборудование"><i class="material-icons align-bottom">&#xe92b;</i></a>
+          {% endif %}
+        </div>
+        <div>
+          <a class="btn btn-secondary btn-sm{% if e.active %} disabled" role="button" aria-disabled="true"{% else %}"{% endif %} onclick="equipmentSave({{ e.id }});">Сохранить</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif e.type == 4 %}
+  <div class="col-12 col-md-6 d-inline-flex h240px my-3 p-2 equipment-{{ e.id }}">
+    <div class="d-flex justify-content-center align-items-center">
+      <img src="/media/equipment/icons/krims_sl.png" alt="{{ e.get_type_display }}" width="200px" height="200px">
+    </div>
+    <div class="d-flex flex-column justify-content-between w-100 pl-3">
+      <div>
+        <div class="d-flex justify-content-between mb-2">
+          <div>
+            <i id="equip-ready-{{ e.id }}" class="material-icons align-bottom {% if e.is_ready %}green" title="Оборудование собрано">playlist_add_check{% else %}red" title="Оборудование собрано не полностью">playlist_remove{% endif %}</i>
+            <span class="h6">{{ e.get_type_display }}</span>
+          </div>
+          <div>
+            <div id="equip-busy-{{ e.id }}" {% if not e.is_ready %}hidden{% endif %}>
+              <i class="material-icons align-bottom {% if e.active %}red" title="Оборудование работает">stop_circle{% else %}green" title="Оборудование свободно">play_circle{% endif %}</i>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="h6"><strong>{{ e.name }}</strong></span>
+        </div>
+      </div>
+      <div>
+        <form id="save-form-equipment-{{ e.id }}" action="{% url 'equipment_save' e.id %}" method="post">{% csrf_token %}
+          <div class="input-group input-group-sm mb-1 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 1</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_1"{% if e.active %} disabled{% endif %}>
+              {% if e.main %}
+              <option value="{{ e.main.id }}" selected>{{ e.main }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.main != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+          <div class="input-group input-group-sm mb-1 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 2</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_2"{% if e.active %} disabled{% endif %}>
+              {% if e.third %}
+              <option value="{{ e.second.id }}" selected>{{ e.third }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.third != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+          <div class="input-group input-group-sm mb-1 text-right">
+					  <div class="input-group-prepend">
+    			  	<span class="input-group-text">Модуль 3</span>
+  				  </div>
+            <select class="form-control select-module" name="equip_module_3"{% if e.active %} disabled{% endif %}>
+              {% if e.fourth %}
+              <option value="{{ e.third.id }}" selected>{{ e.fourth }}</option>
+              <option value="">---</option>
+              {% else %}
+              <option value="" selected>---</option>
+              {% endif %}
+              {% for m in user.all_bnc_modules %}
+              {% if e.fourth != m %}
+              <option value="{{ m.id }}"{% if m.mode != 0 %} disabled{% endif %}>{{ m.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+				  </div>
+        </form>
+      </div>
+      <div class="d-flex justify-content-between pb-1">
+        <div class="pt-1">
+          {% if not e.active %}
+          <a class="link" onclick="ShowModalEquipmentDelete('{% url 'equipment_delete' e.id %}');" title="Удалить оборудование"><i class="material-icons align-bottom">&#xe92b;</i></a>
+          {% endif %}
+        </div>
+        <div>
+          <a class="btn btn-secondary btn-sm{% if e.active %} disabled" role="button" aria-disabled="true"{% else %}"{% endif %} data-toggle="modal" data-target="#">Настройки</a>
+          <a class="btn btn-secondary btn-sm{% if e.active %} disabled" role="button" aria-disabled="true"{% else %}"{% endif %} onclick="equipmentSave({{ e.id }});">Сохранить</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+<script>
+  function ShowModalEquipmentDelete(url) {
+      $('#equipment-delete-form').attr('action', url);
+      $('#modalEquipmentDelete').modal('show');
+	}
+  function equipmentSave(idx) {
+      let form = $('#save-form-equipment-'+idx);
+      {% if e.active %}
+      console.log('Console: '+form.attr('action'));
+      {% endif %}
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+              // $('#alert').addClass('alert-success');
+              // $('#alert-msg').text(data.result);
+              // $('#alert').css("display", "block");
+              // let ready = $('#equip-ready-'+idx);
+              // if (data.ready) {
+              //     $('#equip-ready-'+idx).removeClass('red');
+              //     ready.text('playlist_add_check');
+              //     ready.attr('title', 'Оборудование собрано');
+              //     $('#equip-ready-'+idx).addClass('green');
+              //     ready.removeClass('red');
+              //     $('#equip-busy-'+idx).attr('hidden', false);
+              // }
+              // else {
+              //     ready.removeClass('green');
+              //     ready.text('playlist_remove');
+              //     ready.attr('title', 'Оборудование собрано не полностью');
+              //     ready.addClass('red');
+              //     $('#equip-busy-'+idx).attr('hidden', true);
+              // }
+              location.reload(true);
+          }
+          else {
+              $('#alert').addClass('alert-danger');
+              $('#alert-msg').text(data.error);
+              $('#alert').css("display", "block");
+          }
+      });
+  }
+  $(document).ready(function () {
+      $('.select-module').change(function() {
+          var s = $('.select-module'),
+	            val = +this.value,
+              data = $(this).data('val');
+	        s.not(this).each(function(indx, el){
+	  		      data &&  $('option[value="'+data+'"]', el).prop('disabled', false)
+	  		      val && $('option[value="'+val+'"]', el).prop('disabled', true)
+	        });
+          $(this).data({val:val});
+          // $(this).next().val(val);
+      });
+  });
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAddEquipment" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавление нового оборудования</h5>
+      </div>
+      <div class="modal-body">
+        <div>
+          <form id="add-device-form" action="{% url 'equipment_add' %}" method="post">{% csrf_token %}
+            <div class="form-group">
+              <label>Имя устройства:</label>
+              <input class="form-control" type="text" name="name" required>
+            </div>
+            <div class="form-group">
+              <label>Тип устройства:</label>
+              <select class="form-control" name="type">
+                {% for e in type_equipment %}
+                {% if e.0 == 0 or e.0 == 1 %}
+				  		  <option value="{{ e.0 }}">{{ e.1 }}</option>
+                {% else %}
+                {% if user.is_admin %}
+                <option value="{{ e.0 }}">{{ e.1 }}</option>
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+      	  		</select>
+            </div>
+            <div class="form-group">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark">Добавить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalEquipmentDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить данное оборудование?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="equipment-delete-form">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

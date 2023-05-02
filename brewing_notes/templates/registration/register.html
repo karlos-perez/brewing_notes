@@ -1,0 +1,75 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block seo %}
+  <title>Регистрация на сайте</title>
+  <meta name="description" content="Регистрация на сайте BrewingNotes.ru"/>
+  <meta name="keywords" content="рецепты пива, домашнее пиво рецепт, рецепт для новичков, простой рецепт пива, мастер рецептов, рассчитать рецепт, BrewPiLess, iSpindel, BPL, поделиться рецептом, BeerXML, база рецептов пива, стили пива, ингредиенты пива, справочник солода, справочник хмеля, справочник дрожжей, домашнее пиво, крафтовое пиво,  домашнее пивоварение, ячмень, солод, дрожжи, хмель, лагер, эль, зерновое пиво, пилснер, венское пиво, пшеничное пиво, светлый эль, витбир, янтарный эль, коричневый эль, стаут, портер, ипа, неипа, апа, NEIPA, IPA, APA, stout, RIS"/>
+{% endblock %}
+
+{% block auth %}
+<div id="login-signup-modal" class="modal fade in" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" id="login-modal-content">
+      <div class="modal-header">
+        <h4>Регистрация</h4>
+        <a class="btn-link" href="{% url 'main' %}"><i class="material-icons">&#xe5cd;</i></a>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" method="post">{% csrf_token %}
+          <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Имя пользователя:</label>
+            {{ form.username }}
+            {% if form.username.errors %}{{ form.username.errors }}{% else %}<span class="helptext">{{ form.username.help_text }}</span>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Адрес электронной почты:</label>
+            {{ form.email }}
+            {% if form.email.errors %}{{ form.email.errors }}{% else %}<span class="helptext">{{ form.email.help_text }}</span>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.password1.id_for_label }}">Пароль:</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}{{ form.password1.errors }}{% else %}<span class="helptext">{{ form.password1.help_text }}</span>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.password2.id_for_label }}">Подтверждение пароля:</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}{{ form.password2.errors }}{% else %}<span class="helptext">{{ form.password2.help_text }}</span>{% endif %}
+          </div>
+          <div class="form-group form-check">
+            <input id="agree" type="checkbox" name="consent" class="form-check-input" id="RuleCheck">
+            <label class="form-check-label" for="RuleCheck"><small>Принимаю <a class="link" href="{% url 'regulations' %}" target="_blank">Условия использования сайта</a></small></label>
+          </div>
+          <script src='https://www.google.com/recaptcha/api.js'></script>
+          <div class="form-group g-recaptcha" data-sitekey="6LexDVIaAAAAAPPzQP2_gdzi426CrZbkJPnmVWoL"></div>
+          {% if messages %}
+          <ul class="errorlist">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <div class="form-group mt-3">
+            <button id="regester" type="submit" class="btn btn-secondary btn-block">Зарегистрироваться</button>
+          </div>
+        </form>
+        <div class="form-group forgot-pass">
+          <a class="btn btn-link" href="{% url 'confirmation_resend' %}"><small>Не пришло письмо с активацией?</small></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  $(document).ready(function(){
+    $('#login-signup-modal').modal('show');
+    $('#regester').prop('disabled', true);
+    $('#agree').change(function() {
+      $('#regester').prop('disabled', function(i, val) {
+        return !val;
+      })
+    });
+  });
+</script>
+{% endblock %}

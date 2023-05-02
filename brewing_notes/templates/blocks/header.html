@@ -1,0 +1,107 @@
+{% load static core %}
+
+<div class="modal fade" id="menuModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm w-auto modal-content">
+    <div class="modal-header">
+      <h4>Выбрать раздел</h4>
+      <a class="btn btn-link" data-dismiss="modal" aria-label="Close"><i class="material-icons">&#xe5cd;</i></a>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <a class="link h5{% if '/computing' in request.path %} active{% endif %}" href="{% url 'computing_main' %}">Вычислительная</a>
+      </div>
+      <div class="mb-3">
+        <a class="link h5{% if '/catalog' in request.path %} active{% endif %}" href="{% url 'malts_list' %}">Справочная</a>
+      </div>
+      <div class="mb-3">
+        <a class="link h5{% if '/recipes' in request.path %} active{% endif %}" href="{% if user.is_authenticated %}{% url 'recipes_list' %}{% else %}{% url 'recipes_public_list' %}{% endif %}">Рецептурная</a>
+      </div>
+      <div class="mb-3">
+        <a class="link h5" href="https://brewscrew.ru/forum-2/x1f525-receptarij-x1f525/" target="_blank">Симпозиумная</a>
+      </div>
+      {% if user.is_authenticated %}
+      <div class="mb-3">
+        <a class="link h5{% if '/publications' in request.path %} active{% endif %}" href="{% url 'topic_list' %}">Приёмная</a>
+      </div>
+      {% if user.is_tester %}
+      <div class="mb-3">
+        <a class="link h5{% if '/docs/main' in request.path %} active{% endif %}" href="{% url 'docs_main' %}">Просветительская</a>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+<header class="header mb-2 bg-dark">
+  <nav class="navbar navbar-expand navbar-dark py-1 py-md-0">
+    <ul class="navbar-nav mr-3">
+      <li class="nav-item mr-auto mr-sm-0">
+        <a class="navbar-brand mr-auto" href="{% url 'main' %}"><img src="{% static 'img/logo.png' %}" class="img" alt="logo" width="325px"></a>
+      </li>
+    </ul>
+    <div class="navbar-nav d-none d-md-flex overflow-hidden">
+      <a class="nav-link d-none d-lg-block{% if '/computing' in request.path %} active{% endif %}" href="{% url 'computing_main' %}">Вычислительная</a>
+      <a class="nav-link d-none d-lg-block{% if '/catalog' in request.path %} active{% endif %}" href="{% url 'malts_list' %}">Справочная</a>
+      <a class="nav-link d-none d-lg-block{% if '/recipes' in request.path %} active{% endif %}" href="{% if user.is_authenticated %}{% url 'recipes_list' %}{% else %}{% url 'recipes_public_list' %}{% endif %}">Рецептурная</a>
+      <a class="nav-link d-none d-xl-block" href="https://brewscrew.ru/forum-2/x1f525-receptarij-x1f525/" target="_blank">Симпозиумная</a>
+      {% if user.is_authenticated %}
+      <a class="nav-link d-none d-xl-block{% if '/publications' in request.path %}  active{% endif %}" href="{% url 'topic_list' %}">Приёмная</a>
+      <a class="nav-link d-none d-xl-block{% if '/docs/' in request.path %}  active{% endif %}" href="{% url 'docs_main' %}">Спасательная</a>
+      {% endif %}
+    </div>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item d-block d-xl-none mr-1">
+        <a class="nav-link" data-toggle="modal" data-target="#menuModal"><i class="material-icons md-36 align-bottom">apps</i></a>
+      </li>
+      {% if user.is_authenticated and request.user.unread_msg_count %}
+      <li class="nav-item mr-2">
+        <a class="nav-link" href="{% url 'user_messages_inbox' %}"><i class="material-icons green md-36 align-bottom">mark_email_unread</i></a>
+      </li>
+      {% endif %}
+      {% if user.is_authenticated %}
+      <li class="nav-item dropdown dropleft mr-2">
+        <a id="dropdownUserMenuLink" class="link mr-2 dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span>{{ user.username }}</span>
+          {% if user.is_pro and not user.is_moderator %}
+          <i class="material-icons align-middle" title="Премиум">workspace_premium</i>
+          {% endif %}
+        </a>
+        <a href="{% url 'user_detail' user.username %}">
+          <img src="{{ user.get_avatar|thumbnail:"height=50" }}" class="img-thumbnail" alt="{{ user.username }}">
+        </a>
+        <div class="dropdown-menu bg-dark" aria-labelledby="dropdownUserMenuLink">
+          {% if user.ability_to_add %}
+          <a class="dropdown-item" href="{% url 'recipe_add' %}">Добавить рецепт</a>
+          {% endif %}
+          <a class="dropdown-item" href="{% url 'user_recipes' user.username %}">Мои рецепты</a>
+          <a class="dropdown-item" href="{% url 'user_messages_inbox' %}">Сообщения</a>
+          {% if user.is_pro %}
+          {% if user.all_device %}
+          <a class="dropdown-item" href="{% url 'device_info' user.all_device.first.token %}">Телеметрия</a>
+          {% elif user.all_bnc_modules %}
+          <a class="dropdown-item" href="{% url 'modules_list' %}">Телеметрия</a>
+          {% endif %}
+          {% endif %}
+          {% if user.available_pantry %}
+          <a class="dropdown-item" href="{% url 'pantry_balance' user.username %}">Кладовая</a>
+          {% endif %}
+          <a class="dropdown-item" href="{% url 'user_detail' user.username %}">Профиль</a>
+          {% if user.is_moderator %}
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="{% url 'admn_main' %}">Дежурная</a>
+          {% endif %}
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="{% url 'logout' %}">Выход</a>
+        </div>
+      </li>
+      {% else %}
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'login' %}"><h5>Вход</h5></a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% if user.is_authenticated and user.device_on_dashboard %}
+  {% include 'blocks/dashboard.html' %}
+  {% endif %}
+</header>

@@ -1,0 +1,1224 @@
+{% extends 'base.html' %}
+{% load static brew core %}
+
+{% block page_title %}Калькуляторы варки пива{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="/static/js/calcs.js"></script>
+{% endblock %}
+
+{% block center %}
+{% include 'computing/comp_menu.html' %}
+<div class="row main-body mb-2 py-3">
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseAlco" role="button" aria-expanded="false" aria-controls="collapseAlco">Калькулятор алкоголя</h4>
+		<script>
+			function changeAlcoUnit() {
+					let unit = $('input[name="alco_gravity_unit"]:checked').val();
+					let orig = $('input[name="alco_OG"]');
+					let fin = $('input[name="alco_FG"]');
+					if (unit == "sg") {
+							orig.prop('step', '0.001');
+							orig.val(round(convertPtG(orig.val()), 3));
+							fin.prop('step', '0.001');
+					    fin.val(round(convertPtG(fin.val()), 3));
+					}
+					else {
+							orig.prop('step', '0.1');
+							orig.val(round(convertGtP(orig.val()), 1));
+							fin.prop('step', '0.1');
+							fin.val(round(convertGtP(fin.val()), 1));
+					}
+					calcAlco();
+			}
+			function calcAlco() {
+					let unit = $('input[name="alco_gravity_unit"]:checked').val();
+			    let og = Number($('input[name="alco_OG"]').val().replace(',', '.'));
+				  let fg = Number($('input[name="alco_FG"]').val().replace(',', '.'));
+				  let op;
+				  let fp;
+				  if (unit == "sg") {
+							op = convertGtP(og);
+							fp = convertGtP(fg);
+					}
+					if (unit == "plato") {
+							op = og;
+							fp = fg;
+							og = convertPtG(og);
+							fg = convertPtG(fg);
+					}
+					let abvOld = calcAlcoOld(og, fg);
+					let abvNew = calcAlcoNew(og, fg);
+					let att = (1 - (fp / op)) * 100;
+					let e = (0.1808 * op) + (0.8192 * fp);
+					let a = (op - e) / (2.0665 - (0.010665 * op));
+					let calories = ((6.9 * a) + 4.0 * (e - 0.1)) * fg;
+					$('#alco-ABV').text(round(abvOld, 1)+' ('+round(abvNew, 1)+') %');
+					$('#alco-Att').text(round(att, 1)+' %');
+					$('#alco-Cal').text(round(calories, 1)+' кКал');
+			}
+		</script>
+		<div class="collapse mx-3" id="collapseAlco">
+			<form name="calc_alco" onsubmit="return false;">
+				<div class="form-group mb-2">
+					<span class="mr-2">Единица плотности:</span>
+					<input id="unitGravity" type="radio" name="alco_gravity_unit" value="sg" onchange="javascript: changeAlcoUnit();" checked="">
+					<label for="unitGravity">SG (1.xxx)</label>
+					<input id="unitPlato" type="radio" name="alco_gravity_unit" value="plato" onchange="javascript: changeAlcoUnit();">
+					<label for="unitPlato">Plato °P</label>
+				</div>
+				<div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Начальная плотность (OG):</span>
+  				</div>
+  				<input type="number" class="form-control" name="alco_OG" value="1.050" step="0.001" min="1.000" maxlength="5" onchange="javascript: calcAlco();">
+				</div>
+				<div class="input-group flex-nowrap mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text" id="addon-wrapping">Конечная плотность (FG):</span>
+  				</div>
+  				<input type="number" class="form-control" name="alco_FG" value="1.010" step="0.001" min="1.000" maxlength="5" onchange="javascript: calcAlco();">
+				</div>
+				<div class="form-group mb-0 text-right">
+					<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calcAlco();">
+				</div>
+			</form>
+			<div>
+				<span class="mr-2">Алкоголь объемный:</span>
+				<strong id="alco-ABV" class="green"></strong>
+			</div>
+			<div>
+				<span class="mr-2">Полученная аттенюация:</span>
+				<strong id="alco-Att"></strong>
+			</div>
+			<div>
+				<span class="mr-2">Калории на 100г:</span>
+				<strong id="alco-Cal"></strong>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseRefr" role="button" aria-expanded="false" aria-controls="collapseRefr">Рефрактометр</h4>
+		<script>
+			var unitOG,
+					OG,
+					corrFactorOG,
+					FGB;
+			function getRefrInput() {
+					unitOG = $('select[name="refr_unit_og"] option:selected').val();
+					OG = Number($('input[name="refr_og"]').val().replace(',', '.'));
+					corrFactorOG = Number($('input[name="refr_corr_og"]').val().replace(',', '.'));
+					FGB = Number($('input[name="refr_fg"]').val().replace(',', '.'));
+			}
+			function changeRefrUnitOG() {
+					let unit = $('select[name="refr_unit_og"] option:selected').val();
+					let inputOG = $('input[name="refr_og"]');
+					if (unit == 'sg') {
+							inputOG.prop('step', '0.001');
+							inputOG.val('1.048');
+					}
+					else {
+							inputOG.prop('step', '0.1');
+							inputOG.val('12');
+					}
+					calcRefr();
+			}
+			function changeRefrUnitFG() {
+					let unit = $('select[name="refr_unit_fg"] option:selected').val();
+					let inputOG = $('input[name="refr_fg"]');
+					if (unit == 'sg') {
+							inputOG.prop('step', '0.001');
+							inputOG.val('1.016');
+					}
+					else {
+							inputOG.prop('step', '0.1');
+							inputOG.val('4');
+					}
+					calcRefr();
+			}
+			function calcRefr() {
+					getRefrInput();
+					let correctedOG;
+					let correctedOP;
+					let correctedFP = FGB / corrFactorOG;
+					if (unitOG == 'bx') {
+							correctedOP = OG / corrFactorOG;
+							correctedOG = convertPtG(correctedOP);
+					}
+					else if (unitOG == 'plato') {
+							correctedOP = OG;
+							correctedOG = convertPtG(correctedOP);
+					}
+					else {
+							let OP = convertGtP(OG);
+							correctedOP = OP / corrFactorOG;
+							correctedOG = convertPtG(correctedOP);
+					}
+					let finalGravity = 1 + 0.006276 * correctedFP - 0.002349 * correctedOP;
+					let finalPlato = convertGtP(finalGravity);
+					$('#refr-og').html(round(correctedOP, 1)+' &deg;P / '+round(correctedOG, 3));
+					$('#refr-fg').html(round(finalPlato, 1)+' &deg;P / '+round(finalGravity, 3));
+					let abv = round(calcAlcoOld(correctedOG, finalGravity), 1)+' / '+round(calcAlcoNew(correctedOG, finalGravity), 1)+' %';
+					$('#refr-abv').html(abv);
+			}
+		</script>
+		<div class="collapse mx-3" id="collapseRefr">
+			<h5 class="mb-3">Расчёт плотности и алкоголя</h5>
+			<form name="calc_refract" onsubmit="return false;">
+				<div class="input-group mb-3">
+  				<div class="input-group-prepend">
+    				<span class="input-group-text">Начальная плотность:</span>
+  				</div>
+  				<input class="form-control" type="number" min="0" step="0.1" name="refr_og" value="12" maxlength="5" onchange="javascript: calcRefr();">
+					<select class="select_refract form-control" name="refr_unit_og" onChange="changeRefrUnitOG();">
+						<option value="bx">Brix</option>
+						<option value="plato">Plato</option>
+						<option value="sg">SG (1.xxx)</option>
+					</select>
+					<input class="form-control" type="number" min="0.5" max="1.5" step="0.01" name="refr_corr_og" value="1.0" maxlength="5" onchange="javascript: calcRefr();" title="Поправочный коэффициент">
+				</div>
+				<div class="input-group flex-nowrap mb-3">
+					<div class="input-group-prepend">
+    				<span class="input-group-text">Конечная плотность, Brix:</span>
+  				</div>
+  				<input class="form-control" type="number" min="0" step="0.1" name="refr_fg" value="6" maxlength="5" onchange="javascript: calcRefr();">
+				</div>
+				<div class="form-group mb-0 text-right">
+					<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calcRefr();">
+				</div>
+				<div>
+					<span class="mr-2">Начальная плотность:</span>
+					<strong id="refr-og"></strong>
+				</div>
+				<div>
+					<span class="mr-2">Конечная плотность:</span>
+					<strong id="refr-fg"></strong>
+				</div>
+				<div>
+					<span class="mr-2">Алкоголь объемный:</span>
+					<strong id="refr-abv"></strong>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseSG" role="button" aria-expanded="false" aria-controls="collapseSG">Перевод одного в другое</h4>
+		<div class="collapse mx-3" id="collapseSG">
+			<form name="convert_og" onsubmit="return false;">
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="convert_sg" value="1.044" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('convert_sg', 'convert_plato');">
+					<input class="form-control" type="number" name="convert_plato" value="11" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('convert_plato', 'convert_sg');">
+					<div class="input-group-append">
+						<input class="btn btn-secondary input-group-text" type="button" name="updateGravity" value="SG&nbsp;&#9668;&#9658;&nbsp;Plato">
+  				</div>
+				</div>
+			</form>
+			<script>
+				function changeSRM() {
+						let srm = Number($('input[name="convert_srm"]').val().replace(',', '.'));
+						let lov = convertSRMToLovibond(srm);
+						let ebc = convertSRMToEBC(srm);
+						$('input[name="convert_lovibond"]').val(round(lov, 1));
+						$('input[name="convert_ebc"]').val(round(ebc, 1));
+						updateColor(srm);
+				}
+				function changeLov() {
+						let lov = Number($('input[name="convert_lovibond"]').val().replace(',', '.'));
+						let srm = convertLovibondToSRM(lov);
+						let ebc = convertLovibondToEBC(lov);
+						$('input[name="convert_srm"]').val(round(srm, 1));
+						$('input[name="convert_ebc"]').val(round(ebc, 1));
+						updateColor(srm);
+				}
+				function changeEBC() {
+						let ebc = Number($('input[name="convert_ebc"]').val().replace(',', '.'));
+						let srm = convertEBCToSRM(ebc);
+						let lov = convertEBCToLovibond(ebc);
+						$('input[name="convert_srm"]').val(round(srm, 1));
+						$('input[name="convert_lovibond"]').val(round(lov, 1));
+						updateColor(srm);
+				}
+				function updateColor(srm) {
+				    let color = colorSRM[round(srm, 0)];
+				    if (!color && srm > 41) color = '#000000';
+				    $('#color-fill').css('background-color', color);
+				}
+			</script>
+			<form name="convert_color" onsubmit="return false;">
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="convert_srm" value="0.5" step="0.1" min="0" maxlength="5" onchange="javascript: changeSRM();" title="SRM">
+					<input class="form-control" type="number" name="convert_lovibond" value="0.9" step="0.1" min="0" maxlength="5" onchange="javascript: changeLov();" title="Lovibond">
+					<input class="form-control" type="number" name="convert_ebc" value="1" step="0.1" min="0" maxlength="5" onchange="javascript: changeEBC();" title="EBC">
+					<div class="input-group-append">
+						<div id="color-fill" style="background-color: #fff4d4; width:3rem" title="Примерный цвет"></div>
+						<input class="btn btn-secondary input-group-text" type="button" name="updateColor" value="SRM&nbsp;&#9668;&#9658;&nbsp;&deg;L&#9668;&#9658;&nbsp;EBC">
+  				</div>
+				</div>
+			</form>
+			<script>
+				function changeOZ() {
+						let gram = Number($('input[name="convert_gram"]').val().replace(',', '.'));
+						$('input[name="convert_oz"]').val(round(convertGramsToOunces(gram), 3));
+				}
+				function changeGram() {
+						let oz = Number($('input[name="convert_oz"]').val().replace(',', '.'));
+						$('input[name="convert_gram"]').val(round(convertOuncesToGrams(oz), 1));
+				}
+			</script>
+			<form name="convert_weight" onsubmit="return false;">
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="convert_gram" value="28.3" step="0.1" min="0" maxlength="5" onchange="javascript: changeOZ();" title="Граммы">
+					<input class="form-control" type="number" name="convert_oz" value="1" step="0.001" min="0" maxlength="5" onchange="javascript: changeGram();" title="Унции">
+					<div class="input-group-append">
+						<input class="btn btn-secondary input-group-text" type="button" name="updateWeight" value="Грамм&nbsp;&#9668;&#9658;&nbsp;Унция">
+  				</div>
+				</div>
+			</form>
+			<script>
+				function changeLitres() {
+						let gall = Number($('input[name="convert_gallon"]').val().replace(',', '.'));
+						$('input[name="convert_liter"]').val(round(convertGallonsToLiters(gall), 3));
+				}
+				function changeGallons() {
+						let litr = Number($('input[name="convert_liter"]').val().replace(',', '.'));
+						$('input[name="convert_gallon"]').val(round(convertLitersToGallons(litr), 3));
+				}
+			</script>
+			<form name="convert_value" onsubmit="return false;">
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="convert_liter" value="3.78" step="0.01" min="0" maxlength="5" onchange="javascript: changeGallons();" title="Литры">
+					<input class="form-control" type="number" name="convert_gallon" value="1" step="0.01" min="0" maxlength="5" onchange="javascript: changeLitres();" title="Галлоны">
+					<div class="input-group-append">
+						<input class="btn btn-secondary input-group-text" type="button" name="updateValue" value="Литр&nbsp;&#9668;&#9658;&nbsp;Галлон">
+  				</div>
+				</div>
+			</form>
+			<script>
+				function changeFahrenheit() {
+						let cel = Number($('input[name="convert_celsius"]').val().replace(',', '.'));
+						$('input[name="convert_fahrenheit"]').val(round(convertCelsiusToFahrenheit(cel), 0));
+				}
+				function changeCelsius() {
+						let far = Number($('input[name="convert_fahrenheit"]').val().replace(',', '.'));
+						$('input[name="convert_celsius"]').val(round(convertFahrenheitToCelsius(far), 0));
+				}
+			</script>
+			<form name="convert_temp" onsubmit="return false;">
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="convert_celsius" value="38" step="1" min="0" maxlength="3" onchange="javascript: changeFahrenheit();" title="Цельсий">
+					<input class="form-control" type="number" name="convert_fahrenheit" value="100" step="1" min="0" maxlength="3" onchange="javascript: changeCelsius();" title="Фаренгейт">
+					<div class="input-group-append">
+						<input class="btn btn-secondary input-group-text" type="button" name="updateTemp" value="&deg;C&nbsp;&#9668;&#9658;&nbsp;&deg;F">
+  				</div>
+				</div>
+			</form>
+			<script>
+				function changeBar() {
+					let bar = Number($('input[name="convert_bar"]').val().replace(',', '.'));
+					$('input[name="convert_MPa"]').val(round(bar / 10, 3));
+					$('input[name="convert_psi"]').val(round(bar * 14.504, 2));
+				}
+				function changePsi() {
+					let psi = Number($('input[name="convert_psi"]').val().replace(',', '.'));
+					$('input[name="convert_MPa"]').val(round(psi * 0.006894, 3));
+					$('input[name="convert_bar"]').val(round(psi * 0.06894, 2));
+				}
+				function changeMPa() {
+					let mpa = Number($('input[name="convert_MPa"]').val().replace(',', '.'));
+					$('input[name="convert_bar"]').val(round(mpa * 10, 2));
+					$('input[name="convert_psi"]').val(round(mpa * 145.04, 2));
+				}
+			</script>
+			<form name="convert_pressure " onsubmit="return false;">
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="convert_bar" value="1" step="0.01" min="0" maxlength="5" onchange="javascript: changeBar();" title="bar">
+					<input class="form-control" type="number" name="convert_psi" value="14.5" step="0.1" min="0" maxlength="5" onchange="javascript: changePsi();" title="psi">
+					<input class="form-control" type="number" name="convert_MPa" value="0.1" step="0.001" min="0" maxlength="5" onchange="javascript: changeMPa();" title="МПа">
+					<div class="input-group-append">
+						<input class="btn btn-secondary input-group-text" type="button" name="updatePressure" value="bar&nbsp;&#9668;&#9658;&nbsp;psi&#9668;&#9658;&nbsp;МПа">
+  				</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapsePlato" role="button" aria-expanded="false" aria-controls="collapseI">Поправка Ареометра на температуру</h4>
+		<div class="collapse mx-3" id="collapsePlato">
+			<script>
+				function sgTempCorr() {
+						let tempWort = $('input[name="adjustment_wort_temp"]').val();
+						let sgWort = Number($('input[name="adjustment_wort_sg"]').val().replace(',', '.'));
+
+						if (hydrometerFactor[tempWort]) {
+							let sgCorrWort = round(sgWort + hydrometerFactor[tempWort], 3);
+							$('#wort-plato-corr').text(sgCorrWort);
+							$('#wort-plato-corr').addClass('green');
+						}
+				}
+			</script>
+			<form name="adjustment_hydrometer" onsubmit="return false;">
+				<small>Ареометр общего назначения (температура калибровки 20&deg;С)</small>
+				<div class="input-group flex-nowrap mb-3">
+  				<input class="form-control" type="number" name="adjustment_wort_sg" value="1.000" step="0.001" min="1.000" placeholder="SG" required onchange="javascript: sgTempCorr();" title="Плотность сусла">
+					<input class="form-control" type="number" name="adjustment_wort_temp" value="" step="1" min="15" max="25" placeholder="15-30&deg;C" required onchange="javascript: sgTempCorr();" title="Температура сусла">
+					<div class="input-group-append">
+						<input class="btn btn-secondary input-group-text" type="button" name="" value="Расчитать" onclick="javascript: sgTempCorr();">
+  				</div>
+				</div>
+			</form>
+			<div>
+				<span class="mr-2">Плотность сусла (SG):</span>
+				<strong id="wort-plato-corr"></strong>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseIBUExtended" role="button" aria-expanded="false" aria-controls="collapseIBUExtended">Расширенный расчёт горечи IBU</h4>
+		<div id="collapseIBUExtended" class="row collapse mx-3 mt-4">
+			<script>
+				function changeIBUUseHop(obj) {
+						let inp = $(obj).closest('.hop-extended');
+						let use = $(obj).val();
+						if (use == 2) {
+								$(inp).find('input[name="ibu_time_extended"]').prop('disabled', true);
+								$(inp).find('input[name="ibu_time_extended"]').val('');
+						}
+						else {
+								$(inp).find('input[name="ibu_time_extended"]').prop('disabled', false);
+						}
+				}
+				function addHopItemExtended() {
+						$('.hop-extended').first().clone().appendTo('#hop-items-extended');
+						var lastitem = $('.hop-extended').last();
+						$(lastitem).find('[name="ibu_amount_extended"]').val('');
+						$(lastitem).find('[name="ibu_alfa_extended"]').val('');
+						$(lastitem).find('[name="ibu_time_extended"]').val('');
+						$('input[name="delete_hop_extended"]').attr('hidden', false);
+				}
+				function deleteHopItemExtended() {
+       	  	$('.hop-extended').last().remove();
+       	  	let count = $('.hop-extended').length;
+       	  	if (count <= 1) {
+       	  	    $('input[name="delete_hop_extended"]').attr('hidden', true);
+       	  	}
+     			}
+     			function calculationIBUExtended() {
+						let pre_boil_gravity = Number($('input[name=ibu_pbg_extended]').val().replace(',', '.'));
+						let after_boilsize = Number($('input[name=ibu_after_boilsize_extended]').val().replace(',', '.'));
+						let hsTime = Number($('input[name=ibu_hstime_extended]').val().replace(',', '.'));
+						let hsTemp = Number($('input[name=ibu_hstemp_extended]').val().replace(',', '.'));
+						let hsIBU = 0;
+						let bIBU = 0;
+						let hsUtil = 0;
+						let hsTFactor = 0;
+						$('.hop-extended').each(function () {
+								let am = Number($(this).find('input[name="ibu_amount_extended"]').val().replace(',', '.'));
+								let al = Number($(this).find('input[name="ibu_alfa_extended"]').val().replace(',', '.'));
+								let tp = Number($(this).find('select[name="ibu_type_extended"]').val().replace(',', '.'));
+								let aFactor = ((al * am) / after_boilsize * 10);
+								let gFactor = 1.65 * Math.pow(0.000125, pre_boil_gravity - 1);
+								let use = $(this).find('select[name="ibu_use_extended"]').val();
+								if (use == 1) {
+										let tm = Number($(this).find('input[name="ibu_time_extended"]').val().replace(',', '.'));
+										let tFactor = (1 - Math.pow(Math.E, (-0.04 * tm))) / 4.15;
+										let gt = gFactor * tFactor * tp;
+										let ibu = gt * aFactor;
+										$(this).find('#ibu-extended-ibu').text(round(ibu, 1)+' IBU');
+										$(this).find('#ibu-extended-util').text('');
+										bIBU = bIBU + ibu;
+								}
+								else {
+										if (hsTFactor == 0) {
+												hsTFactor = (1 - Math.pow(Math.E, (-0.04 * hsTime))) / 4.15;
+										}
+										if (hsUtil == 0 ) {
+												hsUtil = 2.39 * Math.pow(10, 11) * Math.pow(Math.E, ( -9773 / (273.15 + hsTemp)));
+										}
+										let gt = gFactor * hsTFactor * tp;
+										let ibu = gt * aFactor * hsUtil;
+										$(this).find('#ibu-extended-ibu').text(round(ibu, 1)+' IBU');
+										$(this).find('#ibu-extended-util').text(round(hsUtil * 100, 3)+' %');
+										hsIBU = hsIBU + ibu;
+								}
+						});
+						let hsFactor = bIBU * hsUtil * hsTFactor;
+						let total_ibu = bIBU + hsIBU + hsFactor;
+						$('#ibu-text-extended').text(round(total_ibu, 1));
+				}
+			</script>
+			<form name="calc_IBU_extended">
+				<div class="input-group mb-3 text-right">
+					<div class="input-group-prepend">
+    				<span class="input-group-text">Плотность до кипячения:</span>
+  				</div>
+					<input class="form-control" type="number" name="ibu_pbg_extended" value="1.044" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('ibu_pbg_extended', 'ibu_pbp_extended');" title="SG">
+					<input class="form-control" type="number" name="ibu_pbp_extended" value="11" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('ibu_pbp_extended', 'ibu_pbg_extended');" title="Plato">
+				</div>
+				<div class="input-group mb-3 text-right">
+					<div class="input-group-prepend">
+    				<span class="input-group-text">Размер после кипячения, л:</span>
+  				</div>
+					<input class="form-control" type="number" name="ibu_after_boilsize_extended" value="25" step="0.1" min="0" maxlength="5">
+				</div>
+				<div class="input-group mb-3 text-right">
+					<div class="input-group-prepend">
+    				<span class="input-group-text">Hop Stand</span>
+  				</div>
+					<div class="input-group-prepend">
+    				<span class="input-group-text">Время, мин:</span>
+  				</div>
+					<input class="form-control" type="number" name="ibu_hstime_extended" value="0" step="1" min="0" maxlength="3" title="Время хмелевой паузы" required>
+					<div class="input-group-prepend">
+    				<span class="input-group-text">Темп. &deg;C:</span>
+  				</div>
+					<input class="form-control" type="number" name="ibu_hstemp_extended" value="0" step="1" min="0" maxlength="3" title="Температура хмелевой паузы" required>
+				</div>
+				<div id="hop-items-extended">
+					<div class="hop-extended input-group mb-3 row-ibu">
+						<input class="form-control" type="number" name="ibu_amount_extended" value="" step="1" min="0" maxlength="5" placeholder="Вес, г" required>
+						<input class="form-control" type="number" name="ibu_alfa_extended" value="" step="0.1" min="0" maxlength="3" placeholder="&alpha;, %" required>
+						<select class="form-control" name="ibu_type_extended">
+							<option selected value="1.1">Гранул.</option>
+							<option value="1">Цельный</option>
+    					</select>
+						<select class="form-control" name="ibu_use_extended" onchange="changeIBUUseHop(this);">
+							<option selected value="1">Кипячение</option>
+							<option value="2">ХопСтэнд</option>
+    					</select>
+						<input class="form-control" type="number" name="ibu_time_extended" value="" step="1" min="0" maxlength="3" placeholder="мин." required>
+						<span id="ibu-extended-ibu" class="ml-2 pt-1">0.0 IBU</span>
+					</div>
+				</div>
+				<div class="d-flex justify-content-between">
+					<div>
+						<span class="ml-2">Горечь (IBU):</span>
+						<strong id="ibu-text-extended" class="green">0.0</strong>
+					</div>
+					<div>
+						<input onclick="javascript: addHopItemExtended();" class="btn btn-secondary mr-2" type="button" name="add_hop_extended" value="Ещё">
+						<input onclick="javascript: deleteHopItemExtended();" class="btn btn-secondary mr-2" type="button" name="delete_hop_extended" value="Убрать" hidden>
+						<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calculationIBUExtended();">
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseYeast" role="button" aria-expanded="false" aria-controls="collapseYeast">Расчёт нормы засева дрожжей и необходимого стартера</h4>
+		<div id="collapseYeast" class="row collapse mt-4 mx-3">
+			<script>
+				var originalPlato,
+						originalGravity,
+						fermentationSize;
+				function calculationYeast() {
+						let typeBeer;
+						let choice = $('input[name="yeast_input_choice"]:checked').val();
+						if (choice == 'type') {
+								$('#select-types').prop('disabled', false);
+								$('#select-recipe').prop('disabled', true);
+								$('input[name="yeast_volume"]').prop('disabled', false);
+								$('input[name="yeast_og"]').prop('disabled', false);
+								$('input[name="yeast_op"]').prop('disabled', false);
+								typeBeer = Number($('#select-types option:selected').val());
+								originalGravity = Number($('input[name="yeast_og"]').val().replace(',', '.'));
+								fermentationSize = Number($('input[name="yeast_volume"]').val().replace(',', '.'));
+						}
+						else {
+								$('#select-types').prop('disabled', true);
+								$('#select-recipe').prop('disabled', false);
+								let r = $('#select-recipe option:selected').val().split('|');
+           			typeBeer = Number(r[0]);
+								originalGravity = Number(r[1].replace(',', '.'));
+								fermentationSize = Number(r[2].replace(',', '.')) - Number(r[3].replace(',', '.'));
+								$('input[name="yeast_volume"]').val(round(fermentationSize,1));
+								$('input[name="yeast_og"]').val(originalGravity);
+								let op = round(convertGtP(originalGravity), 1);
+								$('input[name="yeast_op"]').val(op);
+								$('input[name="yeast_volume"]').prop('disabled', true);
+								$('input[name="yeast_og"]').prop('disabled', true);
+								$('input[name="yeast_op"]').prop('disabled', true);
+						}
+						originalPlato = convertGtP(originalGravity);
+						let pitchRates;
+						if (typeBeer <= 4) {
+       			    if (originalPlato < levelGravity['light']) {
+       			        pitchRates = fermentationSize * pitchRateLager['light'];
+       			    }
+       			    else if (originalPlato > levelGravity['high']) {
+       			        pitchRates = fermentationSize * pitchRateLager['high'];
+       			    }
+       			    else {
+       			        pitchRates = fermentationSize * pitchRateLager['medium'];
+       			    }
+       			}
+       			else {
+       			    if (originalPlato < levelGravity['light']) {
+       			        pitchRates = fermentationSize * pitchRateAle['light'];
+       			    }
+       			    else if (originalPlato > levelGravity['high']) {
+       			        pitchRates = fermentationSize * pitchRateAle['high'];
+       			    }
+       			    else {
+       			        pitchRates = fermentationSize * pitchRateAle['medium'];
+       			    }
+       			}
+       			$('#yeast-pitch-rates').text(round(pitchRates, 1)+' млрд.клеток');
+       			$('input[name="yeast_pitch_rate"]').val(round(pitchRates,1));
+				}
+				function addStarterItem() {
+						$('.yeast').first().clone().appendTo('#yeast-items');
+						var lastitem = $('.yeast').last();
+						$(lastitem).find('[name="start_vol"]').val('');
+						$(lastitem).find('[name="op"]').val('');
+						$(lastitem).find('[name="aeration_model"]').val(0);
+						$(lastitem).find('.yeast-cells').text('');
+						$('#delete-starter').attr('hidden', false);
+				}
+				function deleteStarterItem() {
+       	  	$('.yeast').last().remove();
+       	  	let count = $('.yeast').length;
+       	  	if (count <= 1) {
+       	  	    $('#delete-starter').attr('hidden', true);
+       	  	}
+     		}
+				function calculationStarter() {
+					  let pitchRates = Number($('input[name="yeast_pitch_rate"]').val().replace(',', '.'));
+					  let yeastCellsPerGram = Number($('input[name="yeast_cells_per_gram"]').val().replace(',', '.'));
+					  let yeastAmount = Number($('input[name="yeast_start_amount"]').val().replace(',', '.'));
+					  let yeastStartCells = yeastCellsPerGram * yeastAmount;
+					  $('#yeast-start-cells').text(round(yeastStartCells, 1)+' млрд.клеток');
+						let totalCells = yeastStartCells;
+						let totalVol = 0
+					  $('.yeast').each(function () {
+					  		if ($(this).find('input[name="start_vol"]').length > 0 && $(this).find('input[name="start_vol"]').val() != '') {
+					  				let starterVol = Number($(this).find('input[name="start_vol"]').val().replace(',', '.'));
+										let shaking = Number($(this).find('select[name="aeration_model"]').val().replace(',', '.'));
+										let inoculationRate = totalCells / starterVol;
+										let growthRate = growthRateCurve(inoculationRate);
+										totalCells = (1 + growthRate + shaking) * totalCells;
+										$(this).find('.yeast-cells').text(round(totalCells, 1) + ' млрд.');
+										totalVol = totalVol + starterVol;
+								}
+						});
+					  $('#yeast-total-vol').text(round(totalVol, 1)+' л');
+					  $('#yeast-total-cells').text(round(totalCells, 1));
+					  let pitchRateLevel = totalCells / totalVol;
+						if (pitchRateLevel > 200) {
+							 $('#yeast-rate-level').text('Стартер перенасыщен: '+round(pitchRateLevel, 1)+' млн. кл./мл. Увеличьте объём стартера');
+							 $('#yeast-rate-level').addClass('red')
+						}
+						else {
+								$('#yeast-rate-level').text('Уровень засева: '+round(pitchRateLevel, 1)+' млн. кл./мл')
+								$('#yeast-rate-level').removeClass('red')
+						}
+					  if (pitchRates > totalCells) {
+					  	$('#yeast-total-cells').removeClass();
+					  		$('#yeast-total-cells').addClass('red');
+					  		let s = round(pitchRates - totalCells, 1);
+					  		$('#yeast-shortage').text('Не хватает '+s+' млрд. клеток');
+						}
+					  else {
+					  		$('#yeast-total-cells').removeClass();
+					  		$('#yeast-total-cells').addClass('green');
+					  		$('#yeast-shortage').text('');
+						}
+				}
+				function growthRateCurve(x) {
+    				if (x >= 200) {
+								return 0
+    				}
+    				if (x <= 5) {
+    				    return 6
+    				}
+    				let growth = (12.54793776 * Math.pow(x, -0.4594858324)) - 0.9994994906;
+    				if (growth > 6) {
+    				    growth = 6
+    				}
+    				if (growth < 0) {
+    				    growth = 0
+    				}
+    				return growth
+				}
+			</script>
+			<div class="">
+				<form name="calc_yeast">
+					<div class="form-group mb-2">
+						<div>
+							<span class="mr-2">Расчёт:</span>
+							<input id="choiсe-recipe" type="radio" name="yeast_input_choice" value="recipe" onchange="javascript: calculationYeast();">
+							<label for="choiсe-recipe" class="mr-2">По рецепту</label>
+							<input id="choiсe-type" type="radio" name="yeast_input_choice" value="type" onchange="javascript: calculationYeast();" checked>
+							<label for="choiсe-type">По типу пива</label>
+						</div>
+					</div>
+					<div class="input-group mb-3 justify-content-between">
+						<select id="select-recipe" class="form-control" name="recipe" onchange="calculationYeast();" disabled>
+      			{% for r in user.all_recipes %}
+							<option value="{{ r.type }}|{{ r.OG }}|{{ r.batch_size }}|{% if r.sediment_after_boil %}{{ r.sediment_after_boil }}{% else %}0{% endif %}">{{ r.name }}</option>
+      			{% endfor %}
+      			</select>
+						<select id="select-types" class="form-control" name="types" onchange="calculationYeast();">
+      			{% for t in types %}
+							<option value="{{ t.0 }}">{{ t.1 }}</option>
+      			{% endfor %}
+      			</select>
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Объём на брожение, л:</span>
+  					</div>
+						<input class="form-control" type="number" name="yeast_volume" value="25" step="0.1" min="10" onchange="javascript: calculationYeast();">
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Начальная плотность:</span>
+  					</div>
+						<input class="form-control" type="number" name="yeast_og" value="1.044" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('yeast_og', 'yeast_op'); calculationYeast();" title="SG">
+						<input class="form-control" type="number" name="yeast_op" value="11" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('yeast_op', 'yeast_og'); calculationYeast();" title="Plato">
+					</div>
+					<div class="d-flex justify-content-between">
+						<strong>
+							<span class="mr-2">Норма засева дрожжей&nbsp;<a class="link" href="https://wyeastlab.com/pitch-rates" rel="nofollow" target="_blank"><i class="material-icons align-bottom" title="Cогласно рекомендациям Wyeast Laboratories">error_outline</i></a>:</span>
+							<span id="yeast-pitch-rates" class="green"></span>
+						</strong>
+						<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calculationYeast();">
+					</div>
+					<div class="py-2">
+						<span>Расчёт необходимого стартера&nbsp;<i class="material-icons align-bottom" title="По исследованиям Chris White">error_outline</i>:</span>
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Необходимая норма засева, млрд. клеток:</span>
+  					</div>
+						<input class="form-control" type="number" name="yeast_pitch_rate" value="" step="0.1" onchange="calculationStarter()">
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Кол-во клеток, млрд/г (млрд/мл):</span>
+  					</div>
+						<input class="form-control" type="number" name="yeast_cells_per_gram" value="6" step="0.1" onchange="calculationStarter()">
+					</div>
+					<div class="input-group text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Кол-во дрожжей, г (мл):</span>
+  					</div>
+						<input class="form-control" type="number" name="yeast_start_amount" value="11" step="0.1" onchange="calculationStarter()">
+					</div>
+					<div class="py-2">
+						<span class="ml-2">Начальное кол-во клеток:</span>
+						<strong id="yeast-start-cells">0.0</strong>
+					</div>
+					<div id="yeast-items">
+						<div class="yeast input-group mb-3">
+							<input class="form-control  w100px" type="number" name="start_vol" value="0.5" step="0.01" min="0" maxlength="5" placeholder="Объём, л" required onchange="calculationStarter()">
+							<select class="form-control" name="aeration_model" onchange="calculationStarter()">
+     						<option selected value="0">Без перемешивания</option>
+								<option value="1">Магнитная мешалка</option>
+    					</select>
+							<div class="input-group-append">
+             		<span class="input-group-text"><strong class="yeast-cells"></strong></span>
+           		</div>
+						</div>
+					</div>
+					<div class="d-flex justify-content-between">
+						<div>
+           			<a id="add-starter" class="link" onclick="javascript: addStarterItem();" title="Добавить"><i class="material-icons">add_box</i></a>
+           			<a id="delete-starter" hidden class="link" onclick="javascript: deleteStarterItem();" title="Убрать"><i class="material-icons">indeterminate_check_box</i></a>
+						</div>
+						<div>
+							<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="calculationStarter()">
+						</div>
+					</div>
+					<div>
+						<small id="yeast-rate-level" class="red ml-2"></small>
+					</div>
+					<div>
+						<span class="ml-2">Итоговый объём стартера:</span>
+						<strong id="yeast-total-vol">0.0 л</strong>
+					</div>
+					<div>
+						<span class="ml-2">Конечное кол-во клеток:</span>
+						<strong id="yeast-total-cells" class="green">0.0</strong>
+					</div>
+					<div>
+						<small id="yeast-shortage" class="ml-2"></small>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseCarbo" role="button" aria-expanded="false" aria-controls="collapseCarbo">Расчёт карбонизации</h4>
+		<div id="collapseCarbo" class="row collapse mt-4 mx-3">
+			<script>
+				function calculationCarbo() {
+						let og = Number($('input[name="carbo_og"]').val().replace(',', '.'));
+						let fg = Number($('input[name="carbo_fg"]').val().replace(',', '.'));
+						let volume = Number($('input[name="carbo_volume"]').val().replace(',', '.'));
+						let temp = Number($('input[name="carbo_temp"]').val().replace(',', '.'));
+						let tempF = convertCelsiusToFahrenheit(temp);
+						let CO2beer = 3.0378 - (0.050062 * tempF) + (0.00026555 * Math.pow(tempF, 2));
+						$('#carbo-co2-initial').text(round(CO2beer, 2));
+						let choice = $('input[name="carbo_input_choice"]:checked').val();
+						if (choice == 'manual') {
+								$('#gule_limit').prop('display', 'block').fadeIn('slow');
+								$('input[name="carbo_volumeCO"]').prop('disabled', false);
+								$('select[name="carbo_recipe"]').prop('disabled', true);
+								$('select[name="carbo_style"]').prop('disabled', true);
+								// $('input[name="carbo_volume"]').prop('disabled', false);
+								$('input[name="carbo_og"]').prop('disabled', false);
+								$('input[name="carbo_op"]').prop('disabled', false);
+								$('input[name="carbo_fg"]').prop('disabled', false);
+								$('input[name="carbo_fp"]').prop('disabled', false);
+								let CO2 = Number($('input[name="carbo_volumeCO"]').val().replace(',', '.'));
+								let dxt = carboDextrose(CO2beer, volume, CO2);
+								let dext = round(dxt, 1)+' г'+' | '+round(dxt / volume, 1)+' г/л';
+								$('#carbo-dext').text(dext);
+								let psi = carboPressure(tempF, CO2);
+								let press = round(psi, 1)+' psi | '+round(psi * 0.0689476, 2)+' bar';
+								$('#carbo-press').text(press);
+								let prim = carboPrimer(og, fg, CO2beer, volume, CO2);
+								if ($('input[name="is_limit_gule"]').is(':checked')) {
+										$('input[name="limit_gule"]').prop("disabled", false);
+										let limitGule = Number($('input[name="limit_gule"]').val().replace(',', '.'));
+										if (limitGule && limitGule < prim) {
+												let op = convertGtP(og);
+												let fp = convertGtP(fg);
+												let aa = 0.82 * (op - fp) / op * 100;
+												let bb = limitGule * op * 10 * (aa / 100); // D
+												let cc = bb / (limitGule + volume);
+												let dd = CO2 * 2 - CO2beer * 2 - cc / 2;
+												let dex = (dd * (limitGule + volume) * 2) / 0.91;
+												let txt = round(prim, 2)+' л '+' ('+limitGule+' л + '+round(dex, 0)+' г декстрозы)'
+												$('#carbo-prime').text(txt);
+												$('#co2-instyle').text('');
+												$('#co2-instyle').removeClass('red');
+												$('input[name="update"]').prop('disabled', false);
+										}
+										else {
+											return false;
+										}
+								}
+								else {
+										$('input[name="limit_gule"]').prop("disabled", true);
+										$('#carbo-prime').text(round(prim, 2)+' л');
+										$('#co2-instyle').text('');
+										$('#co2-instyle').removeClass('red');
+										$('input[name="limit_gule"]').val(round(prim, 2));
+										$('input[name="update"]').prop('disabled', false);
+								}
+						}
+						else if (choice == 'by_style') {
+								$('#gule_limit').prop('display', 'none').fadeOut('slow');
+								$('select[name="carbo_style"]').prop('disabled', false);
+								$('select[name="carbo_recipe"]').prop('disabled', true);
+								$('input[name="carbo_volumeCO"]').prop('disabled', true);
+								// $('input[name="carbo_volume"]').prop('disabled', false);
+								$('input[name="carbo_og"]').prop('disabled', false);
+								$('input[name="carbo_op"]').prop('disabled', false);
+								$('input[name="carbo_fg"]').prop('disabled', false);
+								$('input[name="carbo_fp"]').prop('disabled', false);
+								let style =  $('select[name="carbo_style"] option:selected').val();
+								let coStyle = style.split('-');
+								let CO2_min = Number(coStyle[0].replace(',', '.'));
+								let CO2_max = Number(coStyle[1].replace(',', '.'));
+								let dext_min = carboDextrose(CO2beer, volume, CO2_min);
+								let dext_max = carboDextrose(CO2beer, volume, CO2_max);
+								let dext = round(dext_min, 1)+' - '+round(dext_max, 1)+' г'+' | '+round(dext_min / volume, 1)+' - '+round(dext_max / volume, 1)+' г/л';
+								$('#carbo-dext').text(dext);
+								let psi_min = carboPressure(tempF, CO2_min);
+								let psi_max = carboPressure(tempF, CO2_max);
+								let press = round(psi_min, 1)+' - '+round(psi_max, 1)+' psi | '+round(psi_min * 0.0689476, 2)+' - '+round(psi_max * 0.0689476, 2)+' bar';
+								$('#carbo-press').text(press);
+								let prim_min = carboPrimer(og, fg, CO2beer, volume, CO2_min);
+								let prim_max = carboPrimer(og, fg, CO2beer, volume, CO2_max);
+								let prim = round(prim_min, 2)+' - '+round(prim_max, 2)+' л';
+								$('#carbo-prime').text(prim);
+								$('#co2-instyle').text('Объём CO2 по стилю: '+coStyle[0]+' - '+coStyle[1]);
+								$('#co2-instyle').removeClass('red');
+								$('input[name="update"]').prop('disabled', false);
+						}
+						else {
+								$('select[name="carbo_recipe"]').prop('disabled', false);
+								$('select[name="carbo_style"]').prop('disabled', true);
+								$('input[name="carbo_volumeCO"]').prop('disabled', true);
+								let recipeData =  $('select[name="carbo_recipe"] option:selected').val().split('|');
+								if (!recipeData[0] || !recipeData[1] || !recipeData[2] || !recipeData[3] || !recipeData[4]){
+										$('#co2-instyle').text('Не хватает данный в рецепте для расчёта');
+										$('#co2-instyle').addClass('red');
+										$('input[name="update"]').prop('disabled', true);
+										$('#carbo-dext').text('0.0');
+										$('#carbo-prime').text('0.0');
+										$('#carbo-press').text('0.0');
+										return false;
+								}
+								$('input[name="update"]').prop('disabled', false);
+								og = Number(recipeData[2].replace(',', '.'));
+								fg = Number(recipeData[3].replace(',', '.'));
+								volume = Number(recipeData[4].replace(',', '.'));
+								$('input[name="carbo_og"]').val(og);
+								$('input[name="carbo_op"]').val(round(convertGtP(og), 1));
+								$('input[name="carbo_og"]').prop('disabled', true);
+								$('input[name="carbo_op"]').prop('disabled', true);
+								$('input[name="carbo_fg"]').val(fg);
+								$('input[name="carbo_fp"]').val(round(convertGtP(fg), 1));
+								$('input[name="carbo_fg"]').prop('disabled', true);
+								$('input[name="carbo_fp"]').prop('disabled', true);
+								$('input[name="carbo_volume"]').val(volume);
+								// $('input[name="carbo_volume"]').prop('disabled', true);
+								let CO2_min = Number(recipeData[0].replace(',', '.'));
+								let CO2_max = Number(recipeData[1].replace(',', '.'));
+								let dext_min = carboDextrose(CO2beer, volume, CO2_min);
+								let dext_max = carboDextrose(CO2beer, volume, CO2_max);
+								let dext = round(dext_min, 1)+' - '+round(dext_max, 1)+' г'+' | '+round(dext_min / volume, 1)+' - '+round(dext_max / volume, 1)+' г/л';
+								$('#carbo-dext').text(dext);
+								let psi_min = carboPressure(tempF, CO2_min);
+								let psi_max = carboPressure(tempF, CO2_max);
+								let press = round(psi_min, 1)+' - '+round(psi_max, 1)+' psi | '+round(psi_min * 0.0689476, 2)+' - '+round(psi_max * 0.0689476, 2)+' bar';
+								$('#carbo-press').text(press);
+								let prim_min = carboPrimer(og, fg, CO2beer, volume, CO2_min);
+								let prim_max = carboPrimer(og, fg, CO2beer, volume, CO2_max);
+								let prim = round(prim_min, 2)+' - '+round(prim_max, 2)+' л';
+								$('#carbo-prime').text(prim);
+								$('#co2-instyle').text('Объём CO2 по стилю: '+CO2_min+' - '+CO2_max);
+								$('#co2-instyle').removeClass('red');
+
+						}
+				}
+				function carboDextrose(coB, vol, co) {
+						let sugar = ((co * 2) - (coB * 2)) * 2 * vol;
+						return sugar / 0.91;
+				}
+				function carboPressure(temp, co) {
+						let pressPSI = -16.6999 - (0.0101059 * temp) + (0.00116512 * Math.pow(temp, 2)) + (0.173354 * temp * co) + (4.24267 * co) - (0.0684226 * Math.pow(co, 2));
+						return pressPSI;
+				}
+				function carboPrimer(og, fg, coB, vol, co) {
+						let op = convertGtP(og);
+						let fp = convertGtP(fg);
+						let c_k = 5 * 0.82 * (op - fp) * og;
+						let volPrimer = vol * (co * 2 - coB * 2) / (c_k - co * 2);
+						return volPrimer;
+				}
+			</script>
+			<div class="">
+				<form name="calc_carbo">
+					<div class="form-group mb-2">
+						<div>
+							<span class="mr-2">Объём CO2:</span>
+							<input id="choiсe-manual" type="radio" name="carbo_input_choice" value="manual" onchange="javascript: calculationCarbo();" checked>
+							<label for="choiсe-manual" class="mr-2">Свой</label>
+							<input id="choiсe-style" type="radio" name="carbo_input_choice" value="by_style" onchange="javascript: calculationCarbo();">
+							<label for="choiсe-style" class="mr-2">По стилю</label>
+							<input id="choiсe-recipe-carbo" type="radio" name="carbo_input_choice" value="by_recipe" onchange="javascript: calculationCarbo();">
+							<label for="choiсe-recipe-carbo">По рецепту</label>
+						</div>
+					</div>
+					<div class="input-group mb-3 justify-content-between">
+						<select id="select-recipe-carbo" class="form-control" name="carbo_recipe" onchange="calculationCarbo();" disabled>
+      			{% for r in user.all_recipes %}
+							<option value="{{ r.style.CO2_min }}|{{ r.style.CO2_max }}|{{ r.OG }}|{{ r.FG }}|{{ r.batch_size }}">{{ r.name }}</option>
+      			{% endfor %}
+      			</select>
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+  	 					<span class="input-group-text">Объём CO<sub>2</sub>:</span>
+  					</div>
+						<input class="form-control" type="number" name="carbo_volumeCO" value="2.6" step="0.1" min="1" max="5" onchange="javascript: calculationCarbo();">
+						<select class="form-control w-50" name="carbo_style" disabled onchange="javascript: calculationCarbo()">
+  	    				{% for s in styles %}
+							<option value="{{ s.CO2_min }}-{{ s.CO2_max }}">{{ s.name }} | {{ s.index }}</option>
+  	    				{% endfor %}
+  	  				</select>
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+  	 					<span class="input-group-text">Объём на розлив, л:</span>
+  					</div>
+						<input class="form-control" type="number" name="carbo_volume" value="25" step="0.1" min="10" onchange="javascript: calculationCarbo();">
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+  	 					<span class="input-group-text">Температура, &deg;C:&nbsp;
+                <i class="material-icons align-bottom" title="При карбонизации пива сахарами (декстрозой или шпайзе), то указывается температура брожения пива (необходимо для учёта растворимого в пиве СО2). При принудительной карбонизации указывается температура при которой будет карбонизироваться пиво.">help_outline</i>
+							</span>
+  					</div>
+						<input class="form-control" type="number" name="carbo_temp" value="18" step="0.1" min="0" onchange="javascript: calculationCarbo();">
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+  	 					<span class="input-group-text">Начальная плотность:</span>
+  					</div>
+						<input class="form-control" type="number" name="carbo_og" value="1.044" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('carbo_og', 'carbo_op'); calculationCarbo();" title="SG">
+						<input class="form-control" type="number" name="carbo_op" value="11" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('carbo_op', 'carbo_og'); calculationCarbo();" title="Plato">
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+  	 					<span class="input-group-text">Конечная плотность:</span>
+  					</div>
+						<input class="form-control" type="number" name="carbo_fg" value="1.014" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('carbo_fg', 'carbo_fp'); calculationCarbo();" title="SG">
+						<input class="form-control" type="number" name="carbo_fp" value="3.5" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('carbo_fp', 'carbo_fg'); calculationCarbo();" title="Plato">
+					</div>
+					<div id="gule_limit" class="form-group mb-3">
+						<input id="is_limit_gule" type="checkbox" name="is_limit_gule" onchange="calculationCarbo();">
+						<label for="is_limit_gule">Ограниченное кол-во шпайзе, л:</label>
+						<input class="form-control-sm" type="number" name="limit_gule" value="" step="0.01" maxlength="5" title="Кол-во имеющегося сусла для шпайзе" disabled>
+					</div>
+					<div class="d-flex justify-content-between">
+						<strong>
+							<span class="mr-2">CO<sub>2</sub> в пиве:</span>
+							<span id="carbo-co2-initial"></span>
+						</strong>
+						<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calculationCarbo();">
+					</div>
+				</form>
+				<div class="py-2 d-flex justify-content-between">
+					<span>Варианты карбонизации:</span>
+					<span id="co2-instyle"></span>
+				</div>
+				<div class="d-flex justify-content-between border-line p-2">
+					<span>Декстроза:</span>
+					<strong id="carbo-dext" class="green"></strong>
+				</div>
+				<div class="d-flex justify-content-between p-2">
+					<span>Шпайзе:</span>
+					<strong id="carbo-prime" class="green"></strong>
+				</div>
+				<div class="d-flex justify-content-between border-line p-2">
+					<span>Давление:</span>
+					<strong id="carbo-press" class="green"></strong>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseSpund" role="button" aria-expanded="false" aria-controls="collapseIBU">Расчёт шпунтования</h4>
+		<div id="collapseSpund" class="row collapse mx-3 mt-4">
+			<script>
+				function calculationSpund() {
+						let att = Number($('select[name="spund_yeast"] option:selected').val().replace(',', '.'));
+						let op = Number($('input[name="spund_op"]').val().replace(',', '.'));
+						let ext = Number($('input[name="spund_ext"]').val().replace(',', '.'));
+						let fp = op * (1 - (att / 100));
+						let fg = convertPtG(fp);
+						$('#spund-fg').html(round(fg, 3)+' | '+round(fp, 1)+' &degP');
+						let delta = att - ext;
+						let sp = op * (1 - (delta / 100));
+						let sg = convertPtG(sp);
+						$('#spund-text').html(round(sg, 3)+' | '+round(sp, 1)+' &degP');
+				}
+			</script>
+			<div class="">
+				<form name="calc_spund">
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Дрожжи:</span>
+  					</div>
+						<select class="form-control w-50" name="spund_yeast" onchange="javascript: calculationSpund();">
+    	  				{% for y in yeast %}
+							<option value="{{ y.attenuation }}">{{ y.short_name }} | {{ y.name }} ({{ y.company.name }})</option>
+    	  				{% endfor %}
+    					</select>
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Начальная плотность:</span>
+  					</div>
+						<input class="form-control" type="number" name="spund_og" value="1.048" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('spund_og', 'spund_op'); calculationSpund();" title="SG">
+						<input class="form-control" type="number" name="spund_op" value="12" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('spund_op', 'spund_og'); calculationSpund();" title="Plato">
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Остаточный экстракт, %:</span>
+  					</div>
+						<input class="form-control" type="number" name="spund_ext" value="20" step="1" min="10" onchange="javascript: calculationSpund();">
+					</div>
+					<div class="d-flex justify-content-between">
+						<div>
+							<span class="ml-2 mb-1">Расчётная конечная плотность:</span>
+							<strong id="spund-fg"></strong>
+						</div>
+						<div>
+							<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calculationSpund();">
+						</div>
+					</div>
+				</form>
+				<div>
+					<span class="ml-2 ">Закрыть шпунт на плотности:</span>
+					<strong id="spund-text" class="green">0.0</strong>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 mb-3">
+	<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseSRM" role="button" aria-expanded="false" aria-controls="collapseSRM">Расчёт цвета пива</h4>
+		<div id="collapseSRM" class="row collapse mt-4">
+			<script>
+				function addSRMItem() {
+						$('.row-srm').first().clone().appendTo('#srm-items');
+						var lastitem = $('.row-srm').last();
+						$(lastitem).find('[name="srm_grain"]').val(0);
+						$(lastitem).find('[name="srm_amount"]').val('');
+						$('input[name="delete_srm"]').attr('hidden', false);
+				}
+				function deleteSRMItem() {
+    		      $('.row-srm').last().remove();
+    		      let count = $('.row-srm').length;
+    		      if (count <= 1) {
+    		          $('input[name="delete_srm"]').attr('hidden', true);
+    		      }
+    		  }
+				function calculationSRM() {
+						let mcu = 0;
+						let volume = 0.264172052 * Number($('input[name="srm_volume"]').val().replace(',', '.'));
+						$(".row-srm").each(function () {
+								let l = Number($(this).find('select[name="srm_grain"]').val().replace(',', '.'));
+								let am = Number($(this).find('input[name="srm_amount"]').val().replace(',', '.'));
+								mcu = mcu + 2.20462262 * l * (am / volume);
+						});
+						let srm = 1.4922 * Math.pow(mcu, 0.6859);
+						if (srm >= 40) {
+							srm = 40
+						}
+						let color = 'SRM: '+round(srm, 1)+' | EBC: '+round(convertSRMToEBC(srm), 1);
+						$('#srm-text').text(color);
+						$('#srm-img').css('background-color', colorSRM[round(srm, 0)]);
+				}
+			</script>
+			<div class="col-12 col-md-9 d-flex justify-content-end">
+				<form name="calc_color">
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Размер партии, л:</span>
+  					</div>
+						<input class="form-control" type="number" name="srm_volume" value="25" step="0.1" min="0" maxlength="5">
+					</div>
+					<div id="srm-items">
+						<div class="input-group mb-3 row-srm">
+ 							<select class="form-control w-75" name="srm_grain">
+    	  					<option selected value="0">Ингредиент</option>
+    	  					{% for g in grains %}
+								<option value="{{ g.color }}">{{ g }} ({{ g.color|floatformat }} &deg;L)</option>
+    	  					{% endfor %}
+    						</select>
+							<input class="form-control" type="number" name="srm_amount" value="" step="0.1" min="0" maxlength="5" placeholder="кг" required>
+						</div>
+					</div>
+					<div class="d-flex justify-content-end">
+						<div>
+							<input onclick="javascript: addSRMItem();" class="btn btn-secondary mr-2" type="button" name="add_srm" value="Ещё">
+							<input onclick="javascript: deleteSRMItem();" class="btn btn-secondary mr-2" type="button" name="delete_srm" value="Убрать" hidden>
+							<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calculationSRM();">
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="col-12 col-md-3 text-center">
+				<span class="h5"><strong id="srm-text">SRM: 0 | EBC: 0</strong></span>
+				<div>
+    	      <img id="srm-img" class="img-thumbnail" src="{% static 'img/nothumbnail_t_w150_h150.png' %}" style="background-color: #fff4d4;">
+				</div>
+				<div>
+					<p><small class="">Изображения цвета является ориентировочным, так как не учитывает время кипячения, проходящую реакцию Майяра и др.</small></p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6 mb-3">
+		<h4 class="link text-center mb-4" data-toggle="collapse" href="#collapseDilution" role="button" aria-expanded="false" aria-controls="collapseDilution">Разбавление сусла</h4>
+		<div id="collapseDilution" class="row collapse mt-4 mx-3">
+			<script>
+				function calculationDilution() {
+						let ov = Number($('input[name="dilution_original_volume"]').val().replace(',', '.'));
+						let og = Number($('input[name="dilution_original_og"]').val().replace(',', '.'));
+						let choice = $('input[name="dilution_input_choice"]:checked').val();
+						if (choice == 'gravity') {
+								$('input[name="dilution_desired_volume"]').prop('disabled', true);
+								$('input[name="dilution_desired_og"]').prop('disabled', false);
+								$('input[name="dilution_desired_op"]').prop('disabled', false);
+								let dg = Number($('input[name="dilution_desired_og"]').val().replace(',', '.'));
+								let newVolume = (og - 1) / (dg - 1) * ov;
+								$('#dilution-label').text('Новый объём:');
+								$('#dilution-new-value').text(round(newVolume, 2)+'л');
+								if (newVolume > ov) {
+										let r = 'Добавить <strong class="green">'+round(newVolume-ov, 2)+'л</strong> воды';
+										$('#dilution-diff').html(r);
+								}
+								else {
+										let r = 'Выпарить <strong class="red">'+round(ov-newVolume, 2)+'л</strong> воды';
+										$('#dilution-diff').html(r);
+								}
+						}
+						else {
+								$('input[name="dilution_desired_volume"]').prop('disabled', false);
+								$('input[name="dilution_desired_og"]').prop('disabled', true);
+								$('input[name="dilution_desired_op"]').prop('disabled', true);
+								let dv = Number($('input[name="dilution_desired_volume"]').val().replace(',', '.'));
+								let newGravity = 1 + (og - 1) * (ov / dv);
+								$('#dilution-label').text('Новая плотность:');
+								$('#dilution-new-value').text(round(newGravity, 3));
+								if (newGravity > og) {
+										let r = 'Разница в плотности <strong class="green">'+round(newGravity-og, 3)+'</strong>';
+										$('#dilution-diff').html(r);
+								}
+								else {
+										let r = 'Разница в плотности <strong class="red">'+round(newGravity-og, 3)+'</strong>';
+										$('#dilution-diff').html(r);
+								}
+						}
+				}
+			</script>
+			<div class="">
+				<form name="calc_dilution">
+					<label>Что есть:</label>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Объём, л:</span>
+  					</div>
+						<input class="form-control" type="number" name="dilution_original_volume" value="25" step="0.1" min="10" onchange="javascript: calculationDilution();">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Плотность:</span>
+  					</div>
+						<input class="form-control" type="number" name="dilution_original_og" value="1.044" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('dilution_original_og', 'dilution_original_op'); calculationDilution();" title="SG">
+						<input class="form-control" type="number" name="dilution_original_op" value="11" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('dilution_original_op', 'dilution_original_og'); calculationDilution();" title="Plato">
+					</div>
+					<div class="form-group mb-2">
+						<div>
+							<span class="mr-2">Что нужно:</span>
+							<input id="choiсe-volume" type="radio" name="dilution_input_choice" value="volume" onchange="javascript: calculationDilution();">
+							<label for="choiсe-volume" class="mr-2">Новый объём</label>
+							<input id="choiсe-gravity" type="radio" name="dilution_input_choice" value="gravity" onchange="javascript: calculationDilution();" checked>
+							<label for="choiсe-gravity">Новая плотность</label>
+						</div>
+					</div>
+					<div class="input-group mb-3 text-right">
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Объём, л:</span>
+  					</div>
+						<input class="form-control" type="number" name="dilution_desired_volume" value="27" step="0.1" min="10" onchange="javascript: calculationDilution();" disabled>
+						<div class="input-group-prepend">
+    					<span class="input-group-text">Плотность:</span>
+  					</div>
+						<input class="form-control" type="number" name="dilution_desired_og" value="1.040" step="0.001" min="1.000" maxlength="5" onchange="javascript: convertPlato('dilution_desired_og', 'dilution_desired_op'); calculationDilution();" title="SG">
+						<input class="form-control" type="number" name="dilution_desired_op" value="10" step="0.1" min="0" maxlength="5" onchange="javascript: convertSG('dilution_desired_op', 'dilution_desired_og'); calculationDilution();" title="Plato">
+					</div>
+					<div class="d-flex justify-content-between">
+						<div>
+							<span id="dilution-label" class="ml-2 mb-1"></span>
+							<strong id="dilution-new-value"></strong>
+						</div>
+						<div>
+							<input class="btn btn-secondary" type="button" name="update" value="Расчёт" onclick="javascript: calculationDilution();">
+						</div>
+					</div>
+				</form>
+				<div>
+					<span id="dilution-diff" class="ml-2"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}

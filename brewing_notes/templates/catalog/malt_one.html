@@ -1,0 +1,73 @@
+{% extends 'catalog/base_catalog.html' %}
+{% load brew %}
+
+{% block page_title %}{{ malt }}{% endblock %}
+
+{% block content %}
+<div class="row main-body mb-2">
+  <div class="col d-flex justify-content-between py-2">
+    <div>
+      <a class="link" href="{{ request.META.HTTP_REFERER }}" title="Назад">
+        <span class="small">Назад</span>
+      </a>
+    </div>
+    <div>
+      {% if user.is_editor %}
+      <a class="link" href="{% url 'malt_edit' malt.slug %}" title="Редактировать"><span class="small">Редактировать</span></a>
+      <a class="link ml-3" href="{% url 'malt_add' %}" title="Добавить"><span class="small">Добавить</span></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="row main-body mb-2">
+  <div class="col">
+    <div class="row my-2">
+      <div class="col text-center">
+        <h4>{{ malt.name }}&nbsp;({{ malt.company|default_if_none:'---' }})</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Категория:</i><b>{{ malt.get_type_display }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 text-sm-center mb-2">
+        <span><i class="mr-2">Страна:</i><b>{{ malt.country|default_if_none:'---' }}</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Экстрактивность:</i><b>{{ malt.extractivity }} %</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Цвет (SRM):</i><b>{{ malt.color }} &deg;L</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Белок:</i><b>{{ malt.protein|default_if_none:'---' }} %</b></span>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3 text-sm-center mb-2">
+        <span><i class="mr-2">Доля в засыпи до:</i><b>{{ malt.share }} %</b></span>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Описание:</h5>
+        <p>{{ malt.description|linebreaks }}</p>
+      </div>
+      <div class="col-12 mt-2">
+        <h5>Применение в стилях:</h5>
+      </div>
+      {% for row in malt.styles.all|columns:3 %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        {% for item in row %}
+        <div>
+          <a class="link" href="{% url 'style_one' item.slug %}">
+            <small>{{ item.index }}. {{ item.name }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <div class="col-12 d-flex justify-content-between mt-4 mb-2">
+        <a class="btn btn-secondary mr-2" href="{% url 'malts_list' %}">Назад к списку</a>
+        <a class="btn btn-secondary ml-2" href="{% url 'recipes_list' %}?grain={{ malt.pk }}">Показать рецепты с ингредиентом</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

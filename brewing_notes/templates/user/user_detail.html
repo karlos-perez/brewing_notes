@@ -1,0 +1,882 @@
+{% extends 'base.html' %}
+{% load brew core %}
+
+{% block center %}
+{% include 'blocks/upload_image.html' %}
+<div class="row main-body mb-2">
+  <div class="col-12">
+     <div class="row">
+      <div class="col text-center mt-3">
+        <h4>Статистика</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6">
+        <div class="ml-sm-3">
+          <div><small class=""><b class="mr-2">Последний вход:</b>{{ object.last_login|date:"d.m.Y H:i" }}</small></div>
+          <div><small class=""><b class="mr-2">Регистрация:</b>{{ object.date_joined|date:"d.m.Y H:i" }}</small></div>
+          <div><small class=""><b class="mr-2">E-mail: </b> {{ object.email }}</small></div>
+          <div><small class=""><b class="mr-2">Статус: </b> {{ object.get_status_display }}</small></div>
+          {% if object.is_pro and object.premium_end %}
+          <div><small class=""><b class="mr-2">Статус действует до: </b>{{ object.premium_end|date:"d.m.Y" }}</small></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-sm-6">
+        <div class="">
+          <div><small class="{% if not request.user.ability_to_add %} red{% endif %}"><b class="mr-2">Лимит черновиков: </b> {{ object.limit_draft }}</a></small></div>
+          <div><small class=""><b class="mr-2">Кол-во черновиков: </b> {{ object.recipe_draft_count }}</small></div>
+          <div><small class=""><b class="mr-2">Кол-во опубликованных: </b> {{ object.recipe_publish_count }}</small></div>
+          <div><small class=""><a class="link" href="{% url 'user_recipes' user.username %}"><b class="mr-2">Всего рецептов: </b> {{ object.recipe_count }}</a></small></div>
+        </div>
+      </div>
+    </div>
+    {% if not user.is_moderator %}
+    <div class="col-12 my-3">
+      <div class="text-center mb-3">
+        <h4>Подключение <strong>Премиум</strong><i class="material-icons align-bottom ml-1">workspace_premium</i> доступа</h4>
+      </div>
+      <div class="mb-3">
+      {% if user.is_pro %}
+        <div class="mb-2">
+          <span class="mr-3"><strong>Премиум</strong> доступ до {{ object.premium_end|date:"d.m.Y" }}</span>
+          <button class="btn btn-secondary btn-sm" data-toggle="collapse" href="#collapsePremium" role="button" aria-expanded="false" aria-controls="collapsePremium">Продлить Премиум</button>
+        </div>
+        <div id="collapsePremium" class="collapse">
+          <p>Продлить доступ можно доступ можно следующими способами:</p>
+          <ol>
+            <li>За активность и помощь в развитии на наших ресурсов: <strong>BrewingNotes</strong> и <a class="link" href="brewscrew.ru"><strong>BrewsCrew</strong></a>.
+              Более подробно можно прочитать в <a class="link" href="{% url 'docs_bn_premium' %}#extpact"><strong>тут</strong></a>.
+            </li>
+            <li>Финансово поддержав наш проект.</li>
+          </ol>
+          <div class="text-center mb-3">
+            <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modal-premium-status">Поддержать финансово</a>
+          </div>
+        </div>
+      {% else %}
+      {% if user.premium_trial %}
+        <span>Попробовать <strong>Премиум</strong> доступ <a class="btn btn-secondary btn-sm ml-3" data-toggle="modal" data-target="#modal-premium-status">Активировать</a></span>
+      {% else %}
+        <div class="mb-2">
+          <button class="btn btn-secondary btn-sm" data-toggle="collapse" href="#collapsePremium" role="button" aria-expanded="false" aria-controls="collapsePremium">Подключить <strong>Премиум</strong> доступ</button>
+        </div>
+        <div id="collapsePremium" class="collapse">
+          <p>Получить <strong>Премиум</strong> доступ можно следующими способами:</p>
+          <ol>
+            <li>За активность и помощь в развитии на наших ресурсов: <strong>BrewingNotes</strong> и <a class="link" href="brewscrew.ru"><strong>BrewsCrew</strong></a>.
+              Более подробно можно прочитать в <a class="link" href="{% url 'docs_bn_premium' %}#getpact"><strong>тут</strong></a>.
+            </li>
+            <li>Финансово поддержав наш проект.</li>
+          </ol>
+          <div class="text-center mb-3">
+            <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modal-premium-status">Поддержать финансово</a>
+          </div>
+        </div>
+      {% endif %}
+      {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="row mt-3">
+      <div class="col text-center">
+        <h4>Настройка профиля</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col ml-3">
+        <div class="d-inline-flex">
+          <div class="mr-3">
+            <h5 class="ml-2">Аватар</h5>
+            <div>
+              {% include 'user/avatar.html' with object=user %}
+            </div>
+          </div>
+          <div class="ml-3">
+            <h5 class="ml-2">Логотип{% if not user.is_pro %}<span class="badge badge-secondary ml-2">Премиум</span>{% endif %}</h5>
+            {% if user.is_pro %}
+            <div>
+              {% include 'user/logo.html' with object=user %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col mr-3">
+        <script>
+          $(document).ready(function() {
+              $('.formsave').on('click', function(e){
+                  e.preventDefault();
+                  var form = $(this).closest('form');
+                  $.post('{% url "user_settings" %}', form.serialize(), function (data) {
+                      if (data.success) {
+                          $('#alert').addClass('alert-success');
+                          $('#alert-msg').text(data.result);
+                          $('#alert').css("display", "block");
+                      }
+                      else {
+                          $('#alertSetting').css('display', 'block');
+                          $.each(data.error, function(index, value){
+                              $('#alertSetting').append('<div class="alert alert-danger" role="alert">' + value + '</div>');
+                          });
+                      }
+                  });
+              });
+          });
+        </script>
+        <h5 class="text-center mb-0">Изменить</h5>
+        <div class="text-right">
+          <a class="link" href="" data-toggle="modal" data-target="#modalDelete" title="Удалить профиль"><i class="material-icons">person_remove</i></a>
+        </div>
+        <form class="">
+          {% csrf_token %}
+          <div class="form-group">
+            <div id="alertSetting" style="display: none"></div>
+          </div>
+          <div class="form-inline mb-2 justify-content-end">
+            <label for="inputEmail" class="mr-2">Email:</label>
+            <input id="inputEmail" type="text" class="form-control" name="email" placeholder="E-mail (only for recovery password)" value="{% if user.email %}{{ user.email }}{% endif %}" autocomplete="off" />
+          </div>
+          <div class="form-inline mb-2 justify-content-end">
+            <label for="newPassword" class="mr-2">Новый пароль:</label>
+            <input id="newPassword" type="password" class="form-control" name="password" placeholder="Новый пароль (только если хотите изменить)" value="" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <div class="d-flex justify-content-end">
+              <input value="Обновить данные" class="btn btn-secondary btn-sm formsave" type="submit">
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col text-center">
+        <h4>Настройка Telegram{% if not user.is_pro %}<span class="badge badge-secondary ml-2">Премиум</span>{% endif %}</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col mx-sm-3">
+        {% if user.is_pro %}
+        <script>
+          function tgAuth() {
+              var form = $(this).closest('form');
+              $.post('{% url "get_link_login_bot" %}', form.serialize(), function (data) {
+                  if (data.success) {
+                      $('#form-tg-auth').css('display', 'none').slideUp('slow');
+                      $('#modalTelegramURL').modal('show');
+                      $('#tg-link').attr('href', data.url);
+                      $('#tg-link-sm').attr('href', data.url);
+                      $('#tg-info').css('display', 'block').slideDown('slow');
+                  }
+                  else {
+                      $('#alert').addClass('alert-danger');
+                      $('#alert-msg').text(data.error);
+                      $('#alert').css('display', 'block');
+                  }
+              });
+          }
+          function ShowModalTelegramDelete(url){
+              $('#telegram-delete-form').attr('action', url);
+              $('#modalTelegramDelete').modal('show');
+	        };
+          function changeReceiveNotif() {
+              let form = $('#tg-receive-notif');
+              $.post(form.attr('action'), form.serialize(), function (data) {
+                  if (data.success) {
+                      if (data.status) {
+                          $('#alert').addClass('alert-success');
+                          $('#alert-msg').text(data.result);
+                          $('#alert').css("display", "block");
+                          $('input[name="tg_notif"]').prop('checked', true);
+                      }
+                      else {
+                          $('#alert').addClass('alert-success');
+                          $('#alert-msg').text(data.result);
+                          $('#alert').css("display", "block");
+                          $('input[name="tg_notif"]').prop('checked', false);
+                      }
+                  }
+              });
+          }
+        </script>
+        {% if user.available_telegram %}
+        <div class="">
+          <small class="d-block">Вы авторизованы в <a class="link" href="https://t.me/@BrewingNotes">@BrewingNotes</a></small>
+        </div>
+        <div class="d-flex justify-content-between">
+          <form id="tg-receive-notif" method="post" action="{% url 'tg_receive_notif' %}">{% csrf_token %}
+            <div class="custom-control custom-switch m-2">
+              <input id="tg-notif" type="checkbox" class="custom-control-input" name="tg_notif" {% if user.usertelegramprofile.receive_notification %} checked{% endif %} onchange="changeReceiveNotif();">
+              <label for="tg-notif" class="custom-control-label">Присылать уведомления</label>
+            </div>
+          </form>
+          <div>
+            <a class="link" onclick="ShowModalTelegramDelete('{% url 'user_telegram_delete' user.username %}'); return false;" title="Удалить профиль в Telegram"><i class="material-icons align-bottom">&#xe92b;</i></a>
+          </div>
+        </div>
+        {% else %}
+        <form id="form-tg-auth">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="tgAuth(this);">Авторизовать профиль у Телеграм бота</button>
+        </form>
+        <div id="tg-info" style="display: none;">
+          <small class="d-block">Для подключению к @BrewingNotesBot пройдите по <a id="tg-link-sm" class="link">ссылке</a></small>
+        </div>
+        {% endif %}
+      {% endif %}
+      </div>
+    </div>
+    <div class="row my-3">
+      <div class="col text-center">
+        <h4>Подключение и настройка устройств{% if not user.is_pro %}<span class="badge badge-secondary ml-2">Премиум</span>{% endif %}</h4>
+      </div>
+    </div>
+    {% if user.is_pro %}
+    {% if object.all_device %}
+    <div class="row">
+      <div class="col mx-sm-3">
+        <span class="">Показывать на вверхней панели данные с устройства:</span>
+        <form class="form-inline my-2" method="post" action="{% url 'user_device_setting' %}">{% csrf_token %}
+          <div class="form-group">
+            <select class="form-control" name="select_main_device">
+              <option value="">---</option>
+              {% for i in object.all_device %}
+              <option value="{{ i.id }}" {% if i == object.device_on_dashboard %}selected{% endif %}>{{ i.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group ml-2">
+            <input class="btn btn-secondary" type="submit" value="Сохранить">
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>
+      function CopyText(el) {
+          var selection = window.getSelection();
+          var range = document.createRange();
+          range.selectNodeContents($(el).get(0));
+          selection.removeAllRanges();
+          selection.addRange(range);
+          document.execCommand('copy');
+      }
+      function changeStatusDevice(obj, id) {
+          let dev = $('#setting-'+id);
+          let form = $('#device-change-status-'+id);
+          $.post(form.attr('action'), form.serialize(), function (data) {
+              if (data.success) {
+                  if (data.status) {
+                      dev.prop('hidden', false);
+                      $('#alert').addClass('alert-success');
+                      $('#alert-msg').text(data.result);
+                      $('#alert').css("display", "block");
+                      if (data.status) {
+                          $('#device-label-status-'+id).text('Активно');
+                      }
+                      else {
+                          $('#device-label-status-'+id).text('Отключено');
+                      }
+                  }
+                  else {
+                      dev.prop('hidden', true);
+                      $('#alert').addClass('alert-success');
+                      $('#alert-msg').text(data.result);
+                      $('#alert').css("display", "block");
+                  }
+              }
+          });
+      }
+    </script>
+    {% for d in object.all_device %}
+    <div id="device-{{ d.id }}" class="row px-3">
+      <div class="col">
+        <div class="d-flex justify-content-between mb-2">
+          <div class="d-flex d-inline-block">
+            <form id="device-change-status-{{ d.id }}" method="post" action="{% url 'device_status' d.id %}">
+              <div class="custom-control custom-switch mr-2">
+                <input type="checkbox" class="custom-control-input" name="dev_active" id="enabled-{{ d.id }}" {% if d.active %}checked{% endif %} onchange="changeStatusDevice(this, {{ d.id }});">
+                <label id="device-label-status-{{ d.id }}" class="custom-control-label" for="enabled-{{ d.id }}">{% if d.active %}Активно{% else %}Отключено{% endif %}</label>
+              </div>
+            </form>
+            <div class="ml-2">
+				      <a class="link" href="{% url 'device_info' d.token %}"><span>{{ d.name }} ({{ d.get_type_display }})</span></a>
+            </div>
+          </div>
+          <div>
+            <a class="link" onclick="ShowModalDeviceDelete('{% url 'device_delete' d.id %}'); return false;" title="Удалить устройство"><i class="material-icons">&#xe92b;</i></a>
+          </div>
+        </div>
+        <div class="">
+          <div id="setting-{{ d.id }}" class="list-style-none mb-3" {% if not d.active %}hidden{% endif %}>
+            <div>
+              {% if d.type == 0 %}
+              <span class="">URL:&nbsp;<strong id="url-log-{{ d.id }}">http://logs.brewingnotes.ru/brewpiless?token={{ d.token }}</strong></span>
+              {% elif d.type == 1 %}
+              <span class="">Server URL:&nbsp;<strong id="url-log-{{ d.id }}">/ispindel?token={{ d.token }}</strong></span>
+              {% endif %}
+              <a class="link mx-3" title="Копировать" onclick="CopyText('#url-log-{{ d.id }}')"><i class="material-icons align-middle">&#xe14d;</i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    <div class="row mb-2">
+      <div class="col">
+        <div class="text-right pr-3">
+          <a class="link" data-toggle="modal" data-target="#modalAddDevice" title="Добавить устройство"><i class="material-icons align-bottom ml-2">add</i></a>
+        </div>
+      </div>
+    </div>
+    {% if object.all_device %}
+    <div class="row">
+      <div class="col">
+        <h5 class="link mx-3" data-toggle="collapse" href="#collapseBPLSettings" role="button" aria-expanded="false" aria-controls="collapseBPLSettings">Настройка подключения BrewPiLess</h5>
+        <div id="collapseBPLSettings" class="row collapse m-3">
+          <div class="col">
+            <span class="d-block">Период логирования:&nbsp;<strong>900</strong>с. (более частые данные будут игнорироваться)</span>
+            <span class="d-block">Тип протокола:&nbsp;<strong>Generic HTTP</strong></span>
+            <span class="d-block">Метод запроса:&nbsp;<strong>POST</strong></span>
+            <span class="d-block">URL:&nbsp;Смотрите выше в устройстве</strong></span>
+            <span class="d-block">Тип данных:&nbsp;<strong>application/json</strong></span>
+            <span class="d-block">Формат:&nbsp;</span>
+            <div class="d-block">
+              <span class="overflow-auto d-block text-truncate" id="data-format">{"tempUnit":"C","beerTemp":%b,"fridgeTemp":%f,"roomTemp":%r,"gravity":%g,"tiltVal":%t,"auxTemp":%a,"extDVolt":%v,"pressure":%P}</span>
+              <a class="link mx-3" title="Копировать" onclick="CopyText('#data-format')"><i class="material-icons align-middle">&#xe14d;</i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col">
+        <h5 class="link mx-3" data-toggle="collapse" href="#collapseISpSettings" role="button" aria-expanded="false" aria-controls="collapseISpSettings">Настройка подключения iSpindel</h5>
+        <div id="collapseISpSettings" class="row collapse m-3">
+          <div class="col">
+            <span class="d-block">Update interval (s):&nbsp;<strong>не менее 900</strong>&nbsp;(более частые данные будут игнорироваться)</span>
+            <span class="d-block">Unit of temperature:&nbsp;<strong>Celsius</strong></span>
+            <span class="d-block">Service type:&nbsp;<strong>HTTP</strong></span>
+            <span class="d-block">Token:&nbsp;оставте пустым</strong></span>
+            <span class="d-block">Server Address:&nbsp;<strong>logs.brewingnotes.ru</strong></span>
+            <span class="d-block">Port:&nbsp;<strong>80</strong></span>
+            <span class="d-block">Server URL:&nbsp;Смотрите выше в устройстве</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    <div class="row mb-2">
+      <div class="col text-center">
+        <h4>BNC-модули{% if not user.is_pro %}<span class="badge badge-secondary ml-2">Премиум</span>{% endif %}</h4>
+      </div>
+    </div>
+    {% if object.is_pro %}
+    {% for d in object.all_bnc_modules %}
+    <div id="module-{{ d.id }}" class="row mb-2">
+      <div class="col">
+        <div class="d-flex justify-content-between mb-2 px-3">
+          <div class="d-flex d-inline-block">
+            <div class="ml-2">
+				      <a class="link" href="{% url 'modules_list' %}"><span class="mr-3">{{ d.name }}</span></a>
+              <span>Токен:&nbsp;<strong>{{ d.token }}</strong></span>
+            </div>
+          </div>
+          <div>
+            <a class="link" onclick="ShowModalDeviceDelete('{% url 'module_delete' d.id %}'); return false;" title="Удалить модуль"><i class="material-icons">&#xe92b;</i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="row mb-2">
+      <div class="col">
+        <div class="text-right pr-3">
+          <a class="link" data-toggle="modal" data-target="#modalAddModule" title="Добавить модуль"><i class="material-icons align-bottom ml-2">add</i></a>
+        </div>
+      </div>
+    </div>
+    {% if user.all_bnc_modules %}
+    <div class="row mb-2">
+      <div class="col">
+        <h5 class="link mx-3" data-toggle="collapse" href="#collapseFW" role="button" aria-expanded="false" aria-controls="collapseFW">Актуальная прошивка</h5>
+        <div id="collapseFW" class="row collapse m-3">
+          <div class="col">
+            <table class="table table-list">
+              <tbody>
+                <tr>
+                  <td>
+                    <a class="link" href="/media/firmware/20220316/BNCmodule_v0.2.zip"><span>BNCmodule_v0.2.zip</span></a>
+                  </td>
+                  <td>
+                    <span>md5:&nbsp;46ebdf0be986a8db316cac11e4660aa4</span>
+                  </td>
+                  <td>
+                    <span>16.03.2022</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    <div class="row my-3">
+      <script>
+        function ShowModalWaterDelete(url){
+            $('#water-delete-form').attr('action', url);
+            $('#modalWaterDelete').modal('show');
+	      };
+        function WaterDelete(){
+            let form = $('#water-delete-form');
+            $.post(form.attr('action'), form.serialize(), function (data) {
+                if (data.success) {
+                     $('#alert').addClass('alert-success');
+                     $('#alert-msg').text(data.result);
+                     $('#alert').css("display", "block");
+                     $('#water-profile-'+data.waterID).fadeOut('slow');
+                }
+                else {
+                    $('#alertSetting').css('display', 'block');
+                    $.each(data.error, function(index, value) {
+                        $('#alertSetting').append('<div class="alert alert-danger" role="alert">' + value + '</div>');
+                    });
+                }
+            });
+            $('#modalWaterDelete').modal('hide');
+        };
+        function ShowModalWaterEdit(id){
+            $('input[name=water_id]').val(id);
+            $('input[name=water_name]').val($('#water-name-'+id).text());
+            $('input[name=water_ca]').val($('#water-ca-'+id).text());
+            $('input[name=water_mg]').val($('#water-mg-'+id).text());
+            $('input[name=water_na]').val($('#water-na-'+id).text());
+            $('input[name=water_so]').val($('#water-so-'+id).text());
+            $('input[name=water_cl]').val($('#water-cl-'+id).text());
+            $('input[name=water_hco]').val($('#water-hco-'+id).text());
+            $('input[name=water_ph]').val($('#water-ph-'+id).text());
+            $('input[name=water_desc]').val($('#water-desc-'+id).text());
+            $('#modalWaterAdd').modal('show');
+	      };
+      </script>
+      <div class="col-12 text-center">
+        <h4>Добавление профиля воды{% if not user.is_pro %}<span class="badge badge-secondary ml-2">Премиум</span>{% endif %}</h4>
+      </div>
+      {% if user.is_pro %}
+      <div class="col-12">
+        {% for w in object.wateruserprofile_set.all %}
+        <div id="water-profile-{{ w.id }}" class="mb-3">
+          <div class="d-flex justify-content-between">
+            <div>
+              <span id="water-name-{{ w.id }}" class="h5">{{ w.name }}</span>
+            </div>
+            <div>
+              <a class="link" onclick="ShowModalWaterEdit({{ w.id }}); return false;" title="Изменить профиль"><i class="material-icons">edit</i></a>
+              <a class="link" onclick="ShowModalWaterDelete('{% url 'user_water_delete' w.id %}');" title="Удалить профиль"><i class="material-icons">delete_forever</i></a>
+            </div>
+          </div>
+          <div>
+            <table class="table-ing mt-1">
+              <thead>
+                <tr>
+                  <th>Ca<sup>+2</sup>
+                  <th>Mg<sup>+2</sup></th>
+                  <th>Na<sup>+</sup></th>
+                  <th>SO<sub>4</sub><sup>-2</sup></th>
+                  <th>Cl<sup>-</sup></th>
+                  <th>HCO<sub>3</sub><sup>-</sup></th>
+                  <th>PH</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id="water-ca-{{ w.id }}">{{ w.calcum|default_if_none:'0' }}</td>
+                  <td id="water-mg-{{ w.id }}">{{ w.magnesium|default_if_none:'0' }}</td>
+                  <td id="water-na-{{ w.id }}">{{ w.sodium|default_if_none:'0' }}</td>
+                  <td id="water-so-{{ w.id }}">{{ w.sulfate|default_if_none:'0' }}</td>
+                  <td id="water-cl-{{ w.id }}">{{ w.chloride|default_if_none:'0' }}</td>
+                  <td id="water-hco-{{ w.id }}">{{ w.bicarbonate|default_if_none:'0' }}</td>
+                  <td id="water-ph-{{ w.id }}">{{ w.ph|default_if_none:'0' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <small><strong>Описание:</strong></small>
+            <small id="water-desc-{{ w.id }}">{{ w.description|linebreaksbr }}</small>
+          </div>
+        </div>
+        {% endfor %}
+        <div class="d-flex justify-content-end">
+          <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#modalWaterAdd" title="Добавить профиль">Добавить профиль</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="col-12 text-center mb-3">
+      <h4>Подключение учёта ингредиентов{% if not user.is_pro %}<span class="badge badge-secondary ml-2">Премиум</span>{% endif %}</h4>
+    </div>
+    {% if user.is_pro %}
+    <div class="col-12 mb-3">
+      <div class="mb-3">
+        {% if user.available_pantry %}
+        <span>У Вас подключен учёт ингредиентов. Посмотреть свои ингредиенты Вы можете в разделе <a class="link" href="{% url 'pantry_balance' user.pantry.id %}">Кладовая</a></span>
+        {% else %}
+        <a class="btn btn-secondary btn-sm" href="{% url 'pantry_activate' %}">Подключить учёт ингредиентов</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% if object.is_pro %}
+<script>
+  function ShowModalDeviceDelete(url){
+      $('#device-delete-form').attr('action', url);
+      $('#modalDeviceDelete').modal('show');
+	};
+  function DeviceDelete(){
+      let form = $('#device-delete-form');
+      $.post(form.attr('action'), form.serialize(), function (data) {
+          if (data.success) {
+               $('#alert').addClass('alert-success');
+               $('#alert-msg').text(data.result);
+               $('#alert').css("display", "block");
+               $('#'+data.device).fadeOut('slow');
+               $('select[name="select_main_device"] option[value=""]').attr('selected', 'selected');
+               $('select[name="select_main_device"] option[value='+data.device+']').remove();
+          }
+          else {
+              $('#alertSetting').css('display', 'block');
+              $.each(data.error, function(index, value) {
+                  $('#alertSetting').append('<div class="alert alert-danger" role="alert">' + value + '</div>');
+              });
+          }
+      });
+      $('#modalDeviceDelete').modal('hide');
+  };
+</script>
+{% endif %}
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Вы уверены, что хотите самоудалиться?</h5>
+      </div>
+      <div class="modal-body">
+        <p>При самоудалении, удаляется профиль пользователя и все его рецепты, кроме опубликованных. Опубликованные рецепты пользователя остаются доступны другим пользователям, но под другим именем Автора рецепта.</p>
+      </div>
+      <div class="modal-footer">
+        <form id="delete-form" action="{% url 'user_delete' object.username %}">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Удалить профиль</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddModule" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавление нового устройства</h5>
+      </div>
+      <div class="modal-body">
+        <form id="add-module-form" action="{% url 'user_module_add' %}" method="post">{% csrf_token %}
+          <div class="form-group">
+            <label>Имя устройства:</label>
+            <input class="form-control" type="text" name="name" required>
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-dark">Добавить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalAddDevice" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Добавление нового устройства</h5>
+      </div>
+      <div class="modal-body">
+        <form id="add-device-form" action="{% url 'user_device_add' %}" method="post">{% csrf_token %}
+          <div class="form-group">
+            <label>Имя устройства:</label>
+            <input class="form-control" type="text" name="name">
+          </div>
+          <div class="form-group">
+            <label>Тип устройства:</label>
+            <select class="form-control" name="type">
+              {% for d in type_device %}
+						  <option value="{{ d.0 }}">{{ d.1 }}</option>
+              {% endfor %}
+      			</select>
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-dark">Добавить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalDeviceDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить данное устройство?</p>
+      </div>
+      <div class="text-center">
+        <strong class="red text-center">Внимание!!!</strong>
+      </div>
+      <div class="p-3">
+        <span>При удалении устройства будет удален и весь накопленный журнал с полученными данными от этого устройства.</span>
+      </div>
+      <div class="modal-footer">
+        <form id="device-delete-form">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="DeviceDelete(); return false;">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalTelegramURL" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Для подключению к Телеграмм Боту пройдите по ссылке на устройстве, где уже установлен Телеграм</p>
+        <div class="text-center">
+          <a id="tg-link" class="link"><strong>Go to Telegram</strong></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalTelegramDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <p>Вы уверены, что хотите отключиться от Telegram бота?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="telegram-delete-form">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalWaterDelete" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить данный профиль воды без возможности восстановления?</p>
+      </div>
+      <div class="modal-footer">
+        <form id="water-delete-form">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="submit" class="btn btn-dark" onclick="WaterDelete();">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalWaterAdd" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <script>
+      function round(a, b) {
+          return Number(Math.round(a+'e'+b)+'e-'+b);
+      }
+      function changeIon() {
+          let ca = Number($('input[name="water_ca"]').val().replace(',', '.'));
+          let mg = Number($('input[name="water_mg"]').val().replace(',', '.'));
+          let na = Number($('input[name="water_na"]').val().replace(',', '.'));
+          let so = Number($('input[name="water_so"]').val().replace(',', '.'));
+          let cl = Number($('input[name="water_cl"]').val().replace(',', '.'));
+          let hco = Number($('input[name="water_hco"]').val().replace(',', '.'));
+          let cations = ca / 20.05 + mg / 12.15 + na / 23;
+					let anions = hco / 61 + so / 48 + cl / 35.45;
+					let ionBalance = cations - anions;
+					let cat = $('#cation');
+					let ani = $('#anion');
+					cat.removeClass('green red');
+					ani.removeClass('green red');
+          cat.text(' +'+round(cations, 1));
+          ani.text(' -'+round(anions, 1));
+					if (Math.abs(ionBalance) > 0.5) {
+					    $('#errorIB').prop('hidden', false);
+					    cat.addClass('red');
+					    ani.addClass('red');
+          }
+					else {
+					    $('#errorIB').prop('hidden', true);
+					    cat.addClass('green');
+					    ani.addClass('green');
+          }
+      }
+    </script>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Профиль воды</h3>
+      </div>
+      <div class="modal-body">
+        <form id="water-add-form" action="{% url 'user_water_add' %}" method="post">{% csrf_token %}
+          <div class="form-group mt-2">
+            <input type="hidden" name="water_id" value="">
+            <div class="form-group">
+              <label>Название</label>
+              <input class="form-control" type="text" value="" name="water_name" required>
+            </div>
+            <div class="form-group">
+              <div class="text-center my-2">
+                <span>Катионы&nbsp;(&nbsp;<strong id="cation">0</strong>&nbsp;)</span>
+              </div>
+              <div class="d-inline-flex justify-content-between">
+                <div>
+                  <label>Ca<sup>+2</sup></label>
+                  <input class="form-control" name="water_ca" type="number" step="1" value="0" min="0" max="999" onchange="changeIon();">
+                </div>
+                <div class="mx-2">
+                  <label>Mg<sup>+2</sup></label>
+                  <input class="form-control" name="water_mg" type="number" step="1" value="0" min="0" max="999" onchange="changeIon();">
+                </div>
+                <div>
+                  <label>Na<sup>+</sup></label>
+                  <input class="form-control" name="water_na" type="number" step="1" value="0" min="0" max="999" onchange="changeIon();">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="text-center my-2">
+                <span>Анионы&nbsp;(&nbsp;<strong id="anion">0</strong>&nbsp;)</span>
+              </div>
+              <div class="d-inline-flex justify-content-between">
+                <div>
+                  <label>SO<sub>4</sub><sup>-2</sup></label>
+                  <input class="form-control" name="water_so" type="number" step="1" value="0" min="0" max="999" onchange="changeIon();">
+                </div>
+                <div class="mx-2">
+                  <label>Cl<sup>-</sup></label>
+                  <input class="form-control" name="water_cl" type="number" step="1" value="0" min="0" max="999" onchange="changeIon();">
+                </div>
+                <div>
+                  <label>HCO<sub>3</sub><sup>-</sup></label>
+                  <input class="form-control" name="water_hco" type="number" step="1" value="0" min="0" max="999" onchange="changeIon();">
+                </div>
+              </div>
+              <div id="errorIB" class="text-center" hidden>
+                <strong class="small red"></strong>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="mt-2">
+                <label>pH</label>
+                <input class="form-control" name="water_ph" type="number" step="0.1" min="0" max="13" value="8">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Описание</label>
+              <textarea class="form-control" name="water_desc" rows="10"></textarea>
+            </div>
+            <div class="form-group mt-2 text-right">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+              <button type="submit" class="btn btn-dark save-post">Отправить</button>
+            </div>
+          </div>
+        </form>
+       </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% if not user.is_moderator %}
+<div class="modal fade" id="modal-premium-status" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+    {% if user.premium_trial and not user.is_pro %}
+      <div class="modal-header text-center">
+        <h5>Попробовать <strong>Премиум</strong> доступ</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"><i class="link material-icons">&#xe5cd;</i></span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Премиум</strong> позволяет получить доступ ко всему доступному функционалу сайта.</p>
+        <p>Пробный период к <strong>Премиум</strong> доступу выдается только один раз на <strong>30 дней</strong>.</p>
+        <p>По окончанию пробного периода можете продлить действие <strong>Премиум</strong> доступа.</p>
+        <p>Если в течении <strong>30 дней</strong> после окончания пробного периода Вы не восстанавливаете <strong>Премиум</strong> доступ, то все данные разделов <strong>«Телеметрия»</strong>, <strong>«Кладовая»</strong> и другие данные не доступные обычным пользователям удаляются без возможности восстановления.</p>
+      </div>
+      <div class="modal-footer">
+        <form id="activate-trial-form" action="{% url 'user_activate_trial' %}">
+          <div class="form-group form-check">
+            <input id="agree-trial" type="checkbox" name="consent" class="form-check-input">
+            <label class="form-check-label" for="agree"><small>Принимаю <a class="link" href="{% url 'regulations' %}" target="_blank">Правила и условия использования сайта BrewingNotes.ru</a></small></label>
+          </div>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button id="activate-trial" type="submit" class="btn btn-dark ml-2">Активировать</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="modal-header text-center">
+        <h5>Финансовая поддержка <strong>BrewingNotes.ru</strong></h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true"><i class="link material-icons">&#xe5cd;</i></span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">Поддержав наш проект на сумму в 900 рублей {% if user.is_pro %}мы продлим Ваш{% else %}Вы получите{% endif %} <strong>Премиум</strong> доступ на 6 месяцев.</p>
+        <p class="mb-2">Если перечислите сумму меньше, то нами будет расценено как добровольное пожертвование без продления действия <strong>Премиум</strong> доступа.
+          Если больше, то доступ будет продлен только на 6 месяцев. Возврат средств не предусмотрен.</p>
+        <div class="form-group form-check">
+          <input id="agree-pay" type="checkbox" name="consent" class="form-check-input" id="RuleCheck">
+          <label class="form-check-label" for="RuleCheck"><small>Я согласен и принимаю <a class="link" href="{% url 'regulations' %}" target="_blank">Условия использования сайта</a></small></label>
+        </div>
+        <div id="pay-link" hidden>
+          <p>Для оплаты перейдите по ссылке ниже</p>
+          <p class="red mb-2">Внимание!!! Обязательно при оплате в сообщении указать Ваш логин, что бы правильно идентифицировали платёж.</p>
+          <div class="text-center">
+            <a class="link" href="https://www.tinkoff.ru/rm/krivtsova.irina30/BV36L70722/" target="_blank"><strong>Ссылка для оплаты</strong></a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    </div>
+  </div>
+  <script type="text/javascript">
+    $(document).ready(function(){
+      $('#activate-trial').prop('disabled', true);
+      $('#agree-trial').change(function() {
+        $('#activate-trial').prop('disabled', function(i, val) {
+          return !val;
+        })
+      });
+      $('#pay-link').prop('hidden', true);
+      $('#agree-pay').change(function() {
+        $('#pay-link').prop('hidden', function(i, val) {
+          return !val;
+        })
+      });
+    });
+  </script>
+  {% endif %}
+</div>
+
+
+
+
+
+
+
+{% endblock %}
